@@ -22,6 +22,8 @@
 % to display URLs in blue roman font according to Springer's eBook style:
 \renewcommand\UrlFont{\color{blue}\rmfamily}
 
+\usepackage{todonotes}
+
 \input{macros}
 
 \begin{document}
@@ -42,32 +44,37 @@
 \maketitle              % typeset the header of the contribution
 %
 \begin{abstract}
-The abstract should briefly summarize the contents of the paper in
-150--250 words.
+  We propose a standardization document for sigma protocols in prime order groups, allowing for AND and OR composition, either in compact form (challenge, response) or batchable (commitment, response). We propose a selection of elliptic curves and hash functions suitable for implementations, together with a minimal API that should be consistent across implementations.
+  \minote{Add non-interactive}
 
 \keywords{First keyword  \and Second keyword \and Another keyword.}
 \end{abstract}
 
 \section{Introduction}
 
+Sigma protocols are simple, mature, and powerful zero-knowledge proof systems.
 
-Sigma protocols are simple, mature and pretty powerful. We believe that they deserve a place in the standardization effort of zkproofs.
-\begin{itemize}
-  \item what are sigma protocols
-  \item related works
-\end{itemize}
 
 \subsection{Related Work}
 
 \section{Background and Motivation}
-
+So far, there has been little literature meant to help cryptography engineers implement correctly Sigma protocols.
+Despite Schnorr proofs have been standardized as zero-knowledge proofs (c.f.\ \href{https://tools.ietf.org/html/rfc8235}{RFC8235}) and signatures (c.f.\ ed25519 in \href{https://tools.ietf.org/html/rfc8032}{RFC8032}),
+%a
+ it is not yet clear what is the correct way to implement a Sigma protocol for a logical statement on the discrete logarithm of a $n$ group elements.
+ \minote{reformulate? say something "on the other hand?"}
+ For instance, the current standardized ed25519 cannot be trivially adapted to a zero-knowledge proof in a secure way, because of its malleability~\cite[p. 7]{JCEng:BDLSY1},  and the different behavior on the batched and compressed form\footnote{\url{https://hdevalence.ca/blog/2020-10-04-its-25519am}}.
+The implementation details of sigma protocols are often times overlooked in academic papers and, as a result, a lot of insecure implementations have been published in the past. To name a few examples:
 \begin{itemize}
-\item stable and old
-\item list of examples of the real world from industry
-\item inspired also for other crypto primitives (identification, authentication, etc.)
-\end{itemize}
-\section{Notation and Terminology}
+\item \textbf{Leakage, partial leakage, or reuse of the nonce is fatal.}
+In 2010, the hacker group \texttt{fail0verflow} showed that SONY was reusing the same nonce for digitally signing Playstation 3 games\footnote{\url{https://media.ccc.de/v/27c3-4087-en-console_hacking_2010}}. The member could exploit this to calculate the private key, and create valid signatures.
+\minote{this was on ecdsa}
+\item \textbf{A weak impelmentation of Fiat--Shamir heuristic compromises adaptive security.} In 2016, Bernhard et al.~\cite{??} demonstrated how Helios, a platform for e-voting, calculated the challenge using the Fiat--Shamir heuristic, without including the generator, allowing for tampering of votes.
 
+\item \textbf{Implementation over non-prime order groups could lead to small subgroup attacks}. In 2017, Monero\footnote{\url{https://www.getmonero.org/2017/05/17/disclosure-of-a-major-bug-in-cryptonote-based-currencies.html}} disclosed a vulnerability in Cryptonote-based e-currencies that would allow double-spending.\href{https://tools.ietf.org/html/rfc2785#ref-LAW}{RFC2785}, that already provides solutions for avoiding small subgroup attacks),
+\end{itemize}
+
+\section{Notation and Terminology}
 
 \section{Constructions for $\Sigma$-Protocols}
 \subsection{Basic $\Sigma$-Protocols in Prime-Order Groups}
@@ -102,9 +109,18 @@ A basic $\Sigma$-protocol to prove knowledge of a preimage $x$ of $y$ under a ho
 \section{Security Considerations}
 
 Papers with the seucurity proofs + limitation
+\minote{mention simulation extractability? XXX}
+
 \section{Implementation}
 Implementations already there + APi design + representation + other subleties (check if a point is in the group etc.)
 
+\subsection{Pre-existing implementations}
+\paragraph{SCAPI.}
+\paragraph{zkp.}
+\paragraph{zksk.}
+\paragraph{Emmy}
+
+\subsection{A candidate API design}
 
 \bibliographystyle{splncs04}
 \bibliography{cryptobib/abbrev3,cryptobib/crypto}
