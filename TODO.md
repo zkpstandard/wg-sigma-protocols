@@ -40,19 +40,24 @@ There is already an RFC about non-interactive schnorr proofs, but the API is ins
 - [YAZKC](https://www.ei.ruhr-uni-bochum.de/forschung/veroeffentlichungen/YAZKC/)
 
 
-### API sketch
+### Main features
   - deterministic nonce generation (first proposed in [1](https://groups.google.com/g/sci.crypt/c/SalLSLBBTe4/m/xtYNGDe6irIJ) [2](https://groups.google.com/g/sci.crypt/c/3g8DnnEkv5A/m/a26mLrwfjiMJ))
   - transcript object
   - hashing with the group generator + domain separator
   - add optional data (as a message) in the proof
   - check if points in the group
-  - API
+  -
 ### selection of suitable curves and size recommandation
-    The same parameters used for EC-DSA can be adopted here
+
+  - The same parameters used for EC-DSA can be adopted here
   - BLS12-381
   - secp bitcoin curve
   - ristretto [[hdevalence-ristretto]]
 
+### API
+
+- two structs for the proof: batchable and compressed
+- function prove, verify, simulate
 
 [HR08]: <https://tools.ietf.org/html/rfc8235#ref-HR08>
 [hdevalence-ristretto]: <https://datatracker.ietf.org/doc/draft-hdevalence-cfrg-ristretto/>
