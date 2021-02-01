@@ -7,12 +7,32 @@
 \usepackage{amsmath}
 \usepackage{amssymb}
 %\usepackage{amsthm}
+% crypto notation
+\usepackage[advantage,
+            adversary,
+            asymptotics,
+            complexity,
+            ff,
+            lambda,
+            mm,
+            operators,
+            primitives,
+            probability,
+            sets]{cryptocode}
+
+%
 \usepackage{mathtools}
 %
 \usepackage{todonotes}
 %
-\usepackage{hyperref}
-\usepackage{cleveref}
+\usepackage[%dvips,
+    pdftex,
+    pdftitle={Proposal: Sigma-protocols},
+    pdfauthor={Stephan Krenn and Michele Orrù}, pdfpagelabels=true, %linktocpage=true,     backref=page,
+    bookmarks,bookmarksopen,bookmarksdepth=3,
+    breaklinks,colorlinks,citecolor=blue,linkcolor=blue
+   ]{hyperref}
+\usepackage[capitalize,nameinlink,sort]{cleveref}
 %
 \usepackage{graphicx}
 % Used for displaying a sample figure. If possible, figure files should
@@ -53,18 +73,19 @@
 \section{Introduction}
 
 Sigma protocols are simple, mature, and powerful zero-knowledge proof systems.
-
+This problem ahs already been posted on the zk-proof community\footnote{\url{https://community.zkproof.org/t/standardizing-sigma-protocols/471/}} and received a fair amount of interest.
 
 \subsection{Related Work}
 
 \section{Background and Motivation}
+\label{sec:motivation}
 So far, there has been little literature meant to help cryptography engineers implement correctly Sigma protocols.
 Despite Schnorr proofs have been standardized as zero-knowledge proofs (c.f.\ \href{https://tools.ietf.org/html/rfc8235}{RFC8235}) and signatures (c.f.\ ed25519 in \href{https://tools.ietf.org/html/rfc8032}{RFC8032}),
 %a
  it is not yet clear what is the correct way to implement a Sigma protocol for a logical statement on the discrete logarithm of a $n$ group elements.
  \minote{reformulate? say something "on the other hand?"}
  For instance, the current standardized ed25519 cannot be trivially adapted to a zero-knowledge proof in a secure way, because of its malleability~\cite[p. 7]{JCEng:BDLSY1},  and the different behavior on the batched and compressed form\footnote{\url{https://hdevalence.ca/blog/2020-10-04-its-25519am}}.
-The implementation details of sigma protocols are often times overlooked in academic papers and, as a result, a lot of insecure implementations have been published in the past. To name a few examples:
+As academic papers focus on proving the security of sigma protocols in generic prime-order groups, the implementation details are often times overlooked in academic papers and, as a result, a lot of insecure implementations have been published in the past. To name a few examples:
 \begin{itemize}
 \item \textbf{Leakage, partial leakage, or reuse of the nonce is fatal.}
 In 2010, the hacker group \texttt{fail0verflow} showed that SONY was reusing the same nonce for digitally signing Playstation 3 games\footnote{\url{https://media.ccc.de/v/27c3-4087-en-console_hacking_2010}}. The member could exploit this to calculate the private key, and create valid signatures.
@@ -110,6 +131,7 @@ A basic $\Sigma$-protocol to prove knowledge of a preimage $x$ of $y$ under a ho
 
 Papers with the seucurity proofs + limitation
 \minote{mention simulation extractability? XXX}
+\minote{mention post-quantum security guarantees?}
 
 \section{Implementation}
 Implementations already there + APi design + representation + other subleties (check if a point is in the group etc.)
@@ -122,6 +144,18 @@ Implementations already there + APi design + representation + other subleties (c
 
 \subsection{A candidate API design}
 
+\paragraph{Key Generation.}
+
+\paragraph{Nonce Generation.} The first stem in the generation of a sigma proof is the generation of a cryptographically secure nonce. As mentioned in \Cref{sec:motivation}, the nonce must be distributed uniformly at random, and even a small bias in the distribution could completely compromise zero-knowledge.
+The construction of cryptographically secure source of randomness is a difficult problem, that is particularly challenging on embedded devices such as smart-cards or embedded systems.
+For this reason, we propose the generation of a synthetic nonce obtained from hashing the statement and the secret together, as already suggested in previous standards \href{https://tools.ietf.org/html/rfc6979}{RFC6979}.
+
+\minote{XXX. what do we do for ring signatures that repeat the same statement twice? suggest to add a counter or a new random entry in the message?}
+
+\paragraph{Computing the challenge.}
+
+\section{Open Problems}
+\minote{check multisignatures and add the new problem of computing proofs with devices that share different keys}
 \bibliographystyle{splncs04}
 \bibliography{cryptobib/abbrev3,cryptobib/crypto}
 %
