@@ -10,12 +10,32 @@
 \usepackage{amsmath}
 \usepackage{amssymb}
 %\usepackage{amsthm}
+% crypto notation
+\usepackage[advantage,
+            adversary,
+            asymptotics,
+            complexity,
+            ff,
+            lambda,
+            mm,
+            operators,
+            primitives,
+            probability,
+            sets]{cryptocode}
+
+%
 \usepackage{mathtools}
 %
 \usepackage{todonotes}
 %
-\usepackage{hyperref}
-\usepackage{cleveref}
+\usepackage[%dvips,
+    pdftex,
+    pdftitle={Proposal: Sigma-protocols},
+    pdfauthor={Stephan Krenn and Michele Orrù}, pdfpagelabels=true, %linktocpage=true,     backref=page,
+    bookmarks,bookmarksopen,bookmarksdepth=3,
+    breaklinks,colorlinks,citecolor=blue,linkcolor=blue
+   ]{hyperref}
+\usepackage[capitalize,nameinlink,sort]{cleveref}
 %
 \usepackage{graphicx}
 % Used for displaying a sample figure. If possible, figure files should
@@ -56,18 +76,19 @@
 \section{Introduction}
 
 Sigma protocols are simple, mature, and powerful zero-knowledge proof systems.
-
+This problem ahs already been posted on the zk-proof community\footnote{\url{https://community.zkproof.org/t/standardizing-sigma-protocols/471/}} and received a fair amount of interest.
 
 \subsection{Related Work}
 
 \section{Background and Motivation}
+\label{sec:motivation}
 So far, there has been little literature meant to help cryptography engineers implement correctly Sigma protocols.
 Despite Schnorr proofs have been standardized as zero-knowledge proofs (c.f.\ \href{https://tools.ietf.org/html/rfc8235}{RFC8235}) and signatures (c.f.\ ed25519 in \href{https://tools.ietf.org/html/rfc8032}{RFC8032}),
 %a
  it is not yet clear what is the correct way to implement a Sigma protocol for a logical statement on the discrete logarithm of a $n$ group elements.
  \minote{reformulate? say something "on the other hand?"}
  For instance, the current standardized ed25519 cannot be trivially adapted to a zero-knowledge proof in a secure way, because of its malleability~\cite[p. 7]{JCEng:BDLSY1},  and the different behavior on the batched and compressed form\footnote{\url{https://hdevalence.ca/blog/2020-10-04-its-25519am}}.
-The implementation details of sigma protocols are often times overlooked in academic papers and, as a result, a lot of insecure implementations have been published in the past. To name a few examples:
+As academic papers focus on proving the security of sigma protocols in generic prime-order groups, the implementation details are often times overlooked in academic papers and, as a result, a lot of insecure implementations have been published in the past. To name a few examples:
 \begin{itemize}
 \item \textbf{Leakage, partial leakage, or reuse of the nonce is fatal.}
 In 2010, the hacker group \texttt{fail0verflow} showed that SONY was reusing the same nonce for digitally signing Playstation 3 games\footnote{\url{https://media.ccc.de/v/27c3-4087-en-console_hacking_2010}}. The member could exploit this to calculate the private key, and create valid signatures.
@@ -88,7 +109,7 @@ In 2010, the hacker group \texttt{fail0verflow} showed that SONY was reusing the
         $ (t,\st) \getsr \prover_1(w,y)$\\
         & $\sendr{t}{100}$ \\[2 ex]
       % -----------------------------CHALLENGE-------------------------------
-        & & $c \getsr \CC$ \\
+        & & $c \getsr \CS$ \\
         & $\sendl{c}{100}$ & \\[2 ex]
       % -----------------------------P2-------------------------------
         $ s \getsr \prover_2(w,y,c,\st)$\\
@@ -108,9 +129,9 @@ A basic $\Sigma$-protocol for the relation $\relation=\{(y,w) : y=\varphi(w)\}$ 
     The prover's first algorithm $\prover_1$ chooses a random element $r\getsr\GG$ and computes $t\gets\varphi(r)$.
 	It sets $\st\gets r$ and sends $t$ to the verifier.
   \item
-    Next, the verifier chooses $c\getsr\CC$ and sends $c$ back to the prover.
+    Next, the verifier chooses $c\getsr\CS$ and sends $c$ back to the prover.
   \item
-    The prover's second algorithm $\prover_2$ checks that $c\in\CC$ and aborts if this is not the case.
+    The prover's second algorithm $\prover_2$ checks that $c\in\CS$ and aborts if this is not the case.
 	It then parses $\st=t$ and computes its response as $s\gets r+cw$, which it sends to the verifier.
   \item
     The verifier's algorithm $\verifier$ checks that $s\in\GG$ and $t\in\HH$, and outputs $0$ if this is not the case.
@@ -118,11 +139,11 @@ A basic $\Sigma$-protocol for the relation $\relation=\{(y,w) : y=\varphi(w)\}$ 
 \end{enumerate}
 
 The required simulator $\simulator$ for a basic $\Sigma$-protocol works as follows:
-On input $y$ and a target challenge $c\in\CC$, it chooses $s\getsr\GG$.
+On input $y$ and a target challenge $c\in\CS$, it chooses $s\getsr\GG$.
 It then sets $t \gets \varphi(s) - cy$ and ouputs the simulated transcript $(t,c,s)$.
 
 \begin{theorem}
-  If $\HH$ is a cyclic group of prime order $q$, $\varphi:\GG\to\HH$ is a group homomorphism, and $\CC=\ZZ_m$ for some $m\leq q$, then the above $\Sigma$-protocol is an honest-verifier zero-knowledge proof of knowledge for the relation $y=\varphi(w)$.
+  If $\HH$ is a cyclic group of prime order $q$, $\varphi:\GG\to\HH$ is a group homomorphism, and $\CS=\ZZ_m$ for some $m\leq q$, then the above $\Sigma$-protocol is an honest-verifier zero-knowledge proof of knowledge for the relation $y=\varphi(w)$.
 \end{theorem}
 
 \subsection{Composition of $\Sigma$-Protocols}
@@ -139,7 +160,7 @@ $$
       The prover's first algorithm $\prover_1$ computes $(t^0,\st^0)\getsr\prover_1^0$ and $(t^1,\st^1)\getsr\prover_1^1$.
       It then outputs $(t,\st) = ((t^0,t^1),(\st^0,\st^1))$, and sends $t$ to the verifier.
     \item
-      The verifier chooses $c\getsr\CC^0\cap\CC^1$, where $\CC^0$ and $\CC^1$ are the challenge sets of the respective protocols to be composed.
+      The verifier chooses $c\getsr\CS^0\cap\CS^1$, where $\CS^0$ and $\CS^1$ are the challenge sets of the respective protocols to be composed.
     \item
       In $\prover_2$, the prover parses $\st=(\st^0,\st^1)$.
       It computes $s^0\getsr\prover_2^0(w^0,y^0,c,\st^0)$ and $s^1\getsr\prover_2^1(w^1,y^1,c,\st^1)$.
@@ -149,7 +170,7 @@ $$
   \end{enumerate}
 
   The simulator $\simulator$ for the composed protocol works as follows:
-  On input $(y^0,y^1)$ and a target challenge $c\in\CC^0\cap\CC^1$, it computes $(t^0,c,s^0)\getsr\simulator^0(y^0,c)$ and $(t^1,c,s^1)\getsr\simulator^1(y^1,c)$.
+  On input $(y^0,y^1)$ and a target challenge $c\in\CS^0\cap\CS^1$, it computes $(t^0,c,s^0)\getsr\simulator^0(y^0,c)$ and $(t^1,c,s^1)\getsr\simulator^1(y^1,c)$.
   The simulator then outputs $(t,c,s)=((t^0,t^1),c,(s^0,s^1))$.
 
 \subsubsection{OR Composition.}
@@ -164,10 +185,10 @@ $$
   \begin{enumerate}
     \item
       The prover's first algorithm $\prover_1$ computes $(t^j,\st^j)\getsr\prover_1^j$.
-      Furthermore, it chooses $c^{1-j}\getsr\CC^0\cap\CC^1$ and computes $(t^{1-j},c^{1-j},s^{1-j})\getsr\simulator^{1-j}(y^{1-j},c^{1-j})$.
+      Furthermore, it chooses $c^{1-j}\getsr\CS^0\cap\CS^1$ and computes $(t^{1-j},c^{1-j},s^{1-j})\getsr\simulator^{1-j}(y^{1-j},c^{1-j})$.
       It then ouputs $(t,\st) = ((t^0,t^1),(\st^j,c^{1-j},s^{1-j}))$, and sends $t$ to the verifier.
     \item
-      The verifier chooses $c\getsr\CC^0\cap\CC^1$, where $\CC^0$ and $\CC^1$ are the challenge sets of the respective protocols to be composed.
+      The verifier chooses $c\getsr\CS^0\cap\CS^1$, where $\CS^0$ and $\CS^1$ are the challenge sets of the respective protocols to be composed.
     \item
       In $\prover_2$, the prover parses $\st=(\st^j,c^{1-j},s^{1-j})$.
       It computes $c^j\gets c-c^{1-j}\mod c^+$, and sets $s^j\getsr\prover_2^j(w^j,y^j,c^j,\st^j)$.
@@ -178,7 +199,7 @@ $$
   \end{enumerate}
 
   The simulator $\simulator$ for the composed protocol works as follows:
-  On input $(y^0,y^1)$ and a target challenge $c\in\CC^0\cap\CC^1$, it chooses a random $c^0$ in $\CC^0\cap\CC^1$ and computes $c^1\gets c-c^0 \mod c^+$.
+  On input $(y^0,y^1)$ and a target challenge $c\in\CS^0\cap\CS^1$, it chooses a random $c^0$ in $\CS^0\cap\CS^1$ and computes $c^1\gets c-c^0 \mod c^+$.
   It then computes $(t^0,c^0,s^0)\getsr\simulator^0(y^0,c^0)$ and $(t^1,c^1,s^1)\getsr\simulator^1(y^1,c^1)$.
   The simulator then outputs $(t,c,s)=((t^0,t^1),c,(s^0,s^1,c^0))$.
 
@@ -189,6 +210,7 @@ $$
 
 Papers with the seucurity proofs + limitation
 \minote{mention simulation extractability? XXX}
+\minote{mention post-quantum security guarantees?}
 
 \section{Implementation}
 Implementations already there + APi design + representation + other subleties (check if a point is in the group etc.)
@@ -201,6 +223,18 @@ Implementations already there + APi design + representation + other subleties (c
 
 \subsection{A candidate API design}
 
+\paragraph{Key Generation.}
+
+\paragraph{Nonce Generation.} The first stem in the generation of a sigma proof is the generation of a cryptographically secure nonce. As mentioned in \Cref{sec:motivation}, the nonce must be distributed uniformly at random, and even a small bias in the distribution could completely compromise zero-knowledge.
+The construction of cryptographically secure source of randomness is a difficult problem, that is particularly challenging on embedded devices such as smart-cards or embedded systems.
+For this reason, we propose the generation of a synthetic nonce obtained from hashing the statement and the secret together, as already suggested in previous standards \href{https://tools.ietf.org/html/rfc6979}{RFC6979}.
+
+\minote{XXX. what do we do for ring signatures that repeat the same statement twice? suggest to add a counter or a new random entry in the message?}
+
+\paragraph{Computing the challenge.}
+
+\section{Open Problems}
+\minote{check multisignatures and add the new problem of computing proofs with devices that share different keys}
 \bibliographystyle{splncs04}
 \bibliography{cryptobib/abbrev3,cryptobib/crypto}
 %
