@@ -126,82 +126,186 @@ A basic $\Sigma$-protocol for the relation $\relation=\{(y,w) : y=\varphi(w)\}$ 
 
 \begin{enumerate}
   \item
-    The prover's first algorithm $\prover_1$ chooses a random element $r\getsr\GG$ and computes $t\gets\varphi(r)$.
-	It sets $\st\gets r$ and sends $t$ to the verifier.
+    The prover's first algorithm $\prover_1(w,y)$ consists of the following steps:
+    \begin{enumerate}
+      \item
+        It chooses a random element $r\getsr\GG$.
+      \item
+        It then computes $t\gets\varphi(r)$.
+      \item
+	The algorithm sets $\st\gets r$ and outputs $(t,\st)$.
+    \end{enumerate}
   \item
-    Next, the verifier chooses $c\getsr\CS$ and sends $c$ back to the prover.
+    The prover's second algorithm $\prover_2(w,y,c,\st)$ proceeds as follows:
+    \begin{enumerate}
+      \item
+        It checks that $c\in\ZZ_m$ and aborts if this is not the case.
+      \item
+	It then parses $\st=t$.
+      \item
+        It computes its output as $s\gets r+cw$.
+    \end{enumerate}
   \item
-    The prover's second algorithm $\prover_2$ checks that $c\in\CS$ and aborts if this is not the case.
-	It then parses $\st=t$ and computes its response as $s\gets r+cw$, which it sends to the verifier.
+    The verifier's algorithm $\verifier(y,t,c,s)$ proceeds as follow:
+    \begin{enumerate}
+      \item
+        It checks that $s\in\GG$ and $t\in\HH$, and outputs $0$ if this is not the case.
+      \item
+	It checks whether $t + cy = \varphi(s)$, and outputs $1$ if this is the case; otherwise, $\verifier$ outputs $0$.
+    \end{enumerate}
   \item
-    The verifier's algorithm $\verifier$ checks that $s\in\GG$ and $t\in\HH$, and outputs $0$ if this is not the case.
-	It then checks whether $t + cy = \varphi(s)$, and outputs $1$ if this is the case; otherwise, $\verifier$ outputs $0$.
+    The required simulator $\simulator(y,c)$ for a basic $\Sigma$-protocol works as follows:
+    \begin{enumerate}
+      \item
+        It chooses $s\getsr\GG$.
+      \item
+        It sets $t \gets \varphi(s) - cy$.
+      \item
+        Finally, the algorithm ouputs the simulated transcript $(t,c,s)$.
+    \end{enumerate}
 \end{enumerate}
 
-The required simulator $\simulator$ for a basic $\Sigma$-protocol works as follows:
-On input $y$ and a target challenge $c\in\CS$, it chooses $s\getsr\GG$.
-It then sets $t \gets \varphi(s) - cy$ and ouputs the simulated transcript $(t,c,s)$.
 
 \begin{theorem}
-  If $\HH$ is a cyclic group of prime order $q$, $\varphi:\GG\to\HH$ is a group homomorphism, and $\CS=\ZZ_m$ for some $m\leq q$, then the above $\Sigma$-protocol is an honest-verifier zero-knowledge proof of knowledge for the relation $y=\varphi(w)$.
+  If $\HH$ is a cyclic group of prime order $q$, $\varphi:\GG\to\HH$ is a group homomorphism, and $m\leq q$, then the above protocol is a $\Sigma$-protocol with simulator $\simulator$.
 \end{theorem}
 
-\subsection{Composition of $\Sigma$-Protocols}
-\subsubsection{AND Composition.}
-  Let $(\prover_1^0,\prover_2^0,\verifier^0)$ and $(\prover_1^1,\prover_2^1,\verifier^1)$ be the specifications of two $\Sigma$-protocols for two relations $\relation^0$ and $\relation^1$, and let $\simulator^0$ and $\simulator^1$ be their simulators.
 
-  The following algorithms then specify a $\Sigma$-protocol for the relation:
+\subsection{Composition of $\Sigma$-Protocols}
+  In this section, we recap composition techniques of $\Sigma$-protocols.
+  Specifically, we define mechanisms for proving knowledge of multiple independent witnesses (``AND-composition''), and for proving knowledge for one out of a set of witnesses (``OR-composition'').
+  Without loss of generality, the techniques presented in the following focus on the composition of two protocols;
+  proving knowledge of more than two witnesses, or for out of a larger set of witnesses, can directly be achieved by iteratively deploying the techniques.
+
+  For the rest of this section, we let $(\prover_1^0,\prover_2^0,\verifier^0)$ and $(\prover_1^1,\prover_2^1,\verifier^1)$ be the specifications of two $\Sigma$-protocols for two relations $\relation^0$ and $\relation^1$, and let $\simulator^0$ and $\simulator^1$ be their simulators.
+
+  Furthermore, we assume that the challenge sets are given by $\ZZ_{m^0}$ and $\ZZ_{m^1}$, respectively.
+  We let $m=\min(m^0,m^1)$.
+
+
+\subsubsection{AND Composition.}
+  In the following we explain how to construct a $\Sigma$-protocol proving knowledge of multiple independent witnesses.
+  That is, the algorithms specified below constitute a $\Sigma$-protocol for the following relation:
 $$
-  \relation = \left\{ ((y^0,y^1),(w^0,w^1) : (y^0,w^0)\in \relation^0 ~\land~ (y^1,w^1)\in\relation^1\right\}\,.
+  \relation^\land = \left\{ ((y^0,y^1),(w^0,w^1) : (y^0,w^0)\in \relation^0 ~\land~ (y^1,w^1)\in\relation^1\right\}\,.
 $$
   
-  \begin{enumerate}
-    \item
-      The prover's first algorithm $\prover_1$ computes $(t^0,\st^0)\getsr\prover_1^0$ and $(t^1,\st^1)\getsr\prover_1^1$.
-      It then outputs $(t,\st) = ((t^0,t^1),(\st^0,\st^1))$, and sends $t$ to the verifier.
-    \item
-      The verifier chooses $c\getsr\CS^0\cap\CS^1$, where $\CS^0$ and $\CS^1$ are the challenge sets of the respective protocols to be composed.
-    \item
-      In $\prover_2$, the prover parses $\st=(\st^0,\st^1)$.
-      It computes $s^0\getsr\prover_2^0(w^0,y^0,c,\st^0)$ and $s^1\getsr\prover_2^1(w^1,y^1,c,\st^1)$.
-      The algorithm sets $s\gets(s^0,s^1)$ and sends $s$ to the verifier.
-    \item
-      The verifier's algorithm $\verifier$ parses $s=(s^0,s^1)$ and outputs $\verifier^0(y^0,t^0,c,s^0)\land\verifier^1(y^1,t^1,c,s^1)$. 
-  \end{enumerate}
 
-  The simulator $\simulator$ for the composed protocol works as follows:
-  On input $(y^0,y^1)$ and a target challenge $c\in\CS^0\cap\CS^1$, it computes $(t^0,c,s^0)\getsr\simulator^0(y^0,c)$ and $(t^1,c,s^1)\getsr\simulator^1(y^1,c)$.
-  The simulator then outputs $(t,c,s)=((t^0,t^1),c,(s^0,s^1))$.
+\begin{enumerate}
+  \item
+    The prover's first algorithm $\prover_1(w,y)$ consists of the following steps:
+    \begin{enumerate}
+      \item
+        The algorithm parses $w=(w^0,w^1)$ and $y=(y^0,y^1)$.
+      \item
+        It computes $(t^0,\st^0)\getsr\prover_1^0(y^0,w^0)$ and $(t^1,\st^1)\getsr\prover_1^1(y^1,w^1)$.
+      \item
+	The algorithm outputs $(t,\st) = ((t^0,t^1),(\st^0,\st^1))$.
+    \end{enumerate}
+  \item
+    The prover's second algorithm $\prover_2(w,y,c,\st)$ proceeds as follows:
+    \begin{enumerate}
+      \item
+        It checks that $c\in\ZZ_m$ and aborts if this is not the case.
+      \item
+	It parses $\st=(\st^0,\st^1)$
+      \item
+        It computes $s^0\getsr\prover_2^0(w^0,y^0,c,\st^0)$ and $s^1\getsr\prover_2^1(w^1,y^1,c,\st^1)$.
+      \item
+        It outputs $s\gets(s^0,s^1)$.
+    \end{enumerate}
+  \item
+    The verifier's algorithm $\verifier(y,t,c,s)$ proceeds as follow:
+    \begin{enumerate}
+      \item
+        It  parses $s=(s^0,s^1)$.
+      \item
+	The algorithm outputs $\verifier^0(y^0,t^0,c,s^0)\land\verifier^1(y^1,t^1,c,s^1)$.
+    \end{enumerate}
+  \item
+    The required simulator $\simulator(y,c)$ works as follows:
+    \begin{enumerate}
+      \item
+        It parses $y=(y^0,y^1)$.
+      \item
+        It chooses $c\in\ZZ_m$.
+      \item
+        It computes $(t^0,c,s^0)\getsr\simulator^0(y^0,c)$ and $(t^1,c,s^1)\getsr\simulator^1(y^1,c)$.
+      \item
+        Finally, the algorithm then outputs $(t,c,s)=((t^0,t^1),c,(s^0,s^1))$.
+    \end{enumerate}
+\end{enumerate}
+
+\begin{theorem}
+  If, for $i=0,1$, $(\prover_1^i,\prover_2^i,\verifier^i)$ is a $\Sigma$-protocol for relation $\relation^i$ with challenge set $\ZZ_{m^i}$ and simulator $\simulator^i$, then the specified protocol is a $\Sigma$-protocol with challenge set $\ZZ_m$ and simulator $\simulator$ for relation $\relation^\land$.
+\end{theorem}
+
 
 \subsubsection{OR Composition.}
-  Let $(\prover_1^0,\prover_2^0,\verifier^0)$ and $(\prover_1^1,\prover_2^1,\verifier^1)$ be the specifications of two $\Sigma$-protocols for two relations $\relation^0$ and $\relation^1$, and let $\simulator^0$ and $\simulator^1$ be their simulators.
-
-  The following algorithms then specify a $\Sigma$-protocol for the relation:
+  In the following we explain how to construct a $\Sigma$-protocol proving knowledge of one out of a set of witnesses.
+  That is, the algorithms specified below constitute a $\Sigma$-protocol for the following relation:
 $$
-  \relation = \left\{ ((y^0,y^1),(w^0,w^1) : (y^0,w^0)\in \relation^0 ~\lor~ (y^1,w^1)\in\relation^1\right\}\,.
+  \relation^\lor = \left\{ ((y^0,y^1),(w^0,w^1) : (y^0,w^0)\in \relation^0 ~\lor~ (y^1,w^1)\in\relation^1\right\}\,.
 $$
 
   In the following protocol specification, let $j$ be such that $w^j$ is known to the prover, whereas without loss of generality $w^{1-j}$ is assumed to be unknown to the prover.
-  \begin{enumerate}
-    \item
-      The prover's first algorithm $\prover_1$ computes $(t^j,\st^j)\getsr\prover_1^j$.
-      Furthermore, it chooses $c^{1-j}\getsr\CS^0\cap\CS^1$ and computes $(t^{1-j},c^{1-j},s^{1-j})\getsr\simulator^{1-j}(y^{1-j},c^{1-j})$.
-      It then ouputs $(t,\st) = ((t^0,t^1),(\st^j,c^{1-j},s^{1-j}))$, and sends $t$ to the verifier.
-    \item
-      The verifier chooses $c\getsr\CS^0\cap\CS^1$, where $\CS^0$ and $\CS^1$ are the challenge sets of the respective protocols to be composed.
-    \item
-      In $\prover_2$, the prover parses $\st=(\st^j,c^{1-j},s^{1-j})$.
-      It computes $c^j\gets c-c^{1-j}\mod c^+$, and sets $s^j\getsr\prover_2^j(w^j,y^j,c^j,\st^j)$.
-      The algorithm sets $s\gets(s^0,s^1,c^0)$ and sends $s$ to the verifier.
-    \item
-      The verifier's algorithm $\verifier$ parses $s=(s^0,s^1,c^0)$ and computes $c^1\gets c-c^0\mod c^+$.
-      It then outputs $\verifier^0(y^0,t^0,c^0,s^0)\land\verifier^1(y^1,t^1,c^1,s^1)$. 
-  \end{enumerate}
+\begin{enumerate}
+  \item
+    The prover's first algorithm $\prover_1(w,y)$ consists of the following steps:
+    \begin{enumerate}
+      \item
+        The algorithm parses $w=(w^0,w^1)$ and $y=(y^0,y^1)$, where $w^{1-j}=\bot$.
+      \item
+        It computes $(t^j,\st^j)\getsr\prover_1^j(y^j,w^j)$.
+      \item
+        It computes a simulated transcript for the unknown witness by choosing $c^{1-j}\getsr\ZZ_m$ and setting $(t^{1-j},c^{1-j},s^{1-j})\getsr\simulator^{1-j}(y^{1-j},c^{1-j})$.
+      \item
+	The algorithm outputs $(t,\st) = ((t^0,t^1),(\st^j,c^{1-j},s^{1-j}))$.
+    \end{enumerate}
+  \item
+    The prover's second algorithm $\prover_2(w,y,c,\st)$ proceeds as follows:
+    \begin{enumerate}
+      \item
+        It checks that $c\in\ZZ_m$ and aborts if this is not the case.
+      \item
+	It parses $\st=(\st^j,c^{1-j},s^{1-j})$.
+      \item
+        It computes $c^j\gets c-c^{1-j}\mod c^+$, and sets $s^j\getsr\prover_2^j(w^j,y^j,c^j,\st^j)$.
+      \item
+        It computes $s^0\getsr\prover_2^0(w^0,y^0,c,\st^0)$ and $s^1\getsr\prover_2^1(w^1,y^1,c,\st^1)$.
+      \item
+        It outputs $s\gets(s^0,s^1,c^0)$.
+    \end{enumerate}
+  \item
+    The verifier's algorithm $\verifier(y,t,c,s)$ proceeds as follow:
+    \begin{enumerate}
+      \item
+        It  parses $s=(s^0,s^1,c^0)$.
+      \item 
+        It sets $c^1\gets c-c^0\mod c^+$.
+      \item
+	The algorithm outputs $\verifier^0(y^0,t^0,c^0,s^0)\land\verifier^1(y^1,t^1,c^1,s^1)$.
+    \end{enumerate}
+  \item
+    The required simulator $\simulator(y,c)$ works as follows:
+    \begin{enumerate}
+      \item
+        It parses $y=(y^0,y^1)$.
+      \item
+        It chooses a random $c^0$ in $\ZZ_m$ and computes $c^1\gets c-c^0 \mod c^+$.
+      \item
+        It then computes $(t^0,c^0,s^0)\getsr\simulator^0(y^0,c^0)$ and $(t^1,c^1,s^1)\getsr\simulator^1(y^1,c^1)$.
+      \item
+        Finally, the algorithm then outputs $(t,c,s)=((t^0,t^1),c,(s^0,s^1,c^0))$.
+    \end{enumerate}
+\end{enumerate}
 
-  The simulator $\simulator$ for the composed protocol works as follows:
-  On input $(y^0,y^1)$ and a target challenge $c\in\CS^0\cap\CS^1$, it chooses a random $c^0$ in $\CS^0\cap\CS^1$ and computes $c^1\gets c-c^0 \mod c^+$.
-  It then computes $(t^0,c^0,s^0)\getsr\simulator^0(y^0,c^0)$ and $(t^1,c^1,s^1)\getsr\simulator^1(y^1,c^1)$.
-  The simulator then outputs $(t,c,s)=((t^0,t^1),c,(s^0,s^1,c^0))$.
+\begin{theorem}
+  If, for $i=0,1$, $(\prover_1^i,\prover_2^i,\verifier^i)$ is a $\Sigma$-protocol for relation $\relation^i$ with challenge set $\ZZ_{m^i}$ and simulator $\simulator^i$, then the specified protocol is a $\Sigma$-protocol with challenge set $\ZZ_m$ and simulator $\simulator$ for relation $\relation^\lor$.
+\end{theorem}
+
+
+
 
 \subsection{Achieving Non-Interactivity - The Fiat-Shamir Transform}
 
