@@ -170,6 +170,30 @@ A basic $\Sigma$-protocol for the relation $\relation=\{(y,w) : y=\varphi(w)\}$ 
   If $\HH$ is a cyclic group of prime order $q$, $\varphi:\GG\to\HH$ is a group homomorphism, and $m\leq q$, then the above protocol is a $\Sigma$-protocol with simulator $\simulator$.
 \end{theorem}
 
+\paragraph{Example 1.}
+Let $\HH$ be a group over an elliptic curve with prime order $q$.
+In order to prove knowledge of the discrete logarithm $w$ of a point $Y$ in base $G$ means proving knowledge of $w\in\ZZ_q$ such that $Y=wG$.
+
+Using the above notation, we have $\varphi:\ZZ_q\to\HH:x\mapsto xG$.
+The protocol flow is then as follows:
+    \begin{protocol}{Proving knowledge of a discrete logarithm\\[-2.25em]}{fig:dlog}{h!}
+      \begin{tabular}{@{}l@{\hspace{3em}}c@{\hspace{-7em}}r@{}}
+        $\prover[w,Y,G]$ & & $\verifier[Y,G]$  \\
+        \hline  \\
+      % -----------------------------P1-------------------------------
+        $ r\gets\ZZ_q$ & &\\
+        $ T = rG$ & & \\
+        & $\sendr{T}{100}$ \\[2 ex]
+      % -----------------------------CHALLENGE-------------------------------
+        & & $c \getsr \ZZ_q$ \\
+        & $\sendl{c}{100}$ & \\[2 ex]
+      % -----------------------------P2-------------------------------
+        $ s \gets r + cw$\\
+        & $\sendr{s}{100}$ \\[2 ex]
+      % -----------------------------V-------------------------------
+        & & Return $1$ if and only if $T + cY = sG$ \\
+      \end{tabular}
+    \end{protocol}
 
 \subsection{Composition of $\Sigma$-Protocols}
   In this section, we recap composition techniques of $\Sigma$-protocols.
