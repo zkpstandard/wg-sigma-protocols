@@ -196,6 +196,10 @@ The protocol flow is then as depicted in Protocol~\ref{fig:dlog}.
       \end{tabular}
     \end{protocol}
 
+For a given challenge $c\in\ZZ_q$, the simulator chooses $s\getsr\ZZ_q$, and sets $T\gets sG-cY$.
+It then outputs the simulated transcript $(T,c,s)$.
+
+
 \paragraph{Example 2 (DLEQ).}
 Let $\HH$ be a group over an elliptic curve with prime order $q$.
 Proving equality of the known discrete logarithm $w$ of $Y$ in base $G$ and $Z$ in base $H$ means proving knowledge of $w\in\ZZ_q$ such that $Y=wG$ and $Z=wH$.
@@ -223,6 +227,9 @@ The protocol flow is then as depicted in Protocol~\ref{fig:dleq}.
         & & and $U + cZ = sH$\\
       \end{tabular}
     \end{protocol}
+
+For a given challenge $c\in\ZZ_q$, the simulator chooses $s\getsr\ZZ_q$, and sets $T\gets sG-cY$ and $U\gets sH - cZ$.
+It then outputs the simulated transcript $((T,U),c,s)$.
 
 
 \paragraph{Example 3 (REP).}
@@ -253,6 +260,8 @@ The protocol flow is then as depicted in Protocol~\ref{fig:rep}.
       \end{tabular}
     \end{protocol}
 
+For a given challenge $c\in\ZZ_q$, the simulator chooses $s,z\getsr\ZZ_q$, and sets $T\gets sG + zH -cY$.
+It then outputs the simulated transcript $(T,c,(s,z))$.
 
 
 \subsection{Composition of $\Sigma$-Protocols}
