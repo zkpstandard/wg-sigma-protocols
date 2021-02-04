@@ -426,6 +426,8 @@ $$
 
 
 \subsection{Achieving Non-Interactivity -- The Fiat-Shamir Transform}
+
+\subsubsection{Long form supporting batch verification.}
 \begin{enumerate}
   \item
     The prover's algorithm $\prover'(y,w,\ctx)$ works as follows:
@@ -444,6 +446,32 @@ $$
     \begin{enumerate}
       \item
         It recomputes the challenge as $c\gets\hash(t,y,\ctx)$.
+      \item
+        It outputs whatever $\verifier(y,t,c,s)$ outputs.
+    \end{enumerate}
+\end{enumerate}
+
+\subsubsection{Short form supporting compact proofs.}
+\begin{enumerate}
+  \item
+    The prover's algorithm $\prover''(y,w,\ctx)$ works as follows:
+    \begin{enumerate}
+      \item
+        The algorithm first computes $(t,\st)\getsr\prover_1(y,w)$.
+      \item
+        It computes the challenge by setting $c\gets\hash(t,y,\ctx)$.
+      \item
+        The algorithm defines $s\getsr\prover_2(y,w,c,\st)$.
+      \item
+        The algorithm outputs $(c,s)$.
+    \end{enumerate}
+  \item
+    The verifier's algorithm $\verifier''(y,c,s,\ctx)$ works as follows:
+    \begin{enumerate}
+      \item
+        The algorithm recomputes the first message $t$ by running the appropriate steps of the simulator $\simulator$.
+      \item
+        The algorithm checks that $c=\hash(t,y,\ctx)$ and rejects if this is not the case. 
       \item
         It outputs whatever $\verifier(y,t,c,s)$ outputs.
     \end{enumerate}
