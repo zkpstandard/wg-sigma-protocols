@@ -425,14 +425,36 @@ $$
 
 
 
-\subsection{Achieving Non-Interactivity - The Fiat-Shamir Transform}
-
+\subsection{Achieving Non-Interactivity -- The Fiat-Shamir Transform}
+\begin{enumerate}
+  \item
+    The prover's algorithm $\prover'(y,w,\ctx)$ works as follows:
+    \begin{enumerate}
+      \item
+        The algorithm first computes $(t,\st)\getsr\prover_1(y,w)$.
+      \item
+        It computes the challenge by setting $c\gets\hash(t,y,\ctx)$.
+      \item
+        The algorithm defines $s\getsr\prover_2(y,w,c,\st)$.
+      \item
+        The algorithm outputs $(t,s)$.
+    \end{enumerate}
+  \item
+    The verifier's algorithm $\verifier'(y,t,s,\ctx)$ works as follows:
+    \begin{enumerate}
+      \item
+        It recomputes the challenge as $c\gets\hash(t,y,\ctx)$.
+      \item
+        It outputs whatever $\verifier(y,t,c,s)$ outputs.
+    \end{enumerate}
+\end{enumerate}
 
 \section{Security Considerations}
 
 Papers with the seucurity proofs + limitation
 \minote{mention simulation extractability? XXX}
 \minote{mention post-quantum security guarantees?}
+
 
 \section{Implementation}
 Implementations already there + APi design + representation + other subleties (check if a point is in the group etc.)
