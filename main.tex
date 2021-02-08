@@ -122,7 +122,7 @@ Following [BFS], we consider a deterministic parameter genration algorithm Pgen 
 
 In the following we formally describe the class of $\Sigma$-protocols, which cover all protocols considered in the remainder of this document.
  For an in-depth discussion of the underlying theory we refer, e.g., to Cramer~\cite{cramer97}.
-\begin{definition}
+\begin{definition}\label{def:sigma}
   Let $\relation$ be a binary relation and let $(y,w)\in\relation$.
   An interactive two-party protocol specified by algorithms $(\prover_1,\prover_2,\verifier)$ is called a \emph{$\Sigma$-protocol} for $\relation$ with challenge set $\CS$, public input $y$, and private input $w$, if and only if it satisfies the following conditions:
   \begin{description}
@@ -167,17 +167,25 @@ In the following we formally describe the class of $\Sigma$-protocols, which cov
 Note that $\Sigma$-protocols were originally introduced for the case $t=2$ only.
 However, we use the above generalized definition as certain practically relevant optimization techniques require $t>2$.
 
+A $\Sigma$-protocol is said to have \emph{unpredictable commitments} if the probability of generating a collision in the first message is negligible, i.e., if there is a negligible function $\negl$ such that for all $(y,w)\in\relation$ it holds that:
+$$
+  \Pr[t'=t'' : t'\getsr\prover_1(w,y), t''\getsr\prover_1(w,y)] \leq \negl\,.
+$$
+
+A $\Sigma$-protocol is furthermore said to have \emph{unique reponses} if it is infeasible to find two distinct valid responses for a given first message and fixed challenge, i.e., there exist no values $y,t,c,s',s''$ with $s'\ne s''$ such that $\verifier(y,t,c,s')=\verifier(y,t,c,s'')=\accept$.
+
+
 The concept of interactive proofs of knowledge was first mentioned by Goldreich et al.~\cite{STOC:GolMicRac85}, and was then refined by Feige et al.~\cite{STOC:FeiFiaSha87}.
 The definitions in the following are due to Bellare and Goldreich~\cite{C:BelGol92}.
 
 Intuitively, a proof system is sound, if it is not possible to make the verifier accept for statements for which no valid witness exists, cf. also~\cite[1.6.2]{zkproof-reference}.
-\begin{definition}
+\begin{definition}\label{def:soundness}
   Let $\relation$ be a binary relation, $\sigma:\NN\to[0,1]$ and let $\prover$ and $\verifier$ specify a probabilistic interactive protocol, where at least $\verifier$ is polynomial time.
   The protocol is called \emph{sound} with \emph{soundness error} $\sigma$, if for every $y\notin\lang(\relation)$, every $w\in\{0,1\}^*$, and every interactive algorithm $\prover^*$, the probability that $\prover^*$ makes $\verifier$ output $\accept$ on common input $y$ is bounded above by $\sigma(|y|)$. 
 \end{definition}
 
 Informally, an interactive protocol is a proof of knowledge, if every party that is able to make the verifier accept with sufficiently high probability needs to know a valid witness or would be able to compute such a witness, cf. also~\cite[1.6.3]{zkproof-reference}.
-\begin{definition}
+\begin{definition}\label{def:pok}
   Let $\relation$ be a binary relation, $\kappa:\NN\to[0,1]$ and let $\prover$ and $\verifier$ specify a probabilistic interactive protocol, where at least $\verifier$ is polynomial time.
   The protocol is then called a \emph{proof of knowledge} for $\relation$ with \emph{knowledge error} $\kappa$, if the folowing conditions are satisfied:
   \begin{description}
@@ -585,12 +593,41 @@ $$
 \end{enumerate}
 
 \section{Security Considerations}
-Sigma protocols hare honest-verifier zero-knowledge and special sound. The non-interactive variant (that is often discussed in practice) was shown secure by Pointcheval and Stern~\cite{JC:PoiSte00}
-Papers with the seucurity proofs + limitation
 \minote{mention simulation extractability? XXX}
 \minote{mention post-quantum security guarantees?}
 
+In the following, we give a concise overview of the most important security guarantees provided by the constructions presented above.
+In a nutshell, $\Sigma$-protocols are honest-verifier zero-knowledge proofs of knowledge, whose security guarantees are maintained under the Fiat-Shamir transform at least against classical attackers.
+For full details and proofs, we refer to the original literature.
+\begin{itemize}
+  \item
+    If $\prover_1,\prover_2,\verifier$ specify a $\Sigma$-protocol for $\relation$ according to Definition~\ref{def:sigma}, then they also specify an honest-verifier zero-knowledge proof of knowledge with soundness error $\sigma=1/m$ and knowledge error $\kappa=1/m$ for $\relation$.
 
+For formal proofs we refer, e.g., to Damg\r{a}rd~\cite{damgard04}.
+  \item
+    If a $\Sigma$-protocol is complete and has unpredictable commitments, then the Fiat-Shamir transform is {\bf complete}.
+
+    For a proof we refer to Unruh~\cite{AC:Unruh17}, which also gives a surprising counter-example in case that commitments are not unpredictable.
+  \item
+    If a $\Sigma$-protocol is honest-verifier zero-knowledge and has unpredictable commitments, then the Fiat-Shamir transform yields a {\bf zero-knowledge} protocol in the random oracle model.
+
+    For a proof we refer to Faust et al.~\cite{INDOCRYPT:FKMV12} and Unruh~\cite{AC:Unruh17}.
+  \item
+    If a $\Sigma$-protocol has a negligible soundness error, then the Fiat-Shamir transform is {\bf sound} according to Definition~\ref{def:soundness}.
+    This security guarantee also holds against quantum attackers.
+
+    For a proof we refer to Pointcheval and Stern~\cite{JC:PoiSte00} and Unruh~\cite{AC:Unruh17}. 
+  \item
+    If a $\Sigma$-protocol has a negligible soundness error, then the Fiat-Shamir transform is {\bf weakly simulation-sound} according to Definition~\ref{def:xxx}.
+    If the protocol additionally has unique responses, then the Fiat-Shamir transform is {\bf strongly simulation-sound} according to Definition~\ref{def:xxx}.
+    These security guarantees also holds against quantum attackers.
+
+    For a proof we refer to Unruh~\cite{AC:Unruh17} and Faust et al.~\cite{INDOCRYPT:FKMV12}. 
+  \item
+    If a $\Sigma$-protocol has a negligible soundness error, then the Fiat-Shamir transform is {\bf simulation-sound extractable} according to Definition~\ref{def:xxx}.
+
+    For a proof we refer to Bernhard et al.~\cite{AC:BerPerWar12}. 
+\end{itemize}
 \section{Implementation}
 Implementations available + selecting the ellptic curves + performance table + proof size.
 
