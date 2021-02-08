@@ -77,13 +77,13 @@ Non-intearctive sigma protocols are zero-knowledge~\cite{GolMicRac89} proofs of 
 They have been introduced by Schnorr~\cite{??} and so far have there have been widespread implementations because of their simplicity, maturity, and versatility.
 Recently, Lueks et al.~\cite{zksk},
 
-Sigma protocols have already been employed for anonymous credentials, password-authenticated key exchange~\cite{J-PAKE HR08}, (ring, multi)  signatues, and other
+Sigma protocols have already been employed for anonymous credentials, password-authenticated key exchange~\cite{jpake}, (ring, multi)  signatues, and other
 cryptographic constructions. Solely in the past XX years, we recall the
 \begin{itemize}
   \item DLEQ in some VOPRFs~\cite{cfrg-voprf}, Privacy pass
   \item AND+DLEQ anonymous credentials; (at least) AND+DLEQ: Signal~\cite{CCS:ChaPerZav20}, openings on Pedersen commitments, or plaintexts of ElGamal encryptions; DH tuple: Cryptography for \#metoo~\cite{PoPETS:KuyKraRab19}; Solidus~\cite{CCS:CZJKJS17}; ClaimChain~\cite{ClaimChain}
-  \item OR for Ring Signatures: CryptoNote (Monero)~\cite{monero}, Mesh~\cite{MeshPoPETS:AlTGon19};
-  \item Signal, who's been using Algebraic MACs~{CCS:ChaMeiZav14}; for group chats;
+  \item OR for Ring Signatures: CryptoNote (Monero)~\cite{monero}, Mesh~\cite{PoPETS:AlTGon19};
+  \item Signal, who's been using Algebraic MACs~\cite{CCS:ChaMeiZav14}; for group chats;
   \item Coconut~\cite{NDSS:SABMD19} with threshold Issuance Selective Disclosure Credentials with Applications to Distributed Ledgers;
    \item Anonymous Credentials Light
 \end{itemize}
@@ -97,16 +97,17 @@ A request for standardization has already been posted on the zk-proof community\
 So far, there has been little literature meant to help cryptography engineers implement correctly Sigma protocols for arbitrary statements about discrete logs.
 Despite Schnorr signatures and zero-knowledge proofs have already been standardized (respectively in XX and XX), there is no formal, established way to implement sigma protocols and their composition. We stress that this is not straightforward:
 %Despite Schnorr proofs have been standardized as zero-knowledge proofs (c.f.\ \href{https://tools.ietf.org/html/rfc8235}{RFC8235}) and signatures (c.f.\ ed25519 in \href{https://tools.ietf.org/html/rfc8032}{RFC8032}),
- for instance, the current standardized ed25519 cannot be immediately adapted to a zero-knowledge proof in a secure way, because of its malleability~\cite[p. 7]{JCEng:BDLSY1},  and the different behavior on the batched and compressed form\footnote{\url{https://hdevalence.ca/blog/2020-10-04-its-25519am}}.
+ for instance, the current standardized ed25519 cannot be immediately adapted to a zero-knowledge proof in a secure way, because of its malleability~\cite[p. 7]{JC:BDLSY1},  and the different behavior on the batched and compressed form\footnote{\url{https://hdevalence.ca/blog/2020-10-04-its-25519am}}.
  Additionally, as academic papers focus on proving the security of sigma protocols in generic prime-order groups, the implementation details are often times overlooked, and, as a result, a lot of insecure implementations have been published in the past. To name a few, well-known pitfalls that have led to insecure implementations:
 \begin{itemize}
+  \item \textbf{Implementation over non-prime order groups could lead to small subgroup attacks}. The cyclic group where proofs are being implemented must be carefully selected. Implementing sigma protocol over Wirstrass curves is appealing for its performances and no general formulas. However, the presence of a small cofactor could be fatal for security. For instance, in 2017, Monero\footnote{\url{https://www.getmonero.org/2017/05/17/disclosure-of-a-major-bug-in-cryptonote-based-currencies.html}} disclosed a vulnerability in Cryptonote-based e-currencies that would allow double-spending.\href{https://tools.ietf.org/html/rfc2785#ref-LAW}{RFC2785}, that already provides solutions for avoiding small subgroup attacks)
+  \item \textbf{Leakage, partial leakage, or reuse of the commitment is fatal.}
+  The first message in a sigma protocol, sometimes called nonce or commitment, must be uniformly distributed in order to preserve zero-knowledge. Re-use of the same nonce~\cite{XX}, or partial leakage allows for the complete recovery of the witness to be proven.
+  A blatant example of this mistake in the wild was uncovered in 2010, by the hacker group \texttt{fail0verflow}. They showed how SONY was reusing the same nonce for digitally signing Playstation 3 games\footnote{\url{https://media.ccc.de/v/27c3-4087-en-console_hacking_2010}}.  The member could exploit this to calculate the private key, and create valid signatures.
 
-\item \textbf{Implementation over non-prime order groups could lead to small subgroup attacks}. In 2017, Monero\footnote{\url{https://www.getmonero.org/2017/05/17/disclosure-of-a-major-bug-in-cryptonote-based-currencies.html}} disclosed a vulnerability in Cryptonote-based e-currencies that would allow double-spending.\href{https://tools.ietf.org/html/rfc2785#ref-LAW}{RFC2785}, that already provides solutions for avoiding small subgroup attacks)
-\item \textbf{Leakage, partial leakage, or reuse of the commitment is fatal.}
-In 2010, the hacker group \texttt{fail0verflow} showed that SONY was reusing the same nonce for digitally signing Playstation 3 games\footnote{\url{https://media.ccc.de/v/27c3-4087-en-console_hacking_2010}}. The member could exploit this to calculate the private key, and create valid signatures.
-\minote{this was on ecdsa}
-\item \textbf{A weak impelmentation of Fiat--Shamir heuristic compromises adaptive security.} In 2016, Bernhard et al.~\cite{??} demonstrated how Helios, a platform for e-voting, calculated the challenge using the Fiat--Shamir heuristic, without including the generator, allowing for tampering of votes.
-
+  \item \textbf{A weak impelmentation of Fiat--Shamir heuristic compromises adaptive security.} The second message in a sigma protocol, sometimes called \emph{challenge}, if computed non-interactives must include non only the commitment, but the full statement and the group description. In fact, if the group generator $G$ is not included in the (EC-DSA) signature, then it is possible to prove statement under a different generator $\alpha G$, for any $\alpha \in \ZZ_p$; if $X \in \GG$, part of the statement, is not included in the query to the random oracle, it is possible to compute proofs for $\beta X$, for any $\beta \in \ZZ_p$.
+  A mistake of this type was uncovered in 2016, by Bernhard et al.~\cite{??}.
+  They demonstrated that Helios, a platform for e-voting, calculated the challenge using the Fiat--Shamir heuristic, without including the generator, allowing for tampering of votes.
 
 \end{itemize}
 
@@ -529,6 +530,6 @@ For this reason, we propose the generation of a synthetic nonce obtained from ha
 \minote{delayed input}
 \minote{batching proofs}
 \bibliographystyle{splncs04}
-\bibliography{cryptobib/abbrev3,cryptobib/crypto}
+\bibliography{cryptobib/abbrev3,cryptobib/crypto,additional}
 %
 \end{document}
