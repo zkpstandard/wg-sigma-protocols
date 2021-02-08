@@ -163,7 +163,7 @@ Following [BFS], we consider a deterministic parameter genration algorithm Pgen 
 
 \section{Constructions for $\Sigma$-Protocols}
 \subsection{Basic $\Sigma$-Protocols in Prime-Order Groups}
-A basic $\Sigma$-protocol for the relation $\relation=\{(y,w) : y=\varphi(w)\}$ for a group homomorphism $\varphi:\GG\to\HH$ is given by the following algorithms:
+A basic $\Sigma$-protocol for the relation $\relation=\{(y,w) : y=\varphi(w)\}$ for a group homomorphism $\varphi:\ZZ_p\to\GG$ is given by the following algorithms:
 
 \begin{enumerate}
   \item
@@ -190,7 +190,7 @@ A basic $\Sigma$-protocol for the relation $\relation=\{(y,w) : y=\varphi(w)\}$ 
     The verifier's algorithm $\verifier(y,t,c,s)$ proceeds as follow:
     \begin{enumerate}
       \item
-        It checks that $s\in\GG$ and $t\in\HH$, and outputs $0$ if this is not the case.
+        It checks that $s\in\GG$ and $t\in\GG$, and outputs $0$ if this is not the case.
       \item
 	It checks whether $t + cy = \varphi(s)$, and outputs $1$ if this is the case; otherwise, $\verifier$ outputs $0$.
     \end{enumerate}
@@ -208,25 +208,25 @@ A basic $\Sigma$-protocol for the relation $\relation=\{(y,w) : y=\varphi(w)\}$ 
 
 
 \begin{theorem}
-  If $\HH$ is a cyclic group of prime order $q$, $\varphi:\GG\to\HH$ is a group homomorphism, and $m\leq q$, then the above protocol is a $\Sigma$-protocol with simulator $\simulator$.
+  If $\GG$ is a cyclic group of prime order $p$, $\varphi:\ZZ_p\to\GG$ is a group homomorphism, and $m\leq q$, then the above protocol is a $\Sigma$-protocol with simulator $\simulator$.
 \end{theorem}
 
 \paragraph{Example 1 (DLOG).}
-Let $\HH$ be a group over an elliptic curve with prime order $q$.
-Proving knowledge of the discrete logarithm $w$ of a point $Y$ in base $G$ means proving knowledge of $w\in\ZZ_q$ such that $Y=wG$.
+Let $\GG$ be a group over an elliptic curve with prime order $p$.
+Proving knowledge of the discrete logarithm $w$ of a point $Y$ in base $G$ means proving knowledge of $w\in\ZZ_p$ such that $Y=wG$.
 
-Using the above notation, we have $\varphi:\ZZ_q\to\HH:x\mapsto xG$.
+Using the above notation, we have $\varphi:\ZZ_p\to\GG:x\mapsto xG$.
 The protocol flow is then as depicted in Protocol~\ref{fig:dlog}.
     \begin{protocol}{Proving knowledge of a discrete logarithm.\\[-2.25em]}{fig:dlog}{h!}
       \begin{tabular}{@{}l@{\hspace{2em}}c@{\hspace{-3em}}r@{}}
         $\prover[w,Y,G]$ & & $\verifier[Y,G]$  \\
         \hline  \\
       % -----------------------------P1-------------------------------
-        $ r\getsr\ZZ_q$ & &\\
+        $ r\getsr\ZZ_p$ & &\\
         $ T = rG$ & & \\
         & $\sendr{T}{100}$ \\[2 ex]
       % -----------------------------CHALLENGE-------------------------------
-        & & $c \getsr \ZZ_q$ \\
+        & & $c \getsr \ZZ_p$ \\
         & $\sendl{c}{100}$ & \\[2 ex]
       % -----------------------------P2-------------------------------
         $ s \gets r + cw$\\
@@ -237,27 +237,27 @@ The protocol flow is then as depicted in Protocol~\ref{fig:dlog}.
       \end{tabular}
     \end{protocol}
 
-For a given challenge $c\in\ZZ_q$, the simulator chooses $s\getsr\ZZ_q$, and sets $T\gets sG-cY$.
+For a given challenge $c\in\ZZ_p$, the simulator chooses $s\getsr\ZZ_p$, and sets $T\gets sG-cY$.
 It then outputs the simulated transcript $(T,c,s)$.
 
 
 \paragraph{Example 2 (DLEQ).}
-Let $\HH$ be a group over an elliptic curve with prime order $q$.
-Proving equality of the known discrete logarithm $w$ of $Y$ in base $G$ and $Z$ in base $H$ means proving knowledge of $w\in\ZZ_q$ such that $Y=wG$ and $Z=wH$.
+Let $\GG$ be a group over an elliptic curve with prime order $p$.
+Proving equality of the known discrete logarithm $w$ of $Y$ in base $G$ and $Z$ in base $H$ means proving knowledge of $w\in\ZZ_p$ such that $Y=wG$ and $Z=wH$.
 
-Using the above notation, we have $\varphi:\ZZ_q\to\HH\times\HH:x\mapsto (xG,xH)$.
+Using the above notation, we have $\varphi:\ZZ_p\to\GG\times\GG:x\mapsto (xG,xH)$.
 The protocol flow is then as depicted in Protocol~\ref{fig:dleq}.
     \begin{protocol}{Proving knowledge of equality of two discrete logarithms.\\[-2.25em]}{fig:dleq}{h!}
       \begin{tabular}{@{}l@{\hspace{2em}}c@{\hspace{-3em}}r@{}}
         $\prover[w,(Y,Z),(G,H)]$ & & $\verifier[(Y,Z),(G,H)]$  \\
         \hline  \\
       % -----------------------------P1-------------------------------
-        $ r\getsr\ZZ_q$ & &\\
+        $ r\getsr\ZZ_p$ & &\\
         $ T = rG$ & & \\
         $ U = rH$ & & \\
         & $\sendr{T,U}{100}$ \\[2 ex]
       % -----------------------------CHALLENGE-------------------------------
-        & & $c \getsr \ZZ_q$ \\
+        & & $c \getsr \ZZ_p$ \\
         & $\sendl{c}{100}$ & \\[2 ex]
       % -----------------------------P2-------------------------------
         $ s \gets r + cw$\\
@@ -269,27 +269,27 @@ The protocol flow is then as depicted in Protocol~\ref{fig:dleq}.
       \end{tabular}
     \end{protocol}
 
-For a given challenge $c\in\ZZ_q$, the simulator chooses $s\getsr\ZZ_q$, and sets $T\gets sG-cY$ and $U\gets sH - cZ$.
+For a given challenge $c\in\ZZ_p$, the simulator chooses $s\getsr\ZZ_p$, and sets $T\gets sG-cY$ and $U\gets sH - cZ$.
 It then outputs the simulated transcript $((T,U),c,s)$.
 
 
 \paragraph{Example 3 (REP).}
-Let $\HH$ be a group over an elliptic curve with prime order $q$.
-Proving knowledge of a valid opening of a Pedersen commitment means proving knowledge of $v,w\in\ZZ_q$ such that $Y=vG + wH$.
+Let $\GG$ be a group over an elliptic curve with prime order $p$.
+Proving knowledge of a valid opening of a Pedersen commitment means proving knowledge of $v,w\in\ZZ_p$ such that $Y=vG + wH$.
 
-Using the above notation, we have $\varphi:\ZZ_q\times\ZZ_q\to\HH:(x,y)\mapsto xG + yH$.
+Using the above notation, we have $\varphi:\ZZ_p\times\ZZ_p\to\GG:(x,y)\mapsto xG + yH$.
 The protocol flow is then as depicted in Protocol~\ref{fig:rep}.
     \begin{protocol}{Proving knowledge of representation.\\[-2.25em]}{fig:rep}{h!}
       \begin{tabular}{@{}l@{\hspace{2em}}c@{\hspace{-3em}}r@{}}
         $\prover[(v,w),Y,(G,H)]$ & & $\verifier[Y,(G,H)]$  \\
         \hline  \\
       % -----------------------------P1-------------------------------
-        $ r\getsr\ZZ_q$ & &\\
-        $ u\getsr\ZZ_q$ & &\\
+        $ r\getsr\ZZ_p$ & &\\
+        $ u\getsr\ZZ_p$ & &\\
         $ T = rG + uH$ & & \\
         & $\sendr{T}{100}$ \\[2 ex]
       % -----------------------------CHALLENGE-------------------------------
-        & & $c \getsr \ZZ_q$ \\
+        & & $c \getsr \ZZ_p$ \\
         & $\sendl{c}{100}$ & \\[2 ex]
       % -----------------------------P2-------------------------------
         $ s \gets r + cv$\\
@@ -301,7 +301,7 @@ The protocol flow is then as depicted in Protocol~\ref{fig:rep}.
       \end{tabular}
     \end{protocol}
 
-For a given challenge $c\in\ZZ_q$, the simulator chooses $s,z\getsr\ZZ_q$, and sets $T\gets sG + zH -cY$.
+For a given challenge $c\in\ZZ_p$, the simulator chooses $s,z\getsr\ZZ_p$, and sets $T\gets sG + zH -cY$.
 It then outputs the simulated transcript $(T,c,(s,z))$.
 
 
