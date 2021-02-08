@@ -273,11 +273,42 @@ It then outputs the simulated transcript $(T,c,s)$.
 
 \paragraph{Example 2 (DLEQ).}
 Let $\GG$ be a group over an elliptic curve with prime order $p$.
-Proving equality of the known discrete logarithm $w$ of $Y_1$ in base $G$ and $Y_2$ in base $H$ means proving knowledge of $w\in\ZZ_p$ such that $Y_1=wG$ and $Y_2=wH$.
+Proving equality of the known discrete logarithm $w$ of $Y_1$ in base $G$ and $Y_2$ in base $H$ means proving knowledge of $(w_1,w_2)\in\ZZ_p$ such that $Y_1=w_1G$ and $Y_2=w_2H$, and $w_1=w_2$.
 
-Using the above notation, we have $\varphi:\ZZ_p\to\GG\times\GG:x\mapsto (xG,xH)$.
+Using the above notation, we have $\varphi:\ZZ_p\to\GG\times\GG:(x_1,x_2)\mapsto (x_1G,x_2H)$.
+The linear system of equations $A(w_1,w_2)=(b_1,b_2)$ is given by $w_1-w_2=0$.
 The protocol flow is then as depicted in Protocol~\ref{fig:dleq}.
     \begin{protocol}{Proving knowledge of equality of two discrete logarithms.\\[-2.25em]}{fig:dleq}{h!}
+      \begin{tabular}{@{}l@{\hspace{-4em}}c@{\hspace{-3em}}r@{}}
+        $\prover[(w_1,w_2),(Y_1,Y_2),(G,H)]$ & & $\verifier[(Y_1,Y_2),(G,H)]$  \\
+        \hline  \\
+      % -----------------------------P1-------------------------------
+        $ r_1,r_2\getsr\ZZ_p$ such that $r_1-r_2=0$ & &\\
+        $ T_1 = r_1G$ & & \\
+        $ T_2 = r_2H$ & & \\
+        & $\sendr{T_1,T_2}{100}$ \\[2 ex]
+      % -----------------------------CHALLENGE-------------------------------
+        & & $c \getsr \ZZ_p$ \\
+        & $\sendl{c}{100}$ & \\[2 ex]
+      % -----------------------------P2-------------------------------
+        $ s_1 \gets r_1 + cw_1$\\
+        $ s_2 \gets r_2 + cw_2$\\
+        & $\sendr{s_1,s_2}{100}$ \\[2 ex]
+      % -----------------------------V-------------------------------
+        & & Return $1$ if and only if \\
+        & & $T_1 + cY_1 = s_1G$ \\
+        & & $T_2 + cY_2 = s_2H$ \\
+        & & and $s_1-s_2=0$.
+      \end{tabular}
+    \end{protocol}
+
+For a given challenge $c\in\ZZ_p$, the simulator chooses $s_1,s_2\getsr\ZZ_p$ such that $s_1-s_2=0$, and sets $T_1\gets s_1G-cY_1$ and $T_2\gets s_2H - cY_2$.
+It then outputs the simulated transcript $((T_1,T_2),c,(s_1,s_2))$.
+
+\paragraph{Example 3 (DLEQ; alternative).}
+The same proofgoal as in the previous example can also be achieved by considering a slightly different homomorphism which directly encodes the linear relation, that is $\varphi:\ZZ_p\to\GG\times\GG:x\mapsto (xG,xH)$.
+The protocol flow is then as depicted in Protocol~\ref{fig:dleq_2}.
+    \begin{protocol}{Proving knowledge of equality of two discrete logarithms.\\[-2.25em]}{fig:dleq_2}{h!}
       \begin{tabular}{@{}l@{\hspace{2em}}c@{\hspace{-3em}}r@{}}
         $\prover[w,(Y_1,Y_2),(G,H)]$ & & $\verifier[(Y_1,Y_2),(G,H)]$  \\
         \hline  \\
@@ -295,15 +326,14 @@ The protocol flow is then as depicted in Protocol~\ref{fig:dleq}.
       % -----------------------------V-------------------------------
         & & Return $1$ if and only if \\
         & & $T_1 + cY_1 = sG$ \\
-        & & and $T_2 + cY_2 = sH$\\
+        & & and $T_2 + cY_2 = sH$. \\
       \end{tabular}
     \end{protocol}
 
 For a given challenge $c\in\ZZ_p$, the simulator chooses $s\getsr\ZZ_p$, and sets $T_1\gets sG-cY_1$ and $T_2\gets sH - cY_2$.
 It then outputs the simulated transcript $((T_1,T_2),c,s)$.
 
-
-\paragraph{Example 3 (REP).}
+\paragraph{Example 4 (REP).}
 Let $\GG$ be a group over an elliptic curve with prime order $p$.
 Proving knowledge of a valid opening of a Pedersen commitment means proving knowledge of $w_1,w_2\in\ZZ_p$ such that $Y=w_1G + w_2H$.
 
