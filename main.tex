@@ -163,13 +163,15 @@ Following [BFS], we consider a deterministic parameter genration algorithm Pgen 
 
 \section{Constructions for $\Sigma$-Protocols}
 \subsection{Basic $\Sigma$-Protocols in Prime-Order Groups}
-A basic $\Sigma$-protocol for the relation $\relation=\{((y_1,\dots,y_m),(w_1,\dots,w_n)) : (y_1,\dots,y_m)=\varphi(w_1,\dots,w_n)\}$ for a group homomorphism $\varphi:\ZZ_p^n\to\GG^m$ is given by the following algorithms:
+A basic $\Sigma$-protocol for the relation 
+$$\relation=\{((y_1,\dots,y_m),(w_1,\dots,w_n)) : (y_1,\dots,y_m)=\varphi(w_1,\dots,w_n)\}$$
+ for a group homomorphism $\varphi:\ZZ_p^n\to\GG^m$ is given by the following algorithms:
 
 \begin{enumerate}
-  \item
+  \item\label{item:basic:p1}
     The prover's first algorithm $\prover_1(w,y)$ consists of the following steps:
     \begin{enumerate}
-      \item
+      \item\label{item:basic:p1:randomness}
         It chooses a random element $r_1,\dots,r_n\getsr\GG$.
       \item
         It then computes $(t_1,\dots,t_m)\gets\varphi(r_1,\dots,r_n)$.
@@ -178,7 +180,7 @@ A basic $\Sigma$-protocol for the relation $\relation=\{((y_1,\dots,y_m),(w_1,\d
       \item
         It finally outputs outputs $(t,\st)$.
     \end{enumerate}
-  \item
+  \item\label{item:basic:p2}
     The prover's second algorithm $\prover_2(w,y,c,\st)$ proceeds as follows:
     \begin{enumerate}
       \item
@@ -188,17 +190,17 @@ A basic $\Sigma$-protocol for the relation $\relation=\{((y_1,\dots,y_m),(w_1,\d
       \item
         It computes its output as $s_i\gets r_i+cw_i$ for $i=1,\dots,n$.
     \end{enumerate}
-  \item
+  \item\label{item:basic:v}
     The verifier's algorithm $\verifier(y,t,c,s)$ proceeds as follow:
     \begin{enumerate}
       \item
         It parses $y=(y_1,\dots,y_m)$, $t=(t_1,\dots,t_m)$, and $s=(s_1,\dots,s_n)$.
-      \item
+      \item\label{item:basic:v:checks}
         It checks that $s_i\in\ZZ_p$ for $i=1,\dots,n$ and $t_j\in\GG$ for $j=1,\dots,m$, and outputs $0$ if this is not the case.
       \item
-	It checks whether $(t_1 + cy_1,\dots,t_m + cy_m) = \varphi(s_1,\dots,s_n)$, and outputs $1$ if this is the case; otherwise, $\verifier$ outputs $0$.
+	It checks whether $(t_1 + cy_1,\dots,t_m + cy_m) = \varphi(s_1,\dots,s_n)$, and outputs $1$ if this is the case; otherwise, $\verifier$ outputs $\reject$.
     \end{enumerate}
-  \item
+  \item\label{item:basic:sim}
     The required simulator $\simulator(y,c)$ for a basic $\Sigma$-protocol works as follows:
     \begin{enumerate}
       \item
@@ -215,6 +217,25 @@ A basic $\Sigma$-protocol for the relation $\relation=\{((y_1,\dots,y_m),(w_1,\d
 \begin{theorem}
   If $\GG$ is a cyclic group of prime order $p$, $\varphi:\ZZ_p\to\GG$ is a group homomorphism, and $m\leq q$, then the above protocol is a $\Sigma$-protocol with simulator $\simulator$.
 \end{theorem}
+
+\subsubsection{Proving linear relations among witnesses}
+
+  While the above protocol allows one to efficiently prove knowledge of a preimage under a homomorphism, many protocols found in the literature require one to prove relations among witnesses.
+  Specifically, they require to prove relations like the following:
+\begin{align*}
+\relation=\{((y_1,\dots,y_m),(w_1,\dots,w_n)) :& (y_1,\dots,y_m)=\varphi(w_1,\dots,w_n) \\
+                                               & A(w_1,\dots,w_n) = (b_1,\dots,b_k)\}\,,
+\end{align*}
+where the matrix $A\in\ZZ_q^{k\times n}$ and vector $(b_1,\dots,b_k)\in\ZZ_p^k$ specify the system of linear equations.
+
+Proving such a relation can easily by achieved by modifying the above protocol as follows:
+\begin{itemize}
+  \item
+    In step \ref{item:basic:p1:randomness}, the prover draws the randomnesses such that they satisfy the system of equations, i.e., such that $A(r_1,\dots,r_n)=(b_1,\dots,b_k)$.
+  \item
+    In step \ref{item:basic:v:checks}, the verifier additionally checks that $A(s_1,\dots,s_n)=(c+1)(b_1,\dots,b_k)$ and outputs $\reject$ if this is not the case.
+\end{itemize}
+
 
 
 
