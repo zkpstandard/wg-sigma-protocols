@@ -18,16 +18,6 @@ There is already an RFC about non-interactive schnorr proofs, but the API is ins
 - stable and old
 - list of examples
 - inspired other cryptographic primitives
-    - J-PAKE [[HR08]]
-    - Anonymous Credentials
-     - [Signal](https://eprint.iacr.org/2019/1416), who's been using [Algebraic MACs](https://smeiklej.com/files/ccs14.pdf) for group chats;
-     - [Coconut: Threshold Issuance Selective Disclosure Credentials with Applications to Distributed Ledgers](https://arxiv.org/abs/1802.07344)
-     - Anonymous Credentials Light
--  Already supported by a plethora of works for the cases that we envisaged:
-   - Schnorr proofs [[RFC8235](https://tools.ietf.org/html/rfc8235)];
-   -  DLEQ in some VOPRFs: [[ietf-voprf-draft](https://tools.ietf.org/pdf/draft-sullivan-cfrg-voprf-03.pdf)], [[ietf-privacypass-draft](https://tools.ietf.org/html/draft-privacy-pass-00)];
-   -  AND+DLEQ anonymous credentials; (at least) AND+DLEQ: [Signal](https://eprint.iacr.org/2019/1416), openings on Pedersen commitments, or plaintexts of ElGamal encryptions; DH tuple: [Cryptography for #metoo](https://petsymposium.org/2019/files/papers/issue3/popets-2019-0054.pdf); [Solidus:Confidential Distributed Ledger Transactions via PVORM](https://eprint.iacr.org/2017/317.pdf); [ClaimChain: Improving the Security and Privacy ofIn-band Key Distribution for Messaging](https://arxiv.org/abs/1707.06279)
-   -  OR for Ring Signatures: [CryptoNote](https://cryptonote.org/inside/)'s ring signature, [Mesh: A Supply Chain Solution with Locally Private Blockchain Transactions](https://content.sciendo.com/view/journals/popets/2019/3/article-p149.xml);
 
 
 ## Implementation

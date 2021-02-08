@@ -67,38 +67,52 @@
 \maketitle              % typeset the header of the contribution
 %
 \begin{abstract}
-  We propose a standardization document for sigma protocols in prime order groups, allowing for AND and OR composition, either in compact form (challenge, response) or batchable (commitment, response). We propose a selection of elliptic curves and hash functions suitable for implementations, together with a minimal API that should be consistent across implementations.
-  \minote{Add non-interactive}
+  We submit a proposal for the standardization of non-interactive sigma protocols in prime order groups, allowing for AND and OR composition, either in compact form (challenge, response) or batchable (commitment, response). We propose a selection of elliptic curves and hash functions suitable for implementations, together with a minimal API that should be consistent across implementations.
 
-\keywords{First keyword  \and Second keyword \and Another keyword.}
+%\keywords{First keyword  \and Second keyword \and Another keyword.}
 \end{abstract}
 
 \section{Introduction}
+Non-intearctive sigma protocols are zero-knowledge~\cite{GolMicRac89} proofs of knowledge~\cite{XX} without SRS, proven secure in the random oracle model.
+They have been introduced by Schnorr~\cite{??} and so far have there have been widespread implementations because of their simplicity, maturity, and versatility.
+Recently, Lueks et al.~\cite{zksk},
 
-Sigma protocols are simple, mature, and powerful zero-knowledge proof systems.
-This problem ahs already been posted on the zk-proof community\footnote{\url{https://community.zkproof.org/t/standardizing-sigma-protocols/471/}} and received a fair amount of interest.
+Sigma protocols have already been employed for anonymous credentials, password-authenticated key exchange~\cite{J-PAKE HR08}, (ring, multi)  signatues, and other
+cryptographic constructions. Solely in the past XX years, we recall the
+\begin{itemize}
+  \item DLEQ in some VOPRFs~\cite{cfrg-voprf}, Privacy pass
+  \item AND+DLEQ anonymous credentials; (at least) AND+DLEQ: Signal~\cite{CCS:ChaPerZav20}, openings on Pedersen commitments, or plaintexts of ElGamal encryptions; DH tuple: Cryptography for \#metoo~\cite{PoPETS:KuyKraRab19}; Solidus~\cite{CCS:CZJKJS17}; ClaimChain~\cite{ClaimChain}
+  \item OR for Ring Signatures: CryptoNote (Monero)~\cite{monero}, Mesh~\cite{MeshPoPETS:AlTGon19};
+  \item Signal, who's been using Algebraic MACs~{CCS:ChaMeiZav14}; for group chats;
+  \item Coconut~\cite{NDSS:SABMD19} with threshold Issuance Selective Disclosure Credentials with Applications to Distributed Ledgers;
+   \item Anonymous Credentials Light
+\end{itemize}
+
+A request for standardization has already been posted on the zk-proof community\footnote{\url{https://community.zkproof.org/t/standardizing-sigma-protocols/471/}} and received a fair amount of interest.
 
 \subsection{Related Work}
 
 \section{Background and Motivation}
 \label{sec:motivation}
-So far, there has been little literature meant to help cryptography engineers implement correctly Sigma protocols.
-Despite Schnorr proofs have been standardized as zero-knowledge proofs (c.f.\ \href{https://tools.ietf.org/html/rfc8235}{RFC8235}) and signatures (c.f.\ ed25519 in \href{https://tools.ietf.org/html/rfc8032}{RFC8032}),
-%a
- it is not yet clear what is the correct way to implement a Sigma protocol for a logical statement on the discrete logarithm of a $n$ group elements.
- \minote{reformulate? say something "on the other hand?"}
- For instance, the current standardized ed25519 cannot be trivially adapted to a zero-knowledge proof in a secure way, because of its malleability~\cite[p. 7]{JCEng:BDLSY1},  and the different behavior on the batched and compressed form\footnote{\url{https://hdevalence.ca/blog/2020-10-04-its-25519am}}.
-As academic papers focus on proving the security of sigma protocols in generic prime-order groups, the implementation details are often times overlooked in academic papers and, as a result, a lot of insecure implementations have been published in the past. To name a few examples:
+So far, there has been little literature meant to help cryptography engineers implement correctly Sigma protocols for arbitrary statements about discrete logs.
+Despite Schnorr signatures and zero-knowledge proofs have already been standardized (respectively in XX and XX), there is no formal, established way to implement sigma protocols and their composition. We stress that this is not straightforward:
+%Despite Schnorr proofs have been standardized as zero-knowledge proofs (c.f.\ \href{https://tools.ietf.org/html/rfc8235}{RFC8235}) and signatures (c.f.\ ed25519 in \href{https://tools.ietf.org/html/rfc8032}{RFC8032}),
+ for instance, the current standardized ed25519 cannot be immediately adapted to a zero-knowledge proof in a secure way, because of its malleability~\cite[p. 7]{JCEng:BDLSY1},  and the different behavior on the batched and compressed form\footnote{\url{https://hdevalence.ca/blog/2020-10-04-its-25519am}}.
+ Additionally, as academic papers focus on proving the security of sigma protocols in generic prime-order groups, the implementation details are often times overlooked, and, as a result, a lot of insecure implementations have been published in the past. To name a few, well-known pitfalls that have led to insecure implementations:
 \begin{itemize}
-\item \textbf{Leakage, partial leakage, or reuse of the nonce is fatal.}
+
+\item \textbf{Implementation over non-prime order groups could lead to small subgroup attacks}. In 2017, Monero\footnote{\url{https://www.getmonero.org/2017/05/17/disclosure-of-a-major-bug-in-cryptonote-based-currencies.html}} disclosed a vulnerability in Cryptonote-based e-currencies that would allow double-spending.\href{https://tools.ietf.org/html/rfc2785#ref-LAW}{RFC2785}, that already provides solutions for avoiding small subgroup attacks)
+\item \textbf{Leakage, partial leakage, or reuse of the commitment is fatal.}
 In 2010, the hacker group \texttt{fail0verflow} showed that SONY was reusing the same nonce for digitally signing Playstation 3 games\footnote{\url{https://media.ccc.de/v/27c3-4087-en-console_hacking_2010}}. The member could exploit this to calculate the private key, and create valid signatures.
 \minote{this was on ecdsa}
 \item \textbf{A weak impelmentation of Fiat--Shamir heuristic compromises adaptive security.} In 2016, Bernhard et al.~\cite{??} demonstrated how Helios, a platform for e-voting, calculated the challenge using the Fiat--Shamir heuristic, without including the generator, allowing for tampering of votes.
 
-\item \textbf{Implementation over non-prime order groups could lead to small subgroup attacks}. In 2017, Monero\footnote{\url{https://www.getmonero.org/2017/05/17/disclosure-of-a-major-bug-in-cryptonote-based-currencies.html}} disclosed a vulnerability in Cryptonote-based e-currencies that would allow double-spending.\href{https://tools.ietf.org/html/rfc2785#ref-LAW}{RFC2785}, that already provides solutions for avoiding small subgroup attacks),
+
 \end{itemize}
 
 \section{Notation and Terminology}
+
+Following [BFS], we consider a deterministic parameter genration algorithm Pgen that returns a group description $\Gamma \defeq (p, G, \GG)$ of a (cyclic) additive, prime order group $\GG = \langle G \rangle$ of order $p$. With $\secpar$, we denote the security parameter.
 
 \subsection{$\Sigma$-Protocols}
     \begin{protocol}{Generic flow of a $\Sigma$-protocol\\[-2.25em]}{fig:generic}{t!}
@@ -119,11 +133,12 @@ In 2010, the hacker group \texttt{fail0verflow} showed that SONY was reusing the
       \end{tabular}
     \end{protocol}
 
+    \minote{Put a reference to section 1.4.1 of the community reference document, they'll love it!}
 \begin{definition}
   Let $\relation$ be a binary relation and let $(y,w)\in\relation$.
   An interactive two-party protocol specified by algorithms $(\prover_1,\prover_2,\verifier)$ is called a \emph{$\Sigma$-protocol} for $\relation$ with challenge set $\CS$, public input $y$, and private input $w$, if and only if it satisfies the following conditions:
   \begin{description}
-    \item[\bf 3-move form:] 
+    \item[\bf 3-move form:]
       The protocol is of the following form (cf. also Protocol~\ref{fig:generic}):
       \begin{itemize}
         \item
@@ -201,7 +216,7 @@ Proving knowledge of the discrete logarithm $w$ of a point $Y$ in base $G$ means
 
 Using the above notation, we have $\varphi:\ZZ_q\to\HH:x\mapsto xG$.
 The protocol flow is then as depicted in Protocol~\ref{fig:dlog}.
-    \begin{protocol}{Proving knowledge of a discrete logarithm\\[-2.25em]}{fig:dlog}{h!}
+    \begin{protocol}{Proving knowledge of a discrete logarithm.\\[-2.25em]}{fig:dlog}{h!}
       \begin{tabular}{@{}l@{\hspace{2em}}c@{\hspace{-3em}}r@{}}
         $\prover[w,Y,G]$ & & $\verifier[Y,G]$  \\
         \hline  \\
@@ -231,7 +246,7 @@ Proving equality of the known discrete logarithm $w$ of $Y$ in base $G$ and $Z$ 
 
 Using the above notation, we have $\varphi:\ZZ_q\to\HH\times\HH:x\mapsto (xG,xH)$.
 The protocol flow is then as depicted in Protocol~\ref{fig:dleq}.
-    \begin{protocol}{Proving knowledge of equality of two discrete logarithms\\[-2.25em]}{fig:dleq}{h!}
+    \begin{protocol}{Proving knowledge of equality of two discrete logarithms.\\[-2.25em]}{fig:dleq}{h!}
       \begin{tabular}{@{}l@{\hspace{2em}}c@{\hspace{-3em}}r@{}}
         $\prover[w,(Y,Z),(G,H)]$ & & $\verifier[(Y,Z),(G,H)]$  \\
         \hline  \\
@@ -263,7 +278,7 @@ Proving knowledge of a valid opening of a Pedersen commitment means proving know
 
 Using the above notation, we have $\varphi:\ZZ_q\times\ZZ_q\to\HH:(x,y)\mapsto xG + yH$.
 The protocol flow is then as depicted in Protocol~\ref{fig:rep}.
-    \begin{protocol}{Proving knowledge of representation\\[-2.25em]}{fig:rep}{h!}
+    \begin{protocol}{Proving knowledge of representation.\\[-2.25em]}{fig:rep}{h!}
       \begin{tabular}{@{}l@{\hspace{2em}}c@{\hspace{-3em}}r@{}}
         $\prover[(v,w),Y,(G,H)]$ & & $\verifier[Y,(G,H)]$  \\
         \hline  \\
@@ -307,7 +322,7 @@ It then outputs the simulated transcript $(T,c,(s,z))$.
 $$
   \relation^\land = \left\{ ((y^0,y^1),(w^0,w^1) : (y^0,w^0)\in \relation^0 ~\land~ (y^1,w^1)\in\relation^1\right\}\,.
 $$
-  
+
 
 \begin{enumerate}
   \item
@@ -399,7 +414,7 @@ $$
     \begin{enumerate}
       \item
         It  parses $s=(s^0,s^1,c^0)$.
-      \item 
+      \item
         It sets $c^1\gets c-c^0\mod m$.
       \item
 	The algorithm outputs $\verifier^0(y^0,t^0,c^0,s^0)\land\verifier^1(y^1,t^1,c^1,s^1)$.
@@ -471,28 +486,30 @@ $$
       \item
         The algorithm recomputes the first message $t$ by running the appropriate steps of the simulator $\simulator$.
       \item
-        The algorithm checks that $c=\hash(t,y,\ctx)$ and rejects if this is not the case. 
+        The algorithm checks that $c=\hash(t,y,\ctx)$ and rejects if this is not the case.
       \item
         It outputs whatever $\verifier(y,t,c,s)$ outputs.
     \end{enumerate}
 \end{enumerate}
 
 \section{Security Considerations}
-
+Sigma protocols hare honest-verifier zero-knowledge and special sound. The non-interactive variant (that is often discussed in practice) was shown secure by Pointcheval and Stern~\cite{JC:PoiSte00}
 Papers with the seucurity proofs + limitation
 \minote{mention simulation extractability? XXX}
 \minote{mention post-quantum security guarantees?}
 
 
 \section{Implementation}
-Implementations already there + APi design + representation + other subleties (check if a point is in the group etc.)
+Implementations available + selecting the ellptic curves + performance table + proof size.
 
 \subsection{Pre-existing implementations}
+
+supported statement + latest version with date + benchmarks + creation date + citation.
 \paragraph{SCAPI.}
 \paragraph{zkp.}
 \paragraph{zksk.}
 \paragraph{Emmy}
-
+\paragraph{Helios}
 \subsection{A candidate API design}
 
 \paragraph{Key Generation.}
@@ -503,10 +520,14 @@ For this reason, we propose the generation of a synthetic nonce obtained from ha
 
 \minote{XXX. what do we do for ring signatures that repeat the same statement twice? suggest to add a counter or a new random entry in the message?}
 
-\paragraph{Computing the challenge.}
+\paragraph{Computing the challenge.} just 128 bits expect post-quantum security + use blake2 or sha256 truncated or sha512 read as an element of $\ZZ_p$
+
 
 \section{Open Problems}
 \minote{check multisignatures and add the new problem of computing proofs with devices that share different keys}
+\minote{designated verifier proofs}
+\minote{delayed input}
+\minote{batching proofs}
 \bibliographystyle{splncs04}
 \bibliography{cryptobib/abbrev3,cryptobib/crypto}
 %
