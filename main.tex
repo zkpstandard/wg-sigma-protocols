@@ -163,18 +163,20 @@ Following [BFS], we consider a deterministic parameter genration algorithm Pgen 
 
 \section{Constructions for $\Sigma$-Protocols}
 \subsection{Basic $\Sigma$-Protocols in Prime-Order Groups}
-A basic $\Sigma$-protocol for the relation $\relation=\{(y,w) : y=\varphi(w)\}$ for a group homomorphism $\varphi:\ZZ_p\to\GG$ is given by the following algorithms:
+A basic $\Sigma$-protocol for the relation $\relation=\{((y_1,\dots,y_m),(w_1,\dots,w_n)) : (y_1,\dots,y_m)=\varphi(w_1,\dots,w_n)\}$ for a group homomorphism $\varphi:\ZZ_p^n\to\GG^m$ is given by the following algorithms:
 
 \begin{enumerate}
   \item
     The prover's first algorithm $\prover_1(w,y)$ consists of the following steps:
     \begin{enumerate}
       \item
-        It chooses a random element $r\getsr\GG$.
+        It chooses a random element $r_1,\dots,r_n\getsr\GG$.
       \item
-        It then computes $t\gets\varphi(r)$.
+        It then computes $(t_1,\dots,t_m)\gets\varphi(r_1,\dots,r_n)$.
       \item
-	The algorithm sets $\st\gets r$ and outputs $(t,\st)$.
+	The algorithm sets $\st\gets (r_1,\dots,r_n)$ and $t\gets(t_1,\dots,t_m)$.
+      \item
+        It finally outputs outputs $(t,\st)$.
     \end{enumerate}
   \item
     The prover's second algorithm $\prover_2(w,y,c,\st)$ proceeds as follows:
@@ -182,34 +184,41 @@ A basic $\Sigma$-protocol for the relation $\relation=\{(y,w) : y=\varphi(w)\}$ 
       \item
         It checks that $c\in\ZZ_m$ and aborts if this is not the case.
       \item
-	It then parses $\st=t$.
+	It then parses $\st=(r_1,\dots,r_n)$ and $w=(w_1,\dots,w_n)$.
       \item
-        It computes its output as $s\gets r+cw$.
+        It computes its output as $s_i\gets r_i+cw_i$ for $i=1,\dots,n$.
     \end{enumerate}
   \item
     The verifier's algorithm $\verifier(y,t,c,s)$ proceeds as follow:
     \begin{enumerate}
       \item
-        It checks that $s\in\GG$ and $t\in\GG$, and outputs $0$ if this is not the case.
+        It parses $y=(y_1,\dots,y_m)$, $t=(t_1,\dots,t_m)$, and $s=(s_1,\dots,s_n)$.
       \item
-	It checks whether $t + cy = \varphi(s)$, and outputs $1$ if this is the case; otherwise, $\verifier$ outputs $0$.
+        It checks that $s_i\in\ZZ_p$ for $i=1,\dots,n$ and $t_j\in\GG$ for $j=1,\dots,m$, and outputs $0$ if this is not the case.
+      \item
+	It checks whether $(t_1 + cy_1,\dots,t_m + cy_m) = \varphi(s_1,\dots,s_n)$, and outputs $1$ if this is the case; otherwise, $\verifier$ outputs $0$.
     \end{enumerate}
   \item
     The required simulator $\simulator(y,c)$ for a basic $\Sigma$-protocol works as follows:
     \begin{enumerate}
       \item
-        It chooses $s\getsr\GG$.
+        It parses $y=(y_1,\dots,y_m)$.
       \item
-        It sets $t \gets \varphi(s) - cy$.
+        It chooses $s_1,\dots,s_n\getsr\GG$.
       \item
-        Finally, the algorithm ouputs the simulated transcript $(t,c,s)$.
+        It sets $(t_1,\dots,t_m) \gets \varphi(s_1,\dots,s_n) - c(y_1,\dots,y_m)$.
+      \item
+        Finally, the algorithm ouputs the simulated transcript by setting $(t,c,s)\gets((t_1,\dots,t_m),c,(s_1,\dots,s_n)$.
     \end{enumerate}
 \end{enumerate}
-
 
 \begin{theorem}
   If $\GG$ is a cyclic group of prime order $p$, $\varphi:\ZZ_p\to\GG$ is a group homomorphism, and $m\leq q$, then the above protocol is a $\Sigma$-protocol with simulator $\simulator$.
 \end{theorem}
+
+
+
+\subsubsection{Examples}
 
 \paragraph{Example 1 (DLOG).}
 Let $\GG$ be a group over an elliptic curve with prime order $p$.
@@ -243,19 +252,19 @@ It then outputs the simulated transcript $(T,c,s)$.
 
 \paragraph{Example 2 (DLEQ).}
 Let $\GG$ be a group over an elliptic curve with prime order $p$.
-Proving equality of the known discrete logarithm $w$ of $Y$ in base $G$ and $Z$ in base $H$ means proving knowledge of $w\in\ZZ_p$ such that $Y=wG$ and $Z=wH$.
+Proving equality of the known discrete logarithm $w$ of $Y_1$ in base $G$ and $Y_2$ in base $H$ means proving knowledge of $w\in\ZZ_p$ such that $Y_1=wG$ and $Y_2=wH$.
 
 Using the above notation, we have $\varphi:\ZZ_p\to\GG\times\GG:x\mapsto (xG,xH)$.
 The protocol flow is then as depicted in Protocol~\ref{fig:dleq}.
     \begin{protocol}{Proving knowledge of equality of two discrete logarithms.\\[-2.25em]}{fig:dleq}{h!}
       \begin{tabular}{@{}l@{\hspace{2em}}c@{\hspace{-3em}}r@{}}
-        $\prover[w,(Y,Z),(G,H)]$ & & $\verifier[(Y,Z),(G,H)]$  \\
+        $\prover[w,(Y_1,Y_2),(G,H)]$ & & $\verifier[(Y_1,Y_2),(G,H)]$  \\
         \hline  \\
       % -----------------------------P1-------------------------------
         $ r\getsr\ZZ_p$ & &\\
-        $ T = rG$ & & \\
-        $ U = rH$ & & \\
-        & $\sendr{T,U}{100}$ \\[2 ex]
+        $ T_1 = rG$ & & \\
+        $ T_2 = rH$ & & \\
+        & $\sendr{T_1,T_2}{100}$ \\[2 ex]
       % -----------------------------CHALLENGE-------------------------------
         & & $c \getsr \ZZ_p$ \\
         & $\sendl{c}{100}$ & \\[2 ex]
@@ -264,45 +273,45 @@ The protocol flow is then as depicted in Protocol~\ref{fig:dleq}.
         & $\sendr{s}{100}$ \\[2 ex]
       % -----------------------------V-------------------------------
         & & Return $1$ if and only if \\
-        & & $T + cY = sG$ \\
-        & & and $U + cZ = sH$\\
+        & & $T_1 + cY_1 = sG$ \\
+        & & and $T_2 + cY_2 = sH$\\
       \end{tabular}
     \end{protocol}
 
-For a given challenge $c\in\ZZ_p$, the simulator chooses $s\getsr\ZZ_p$, and sets $T\gets sG-cY$ and $U\gets sH - cZ$.
-It then outputs the simulated transcript $((T,U),c,s)$.
+For a given challenge $c\in\ZZ_p$, the simulator chooses $s\getsr\ZZ_p$, and sets $T_1\gets sG-cY_1$ and $T_2\gets sH - cY_2$.
+It then outputs the simulated transcript $((T_1,T_2),c,s)$.
 
 
 \paragraph{Example 3 (REP).}
 Let $\GG$ be a group over an elliptic curve with prime order $p$.
-Proving knowledge of a valid opening of a Pedersen commitment means proving knowledge of $v,w\in\ZZ_p$ such that $Y=vG + wH$.
+Proving knowledge of a valid opening of a Pedersen commitment means proving knowledge of $w_1,w_2\in\ZZ_p$ such that $Y=w_1G + w_2H$.
 
-Using the above notation, we have $\varphi:\ZZ_p\times\ZZ_p\to\GG:(x,y)\mapsto xG + yH$.
+Using the above notation, we have $\varphi:\ZZ_p\times\ZZ_p\to\GG:(x_1,x_2)\mapsto x_1G + x_2H$.
 The protocol flow is then as depicted in Protocol~\ref{fig:rep}.
     \begin{protocol}{Proving knowledge of representation.\\[-2.25em]}{fig:rep}{h!}
       \begin{tabular}{@{}l@{\hspace{2em}}c@{\hspace{-3em}}r@{}}
-        $\prover[(v,w),Y,(G,H)]$ & & $\verifier[Y,(G,H)]$  \\
+        $\prover[(w_1,w_2),Y,(G,H)]$ & & $\verifier[Y,(G,H)]$  \\
         \hline  \\
       % -----------------------------P1-------------------------------
-        $ r\getsr\ZZ_p$ & &\\
-        $ u\getsr\ZZ_p$ & &\\
-        $ T = rG + uH$ & & \\
+        $ r_1\getsr\ZZ_p$ & &\\
+        $ r_2\getsr\ZZ_p$ & &\\
+        $ T = r_1G + r_2H$ & & \\
         & $\sendr{T}{100}$ \\[2 ex]
       % -----------------------------CHALLENGE-------------------------------
         & & $c \getsr \ZZ_p$ \\
         & $\sendl{c}{100}$ & \\[2 ex]
       % -----------------------------P2-------------------------------
-        $ s \gets r + cv$\\
-        $ z \gets u + cw$\\
-        & $\sendr{s,z}{100}$ \\[2 ex]
+        $ s_1 \gets r_1 + cw_1$\\
+        $ s_2 \gets r_2 + cw_2$\\
+        & $\sendr{s_1,s_2}{100}$ \\[2 ex]
       % -----------------------------V-------------------------------
         & & Return $1$ if and only if \\
-        & & $T + cY = sG + zH$ \\
+        & & $T + cY = s_1G + s_2H$ \\
       \end{tabular}
     \end{protocol}
 
-For a given challenge $c\in\ZZ_p$, the simulator chooses $s,z\getsr\ZZ_p$, and sets $T\gets sG + zH -cY$.
-It then outputs the simulated transcript $(T,c,(s,z))$.
+For a given challenge $c\in\ZZ_p$, the simulator chooses $s_1,s_2\getsr\ZZ_p$, and sets $T\gets s_1G + s_2H -cY$.
+It then outputs the simulated transcript $(T,c,(s_1,s_2))$.
 
 
 \subsection{Composition of $\Sigma$-Protocols}
