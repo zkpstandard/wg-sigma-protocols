@@ -97,7 +97,7 @@ A request for standardization has already been posted on the zk-proof community\
 So far, there has been little literature meant to help cryptography engineers implement correctly Sigma protocols for arbitrary statements about discrete logs.
 Despite Schnorr signatures and zero-knowledge proofs have already been standardized (respectively in XX and XX), there is no formal, established way to implement sigma protocols and their composition. We stress that this is not straightforward:
 %Despite Schnorr proofs have been standardized as zero-knowledge proofs (c.f.\ \href{https://tools.ietf.org/html/rfc8235}{RFC8235}) and signatures (c.f.\ ed25519 in \href{https://tools.ietf.org/html/rfc8032}{RFC8032}),
- for instance, the current standardized ed25519 cannot be immediately adapted to a zero-knowledge proof in a secure way, because of its malleability~\cite[p. 7]{JC:BDLSY1},  and the different behavior on the batched and compressed form\footnote{\url{https://hdevalence.ca/blog/2020-10-04-its-25519am}}.
+ for instance, the current standardized ed25519 cannot be immediately adapted to a zero-knowledge proof in a secure way, because of its malleability~\cite[p. 7]{JCEng:BDLSY12},  and the different behavior on the batched and compressed form\footnote{\url{https://hdevalence.ca/blog/2020-10-04-its-25519am}}.
  Additionally, as academic papers focus on proving the security of sigma protocols in generic prime-order groups, the implementation details are often times overlooked, and, as a result, a lot of insecure implementations have been published in the past. To name a few, well-known pitfalls that have led to insecure implementations:
 \begin{itemize}
   \item \textbf{Implementation over non-prime order groups could lead to small subgroup attacks}. The cyclic group where proofs are being implemented must be carefully selected. Implementing sigma protocol over Wirstrass curves is appealing for its performances and no general formulas. However, the presence of a small cofactor could be fatal for security. For instance, in 2017, Monero\footnote{\url{https://www.getmonero.org/2017/05/17/disclosure-of-a-major-bug-in-cryptonote-based-currencies.html}} disclosed a vulnerability in Cryptonote-based e-currencies that would allow double-spending.\href{https://tools.ietf.org/html/rfc2785#ref-LAW}{RFC2785}, that already provides solutions for avoiding small subgroup attacks)
@@ -119,6 +119,8 @@ Following [BFS], we consider a deterministic parameter genration algorithm Pgen 
   In the following we provide the formal definitions required for the remainder of this document.
 
     \minote{Put a reference to section 1.4.1 of the community reference document, they'll love it!}
+    
+\subsubsection{$\Sigma$-Protocols}~\\
 
 In the following we formally describe the class of $\Sigma$-protocols, which cover all protocols considered in the remainder of this document.
  For an in-depth discussion of the underlying theory we refer, e.g., to Cramer~\cite{cramer97}.
@@ -174,6 +176,7 @@ $$
 
 A $\Sigma$-protocol is furthermore said to have \emph{unique reponses} if it is infeasible to find two distinct valid responses for a given first message and fixed challenge, i.e., there exist no values $y,t,c,s',s''$ with $s'\ne s''$ such that $\verifier(y,t,c,s')=\verifier(y,t,c,s'')=\accept$.
 
+\subsubsection{Proof Systems and Proofs of Knowledge}~\\
 
 The concept of interactive proofs of knowledge was first mentioned by Goldreich et al.~\cite{STOC:GolMicRac85}, and was then refined by Feige et al.~\cite{STOC:FeiFiaSha87}.
 The definitions in the following are due to Bellare and Goldreich~\cite{C:BelGol92}.
@@ -292,7 +295,7 @@ The protocol flow is then as depicted in Protocol~\ref{fig:dlog}.
         \hline  \\
       % -----------------------------P1-------------------------------
         $ r\getsr\ZZ_p$ & &\\
-        $ T = rG$ & & \\
+        $ T \gets rG$ & & \\
         & $\sendr{T}{100}$ \\[2 ex]
       % -----------------------------CHALLENGE-------------------------------
         & & $c \getsr \ZZ_p$ \\
@@ -323,8 +326,8 @@ The protocol flow is then as depicted in Protocol~\ref{fig:dleq}.
         \hline  \\
       % -----------------------------P1-------------------------------
         $ r_1,r_2\getsr\ZZ_p$ such that $r_1-r_2=0$ & &\\
-        $ T_1 = r_1G$ & & \\
-        $ T_2 = r_2H$ & & \\
+        $ T_1 \gets r_1G$ & & \\
+        $ T_2 \gets r_2H$ & & \\
         & $\sendr{T_1,T_2}{100}$ \\[2 ex]
       % -----------------------------CHALLENGE-------------------------------
         & & $c \getsr \ZZ_p$ \\
@@ -353,8 +356,8 @@ The protocol flow is then as depicted in Protocol~\ref{fig:dleq_2}.
         \hline  \\
       % -----------------------------P1-------------------------------
         $ r\getsr\ZZ_p$ & &\\
-        $ T_1 = rG$ & & \\
-        $ T_2 = rH$ & & \\
+        $ T_1 \gets rG$ & & \\
+        $ T_2 \gets rH$ & & \\
         & $\sendr{T_1,T_2}{100}$ \\[2 ex]
       % -----------------------------CHALLENGE-------------------------------
         & & $c \getsr \ZZ_p$ \\
@@ -385,7 +388,7 @@ The protocol flow is then as depicted in Protocol~\ref{fig:rep}.
       % -----------------------------P1-------------------------------
         $ r_1\getsr\ZZ_p$ & &\\
         $ r_2\getsr\ZZ_p$ & &\\
-        $ T = r_1G + r_2H$ & & \\
+        $ T \gets r_1G + r_2H$ & & \\
         & $\sendr{T}{100}$ \\[2 ex]
       % -----------------------------CHALLENGE-------------------------------
         & & $c \getsr \ZZ_p$ \\
@@ -403,6 +406,44 @@ The protocol flow is then as depicted in Protocol~\ref{fig:rep}.
 For a given challenge $c\in\ZZ_p$, the simulator chooses $s_1,s_2\getsr\ZZ_p$, and sets $T\gets s_1G + s_2H -cY$.
 It then outputs the simulated transcript $(T,c,(s_1,s_2))$.
 
+\paragraph{Example 5 (DH).}
+Let $\GG$ be a group over an elliptic curve with prime order $p$.
+Proving knowledge of the exponents of a valid Diffie-Hellman triple means proving knowledge of $w_1,w_2\in\ZZ_p$ such that $Y_1=w_1G$, $Y_2=w_2G$, and $Y_3=w_1 w_2 G$.
+Yet, the mapping $\ZZ_p^2\to\GG^3:(x_1,x_2)\mapsto (x_1G,x_2G,x_1x_2G)$ is not a homomorphism, and consequently the basic protocol presented before cannot be deployed directly.
+However, the required multiplicative relation can be proven by observing that the proof goal is equivalent to $Y_1=w_1G$, $Y_2=w_2G$, and $Y_3=w_2Y_1$, leading the homomorphism $\varphi:\ZZ_p^2\to\GG^3:(x_1,x_2)\mapsto(x_1G,x_2G,x_2Y_1)$.
+
+The protocol flow is then as depicted in Protocol~\ref{fig:dh}.
+    \begin{protocol}{Proving knowledge of representation.\\[-2.25em]}{fig:dh}{h!}
+      \begin{tabular}{@{}l@{\hspace{-3em}}c@{\hspace{-2em}}r@{}}
+        $\prover[(w_1,w_2),(Y_1,Y_2,Y_3),G)]$ & & $\verifier[(Y_1,Y_2,Y_3),G]$  \\
+        \hline  \\
+      % -----------------------------P1-------------------------------
+        $ r_1\getsr\ZZ_p$ & &\\
+        $ r_2\getsr\ZZ_p$ & &\\
+        $ T_1 \gets r_1G$ & & \\
+        $ T_2 \gets r_2G$ & & \\
+        $ T_3 \gets r_2Y_1$ & & \\
+        & $\sendr{T_1,T_2,T_3}{100}$ \\[2 ex]
+      % -----------------------------CHALLENGE-------------------------------
+        & & $c \getsr \ZZ_p$ \\
+        & $\sendl{c}{100}$ & \\[2 ex]
+      % -----------------------------P2-------------------------------
+        $ s_1 \gets r_1 + cw_1$\\
+        $ s_2 \gets r_2 + cw_2$\\
+        & $\sendr{s_1,s_2}{100}$ \\[2 ex]
+      % -----------------------------V-------------------------------
+        & & Return $1$ if and only if \\
+        & & $T_1 + cY_1 = s_1$ \\
+        & & $T_2 + cY_2 = s_2$ \\
+        & & and $T_3 + cY_3 = s_2Y_1$ \\
+      \end{tabular}
+    \end{protocol}
+
+For a given challenge $c\in\ZZ_p$, the simulator chooses $s_1,s_2\getsr\ZZ_p$, and sets $T_1\gets s_1G -cY_1$, $T_2\gets s_2G-cY_2$, and $T_3\gets s_2Y_1-cY_3$.
+It then outputs the simulated transcript $((T_1,T_2,T_3),c,(s_1,s_2))$.
+
+As shown in this example, and in contrast to linear relations, multiplicative relations among witnesses typically require a reformulation of the proof goal in order to be compatible with the generic protocol presented above.
+We refer, e.g., to Krenn~\cite{krenn12} for generic techniques. 
 
 \subsection{Composition of $\Sigma$-Protocols}
   In this section, we recap composition techniques of $\Sigma$-protocols.
