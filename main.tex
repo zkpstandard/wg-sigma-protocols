@@ -4,9 +4,7 @@
 %
 \documentclass[runningheads]{llncs}
 %
-
-
-
+%
 \usepackage{amsmath}
 \usepackage{amssymb}
 %\usepackage{amsthm}
@@ -73,19 +71,19 @@
 \end{abstract}
 
 \section{Introduction}
-Non-intearctive sigma protocols are zero-knowledge~\cite{GolMicRac89} proofs of knowledge~\cite{XX} without SRS, proven secure in the random oracle model.
-They have been introduced by Schnorr~\cite{??} and so far have there have been widespread implementations because of their simplicity, maturity, and versatility.
+Non-intearctive sigma protocols are zero-knowledge~\cite{GolMicRac89} proofs of knowledge~\cite{C:BelGol92} without SRS, proven secure in the random oracle model.
+They have been introduced by Schnorr~\cite{JC:Schnorr91} and so far have there have been widespread implementations because of their simplicity, maturity, and versatility.
 Recently, Lueks et al.~\cite{zksk},
 
 Sigma protocols have already been employed for anonymous credentials, password-authenticated key exchange~\cite{jpake}, (ring, multi)  signatues, and other
 cryptographic constructions. Solely in the past XX years, we recall the
 \begin{itemize}
-  \item DLEQ in some VOPRFs~\cite{cfrg-voprf}, Privacy pass
+  \item DLEQ in some VOPRFs~\cite{cfrg-voprf}, Privacy pass~\cite{PoPETS:DGSTV18}
   \item AND+DLEQ anonymous credentials; (at least) AND+DLEQ: Signal~\cite{CCS:ChaPerZav20}, openings on Pedersen commitments, or plaintexts of ElGamal encryptions; DH tuple: Cryptography for \#metoo~\cite{PoPETS:KuyKraRab19}; Solidus~\cite{CCS:CZJKJS17}; ClaimChain~\cite{ClaimChain}
   \item OR for Ring Signatures: CryptoNote (Monero)~\cite{monero}, Mesh~\cite{PoPETS:AlTGon19};
   \item Signal, who's been using Algebraic MACs~\cite{CCS:ChaMeiZav14}; for group chats;
   \item Coconut~\cite{NDSS:SABMD19} with threshold Issuance Selective Disclosure Credentials with Applications to Distributed Ledgers;
-   \item Anonymous Credentials Light
+   \item Anonymous Credentials Light~\cite{CCS:BalLys13}
 \end{itemize}
 
 A request for standardization has already been posted on the zk-proof community\footnote{\url{https://community.zkproof.org/t/standardizing-sigma-protocols/471/}} and received a fair amount of interest.
@@ -97,7 +95,7 @@ A request for standardization has already been posted on the zk-proof community\
 So far, there has been little literature meant to help cryptography engineers implement correctly Sigma protocols for arbitrary statements about discrete logs.
 Despite Schnorr signatures and zero-knowledge proofs have already been standardized (respectively in XX and XX), there is no formal, established way to implement sigma protocols and their composition. We stress that this is not straightforward:
 %Despite Schnorr proofs have been standardized as zero-knowledge proofs (c.f.\ \href{https://tools.ietf.org/html/rfc8235}{RFC8235}) and signatures (c.f.\ ed25519 in \href{https://tools.ietf.org/html/rfc8032}{RFC8032}),
- for instance, the current standardized ed25519 cannot be immediately adapted to a zero-knowledge proof in a secure way, because of its malleability~\cite[p. 7]{JCEng:BDLSY12},  and the different behavior on the batched and compressed form\footnote{\url{https://hdevalence.ca/blog/2020-10-04-its-25519am}}.
+ for instance, the current standardized ed25519 cannot be immediately adapted to a zero-knowledge proof in a secure way, because of its malleability~\cite[p. 7]{JCEng:BDLSY12g},  and the different behavior on the batched and compressed form\footnote{\url{https://hdevalence.ca/blog/2020-10-04-its-25519am}}.
  Additionally, as academic papers focus on proving the security of sigma protocols in generic prime-order groups, the implementation details are often times overlooked, and, as a result, a lot of insecure implementations have been published in the past. To name a few, well-known pitfalls that have led to insecure implementations:
 \begin{itemize}
   \item \textbf{Implementation over non-prime order groups could lead to small subgroup attacks}. The cyclic group where proofs are being implemented must be carefully selected. Implementing sigma protocol over Wirstrass curves is appealing for its performances and no general formulas. However, the presence of a small cofactor could be fatal for security. For instance, in 2017, Monero\footnote{\url{https://www.getmonero.org/2017/05/17/disclosure-of-a-major-bug-in-cryptonote-based-currencies.html}} disclosed a vulnerability in Cryptonote-based e-currencies that would allow double-spending.\href{https://tools.ietf.org/html/rfc2785#ref-LAW}{RFC2785}, that already provides solutions for avoiding small subgroup attacks)
@@ -106,20 +104,34 @@ Despite Schnorr signatures and zero-knowledge proofs have already been standardi
   A blatant example of this mistake in the wild was uncovered in 2010, by the hacker group \texttt{fail0verflow}. They showed how SONY was reusing the same nonce for digitally signing Playstation 3 games\footnote{\url{https://media.ccc.de/v/27c3-4087-en-console_hacking_2010}}.  The member could exploit this to calculate the private key, and create valid signatures.
 
   \item \textbf{A weak impelmentation of Fiat--Shamir heuristic compromises adaptive security.} The second message in a sigma protocol, sometimes called \emph{challenge}, if computed non-interactives must include non only the commitment, but the full statement and the group description. In fact, if the group generator $G$ is not included in the (EC-DSA) signature, then it is possible to prove statement under a different generator $\alpha G$, for any $\alpha \in \ZZ_p$; if $X \in \GG$, part of the statement, is not included in the query to the random oracle, it is possible to compute proofs for $\beta X$, for any $\beta \in \ZZ_p$.
-  A mistake of this type was uncovered in 2016, by Bernhard et al.~\cite{??}.
+  A mistake of this type was uncovered in 2012, by Bernhard et al.~\cite{AC:BerPerWar12}.
   They demonstrated that Helios, a platform for e-voting, calculated the challenge using the Fiat--Shamir heuristic, without including the generator, allowing for tampering of votes.
 
 \end{itemize}
 
 \section{Notation and Terminology}
+%Following [BFS], we consider a deterministic parameter genration algorithm Pgen that returns a group description $\Gamma \defeq (p, G, \GG)$ of a (cyclic) additive, prime order group $\GG = \langle G \rangle$ of order $p$. 
+For the purpose of this document, the following notation will be used:
 
-Following [BFS], we consider a deterministic parameter genration algorithm Pgen that returns a group description $\Gamma \defeq (p, G, \GG)$ of a (cyclic) additive, prime order group $\GG = \langle G \rangle$ of order $p$. With $\secpar$, we denote the security parameter.
+\begin{tabular}{r@{\hspace{1em}}p{9cm}}
+    $\secpar$ & main security parameter\\
+    $\GG = \langle G \rangle$ & cyclic group of prime order $p$ generated by $G$\\
+    $\prover,\verifier,\dots$ & potentially randomized algorithms\\
+    $x\getsr\someset$ & assignment of a uniformly random element in $\someset$ to $x$\\
+    $x\getsr\alg(in)$ & assignment of the ouput of a randomized algorithm $\alg$ on input $in$ to $x$\\
+    $\relation$ & binary relation\\
+    $\lang(\relation)$ & language induced by a binary relation $\relation$, i.e., $\lang(\relation)=\{y\in\{0,1\}^*:\exists w$ such that $(y,w)\in\relation\}$.\\
+    $|y|$ & bitlength of a string\\ 
+    $\NN,\ZZ$ & non-negative natural numbers and integers, respectively
+\end{tabular}
+
+
+
+
 
 \subsection{Formal Definitions}
   In the following we provide the formal definitions required for the remainder of this document.
 
-    \minote{Put a reference to section 1.4.1 of the community reference document, they'll love it!}
-    
 \subsubsection{$\Sigma$-Protocols}~\\
 
 In the following we formally describe the class of $\Sigma$-protocols, which cover all protocols considered in the remainder of this document.
@@ -202,7 +214,7 @@ Informally, an interactive protocol is a proof of knowledge, if every party that
 \end{definition}
 
 \section{Constructions for $\Sigma$-Protocols}
-\subsection{Basic $\Sigma$-Protocols in Prime-Order Groups}
+\subsection{Basic $\Sigma$-Protocols in Prime-Order Groups}\label{sec:basicsigma}
 A basic $\Sigma$-protocol for the relation 
 $$\relation=\{((y_1,\dots,y_m),(w_1,\dots,w_n)) : (y_1,\dots,y_m)=\varphi(w_1,\dots,w_n)\}$$
  for a group homomorphism $\varphi:\ZZ_p^n\to\GG^m$ is given by the following algorithms:
@@ -224,7 +236,7 @@ $$\relation=\{((y_1,\dots,y_m),(w_1,\dots,w_n)) : (y_1,\dots,y_m)=\varphi(w_1,\d
     The prover's second algorithm $\prover_2(w,y,c,\st)$ proceeds as follows:
     \begin{enumerate}
       \item
-        It checks that $c\in\ZZ_m$ and aborts if this is not the case.
+        It checks that $c\in\ZZ_u$ and aborts if this is not the case.
       \item
 	It then parses $\st=(r_1,\dots,r_n)$ and $w=(w_1,\dots,w_n)$.
       \item
@@ -254,10 +266,6 @@ $$\relation=\{((y_1,\dots,y_m),(w_1,\dots,w_n)) : (y_1,\dots,y_m)=\varphi(w_1,\d
     \end{enumerate}
 \end{enumerate}
 
-\begin{theorem}
-  If $\GG$ is a cyclic group of prime order $p$, $\varphi:\ZZ_p\to\GG$ is a group homomorphism, and $m\leq q$, then the above protocol is a $\Sigma$-protocol with simulator $\simulator$.
-\end{theorem}
-
 \subsubsection{Proving linear relations among witnesses}
 
   While the above protocol allows one to efficiently prove knowledge of a preimage under a homomorphism, many protocols found in the literature require one to prove relations among witnesses.
@@ -286,6 +294,7 @@ Proving such a relation can easily by achieved by modifying the above protocol a
 \paragraph{Example 1 (DLOG).}
 Let $\GG$ be a group over an elliptic curve with prime order $p$.
 Proving knowledge of the discrete logarithm $w$ of a point $Y$ in base $G$ means proving knowledge of $w\in\ZZ_p$ such that $Y=wG$.
+For a description of this proof goal in residue classes, we also refer to~\cite[1.4.1]{zkproof-reference}.
 
 Using the above notation, we have $\varphi:\ZZ_p\to\GG:x\mapsto xG$.
 The protocol flow is then as depicted in Protocol~\ref{fig:dlog}.
@@ -318,7 +327,7 @@ Let $\GG$ be a group over an elliptic curve with prime order $p$.
 Proving equality of the known discrete logarithm $w$ of $Y_1$ in base $G$ and $Y_2$ in base $H$ means proving knowledge of $(w_1,w_2)\in\ZZ_p$ such that $Y_1=w_1G$ and $Y_2=w_2H$, and $w_1=w_2$.
 
 Using the above notation, we have $\varphi:\ZZ_p\to\GG\times\GG:(x_1,x_2)\mapsto (x_1G,x_2H)$.
-The linear system of equations $A(w_1,w_2)=(b_1,b_2)$ is given by $w_1-w_2=0$.
+The linear system of equations $A(w_1,w_2)=b$ is given by $w_1-w_2=0$.
 The protocol flow is then as depicted in Protocol~\ref{fig:dleq}.
     \begin{protocol}{Proving knowledge of equality of two discrete logarithms.\\[-2.25em]}{fig:dleq}{h!}
       \begin{tabular}{@{}l@{\hspace{-4em}}c@{\hspace{-3em}}r@{}}
@@ -350,7 +359,7 @@ It then outputs the simulated transcript $((T_1,T_2),c,(s_1,s_2))$.
 \paragraph{Example 3 (DLEQ; alternative).}
 The same proofgoal as in the previous example can also be achieved by considering a slightly different homomorphism which directly encodes the linear relation, that is $\varphi:\ZZ_p\to\GG\times\GG:x\mapsto (xG,xH)$.
 The protocol flow is then as depicted in Protocol~\ref{fig:dleq_2}.
-    \begin{protocol}{Proving knowledge of equality of two discrete logarithms.\\[-2.25em]}{fig:dleq_2}{h!}
+    \begin{protocol}{Proving knowledge of equality of two discrete logarithms (alternative).\\[-2.25em]}{fig:dleq_2}{h!}
       \begin{tabular}{@{}l@{\hspace{2em}}c@{\hspace{-3em}}r@{}}
         $\prover[w,(Y_1,Y_2),(G,H)]$ & & $\verifier[(Y_1,Y_2),(G,H)]$  \\
         \hline  \\
@@ -445,7 +454,7 @@ It then outputs the simulated transcript $((T_1,T_2,T_3),c,(s_1,s_2))$.
 As shown in this example, and in contrast to linear relations, multiplicative relations among witnesses typically require a reformulation of the proof goal in order to be compatible with the generic protocol presented above.
 We refer, e.g., to Krenn~\cite{krenn12} for generic techniques. 
 
-\subsection{Composition of $\Sigma$-Protocols}
+\subsection{Composition of $\Sigma$-Protocols}\label{sec:composition}
   In this section, we recap composition techniques of $\Sigma$-protocols.
   Specifically, we define mechanisms for proving knowledge of multiple independent witnesses (``AND-composition''), and for proving knowledge for one out of a set of witnesses (``OR-composition'').
   Without loss of generality, the techniques presented in the following focus on the composition of two protocols;
@@ -453,8 +462,8 @@ We refer, e.g., to Krenn~\cite{krenn12} for generic techniques.
 
   For the rest of this section, we let $(\prover_1^0,\prover_2^0,\verifier^0)$ and $(\prover_1^1,\prover_2^1,\verifier^1)$ be the specifications of two $\Sigma$-protocols for two relations $\relation^0$ and $\relation^1$, and let $\simulator^0$ and $\simulator^1$ be their simulators.
 
-  Furthermore, we assume that the challenge sets are given by $\ZZ_{m^0}$ and $\ZZ_{m^1}$, respectively.
-  We let $m=\min(m^0,m^1)$.
+  Furthermore, we assume that the challenge sets are given by $\ZZ_{u^0}$ and $\ZZ_{u^1}$, respectively.
+  We let $u=\min(u^0,u^1)$.
 
 
 \subsubsection{AND Composition.}
@@ -480,7 +489,7 @@ $$
     The prover's second algorithm $\prover_2(w,y,c,\st)$ proceeds as follows:
     \begin{enumerate}
       \item
-        It checks that $c\in\ZZ_m$ and aborts if this is not the case.
+        It checks that $c\in\ZZ_u$ and aborts if this is not the case.
       \item
 	It parses $\st=(\st^0,\st^1)$
       \item
@@ -502,17 +511,13 @@ $$
       \item
         It parses $y=(y^0,y^1)$.
       \item
-        It chooses $c\in\ZZ_m$.
+        It chooses $c\in\ZZ_u$.
       \item
         It computes $(t^0,c,s^0)\getsr\simulator^0(y^0,c)$ and $(t^1,c,s^1)\getsr\simulator^1(y^1,c)$.
       \item
         Finally, the algorithm then outputs $(t,c,s)=((t^0,t^1),c,(s^0,s^1))$.
     \end{enumerate}
 \end{enumerate}
-
-\begin{theorem}
-  If, for $i=0,1$, $(\prover_1^i,\prover_2^i,\verifier^i)$ is a $\Sigma$-protocol for relation $\relation^i$ with challenge set $\ZZ_{m^i}$ and simulator $\simulator^i$, then the specified protocol is a $\Sigma$-protocol with challenge set $\ZZ_m$ and simulator $\simulator$ for relation $\relation^\land$.
-\end{theorem}
 
 
 \subsubsection{OR Composition.}
@@ -532,7 +537,7 @@ $$
       \item
         It computes $(t^j,\st^j)\getsr\prover_1^j(y^j,w^j)$.
       \item
-        It computes a simulated transcript for the unknown witness by choosing $c^{1-j}\getsr\ZZ_m$ and setting $(t^{1-j},c^{1-j},s^{1-j})\getsr\simulator^{1-j}(y^{1-j},c^{1-j})$.
+        It computes a simulated transcript for the unknown witness by choosing $c^{1-j}\getsr\ZZ_u$ and setting $(t^{1-j},c^{1-j},s^{1-j})\getsr\simulator^{1-j}(y^{1-j},c^{1-j})$.
       \item
 	The algorithm outputs $(t,\st) = ((t^0,t^1),(\st^j,c^{1-j},s^{1-j}))$.
     \end{enumerate}
@@ -540,7 +545,7 @@ $$
     The prover's second algorithm $\prover_2(w,y,c,\st)$ proceeds as follows:
     \begin{enumerate}
       \item
-        It checks that $c\in\ZZ_m$ and aborts if this is not the case.
+        It checks that $c\in\ZZ_u$ and aborts if this is not the case.
       \item
 	It parses $\st=(\st^j,c^{1-j},s^{1-j})$.
       \item
@@ -566,7 +571,7 @@ $$
       \item
         It parses $y=(y^0,y^1)$.
       \item
-        It chooses a random $c^0$ in $\ZZ_m$ and computes $c^1\gets c-c^0 \mod m$.
+        It chooses a random $c^0$ in $\ZZ_u$ and computes $c^1\gets c-c^0 \mod m$.
       \item
         It then computes $(t^0,c^0,s^0)\getsr\simulator^0(y^0,c^0)$ and $(t^1,c^1,s^1)\getsr\simulator^1(y^1,c^1)$.
       \item
@@ -574,16 +579,29 @@ $$
     \end{enumerate}
 \end{enumerate}
 
-\begin{theorem}
-  If, for $i=0,1$, $(\prover_1^i,\prover_2^i,\verifier^i)$ is a $\Sigma$-protocol for relation $\relation^i$ with challenge set $\ZZ_{m^i}$ and simulator $\simulator^i$, then the specified protocol is a $\Sigma$-protocol with challenge set $\ZZ_m$ and simulator $\simulator$ for relation $\relation^\lor$.
-\end{theorem}
-
-
-
 
 \subsection{Achieving Non-Interactivity -- The Fiat-Shamir Transform}
+All protocols describes so far require three messages being exchanged between the prover and the verifier.
+However, communication rounds are often considered expensive from an efficiency point of view, and for many applications interactivy is not desirable.
 
-\subsubsection{Long form supporting batch verification.}
+The following two variants tp achieve non-interactivity require identical computations on the prover's side.
+The first variant has a larger proof size, as the full first message of the prover is part of the proof, whereas the second variant only has a hash value instead.
+However, the first version allows for \stnote{why again do we want to have the long form?}
+
+The constructions are based on the seminal work of Fiat and Shamir~\cite{C:FiaSha86} and subsequent work, e.g., by Bernhard et al.~\cite{AC:BerPerWar12}.
+The underlying idea of this so-called Fiat-Shamir transform is to simulate the verifier's random challenge by means of a random oracle, depending on the first message computed by the prover. 
+More precisely, the challenge is computed as $c\gets\hash(t,y,\ctx)$, where $t$ is the prover's first message from the $\Sigma$-protocol, and $y$ is the public image for which knowledge of a witness is proven.
+The context string $\ctx$ contains application-specific information, such as:
+\begin{itemize}
+  \item
+    a full description of the algebraic setting and proof goal (e.g., group descriptions, generators, etc.) to achieve non-malleability;
+  \item
+    local context information (e.g., session identifiers of higher level protocols) to avoid replay-attacks, or shared randomness or a timestamp to guarantee freshness of the proof.
+\end{itemize}
+
+\subsubsection{Long form}
+
+
 \begin{enumerate}
   \item
     The prover's algorithm $\prover'(y,w,\ctx)$ works as follows:
@@ -607,7 +625,7 @@ $$
     \end{enumerate}
 \end{enumerate}
 
-\subsubsection{Short form supporting compact proofs.}
+\subsubsection{Short form}
 \begin{enumerate}
   \item
     The prover's algorithm $\prover''(y,w,\ctx)$ works as follows:
@@ -624,21 +642,48 @@ $$
   \item
     The verifier's algorithm $\verifier''(y,c,s,\ctx)$ works as follows:
     \begin{enumerate}
-      \item
+      \item\label{item:fslong:v:recomputet}
         The algorithm recomputes the first message $t$ by running the appropriate steps of the simulator $\simulator$.
       \item
         The algorithm checks that $c=\hash(t,y,\ctx)$ and rejects if this is not the case.
-      \item
-        It outputs whatever $\verifier(y,t,c,s)$ outputs.
     \end{enumerate}
 \end{enumerate}
+
+More specifically, when calling $\simulator$ in Step~\ref{item:fslong:v:recomputet}, the verifier does not draw the reponse $s$ at random, as is the case in all the protocols introduced before;
+instead it uses the value specified in the proof.
 
 \section{Security Considerations}
 \minote{mention simulation extractability? XXX}
 \minote{mention post-quantum security guarantees?}
 
 In the following, we give a concise overview of the most important security guarantees provided by the constructions presented above.
+
+Firstly, all the protocols presented in the previous section are $\Sigma$-protocols according to Definition~\ref{def:sigma}.
+\begin{theorem}
+  If $\GG$ is a cyclic group of prime order $p$, $\varphi:\ZZ_p^n\to\GG^m$ is a group homomorphism, and $u\leq p$, then the basic protocol in Section~\ref{sec:basicsigma} is a $\Sigma$-protocol with simulator $\simulator$.
+
+  If $\varphi$ is non-trivial, the protocol has unpredictable commitments.
+  Finally, if $\varphi(x')\ne\varphi(x'')$ for all $x'\ne x''$, the protocol has unique responses.
+\end{theorem}
+
+\begin{theorem}
+  If, for $i=0,1$, $(\prover_1^i,\prover_2^i,\verifier^i)$ is a $\Sigma$-protocol for relation $\relation^i$ with challenge set $\ZZ_{u^i}$ and simulator $\simulator^i$, then the protocols specified in Section~\ref{sec:composition} are $\Sigma$-protocol with challenge set $\ZZ_u$ and simulator $\simulator$ for relation $\relation^\land$ and $\relation^\lor$, respectively.
+  
+  It at least one of the composed protocols has unpredictable commitments, then the composed protocol has unpredictable commitments.
+%  If all composed protocols have unique responses, then so has the composed protocol.
+\end{theorem}
+
+
 In a nutshell, $\Sigma$-protocols are honest-verifier zero-knowledge proofs of knowledge, whose security guarantees are maintained under the Fiat-Shamir transform at least against classical attackers.
+
+
+
+
+
+
+
+
+
 For full details and proofs, we refer to the original literature.
 \begin{itemize}
   \item
@@ -690,6 +735,8 @@ For this reason, we propose the generation of a synthetic nonce obtained from ha
 
 \minote{XXX. what do we do for ring signatures that repeat the same statement twice? suggest to add a counter or a new random entry in the message?}
 
+\stnote{Maybe we should explicitly say here that this way to generate the nonce is only possible for non-interactive protocols, and that in the interactive case this would allow the verifier to use different challenges for the same first message, allowing the verifier to extract}
+
 \paragraph{Computing the challenge.} just 128 bits expect post-quantum security + use blake2 or sha256 truncated or sha512 read as an element of $\ZZ_p$
 
 
@@ -698,7 +745,7 @@ For this reason, we propose the generation of a synthetic nonce obtained from ha
 \minote{designated verifier proofs}
 \minote{delayed input}
 \minote{batching proofs}
-\bibliographystyle{splncs04}
+\bibliographystyle{alpha}
 \bibliography{cryptobib/abbrev3,cryptobib/crypto,additional}
 %
 \end{document}
