@@ -110,7 +110,7 @@ Despite Schnorr signatures and zero-knowledge proofs have already been standardi
 \end{itemize}
 
 \section{Notation and Terminology}
-%Following [BFS], we consider a deterministic parameter genration algorithm Pgen that returns a group description $\Gamma \defeq (p, G, \GG)$ of a (cyclic) additive, prime order group $\GG = \langle G \rangle$ of order $p$. 
+%Following [BFS], we consider a deterministic parameter genration algorithm Pgen that returns a group description $\Gamma \defeq (p, G, \GG)$ of a (cyclic) additive, prime order group $\GG = \langle G \rangle$ of order $p$.
 For the purpose of this document, the following notation will be used:
 
 \begin{tabular}{r@{\hspace{1em}}p{9cm}}
@@ -121,11 +121,12 @@ For the purpose of this document, the following notation will be used:
     $x\getsr\alg(in)$ & assignment of the ouput of a randomized algorithm $\alg$ on input $in$ to $x$\\
     $\relation$ & binary relation\\
     $\lang(\relation)$ & language induced by a binary relation $\relation$, i.e., $\lang(\relation)=\{y\in\{0,1\}^*:\exists w$ such that $(y,w)\in\relation\}$.\\
-    $|y|$ & bitlength of a string\\ 
+    $|y|$ & bitlength of a string\\
     $\NN,\ZZ$ & non-negative natural numbers and integers, respectively
 \end{tabular}
 
 
+Following~\cite{AC:BelFucSca16}, we consider a deterministic parameter generation algorithm $\grgen$ that returns a group description $\Gamma \defeq (p, G, \GG)$ of a (cyclic) additive, prime order group $\GG = \langle G \rangle$ of order $p$. With $\secpar$, we denote the security parameter.
 
 
 
@@ -196,7 +197,7 @@ The definitions in the following are due to Bellare and Goldreich~\cite{C:BelGol
 Intuitively, a proof system is sound, if it is not possible to make the verifier accept for statements for which no valid witness exists, cf. also~\cite[1.6.2]{zkproof-reference}.
 \begin{definition}\label{def:soundness}
   Let $\relation$ be a binary relation, $\sigma:\NN\to[0,1]$ and let $\prover$ and $\verifier$ specify a probabilistic interactive protocol, where at least $\verifier$ is polynomial time.
-  The protocol is called \emph{sound} with \emph{soundness error} $\sigma$, if for every $y\notin\lang(\relation)$, every $w\in\{0,1\}^*$, and every interactive algorithm $\prover^*$, the probability that $\prover^*$ makes $\verifier$ output $\accept$ on common input $y$ is bounded above by $\sigma(|y|)$. 
+  The protocol is called \emph{sound} with \emph{soundness error} $\sigma$, if for every $y\notin\lang(\relation)$, every $w\in\{0,1\}^*$, and every interactive algorithm $\prover^*$, the probability that $\prover^*$ makes $\verifier$ output $\accept$ on common input $y$ is bounded above by $\sigma(|y|)$.
 \end{definition}
 
 Informally, an interactive protocol is a proof of knowledge, if every party that is able to make the verifier accept with sufficiently high probability needs to know a valid witness or would be able to compute such a witness, cf. also~\cite[1.6.3]{zkproof-reference}.
@@ -215,7 +216,7 @@ Informally, an interactive protocol is a proof of knowledge, if every party that
 
 \section{Constructions for $\Sigma$-Protocols}
 \subsection{Basic $\Sigma$-Protocols in Prime-Order Groups}\label{sec:basicsigma}
-A basic $\Sigma$-protocol for the relation 
+A basic $\Sigma$-protocol for the relation
 $$\relation=\{((y_1,\dots,y_m),(w_1,\dots,w_n)) : (y_1,\dots,y_m)=\varphi(w_1,\dots,w_n)\}$$
  for a group homomorphism $\varphi:\ZZ_p^n\to\GG^m$ is given by the following algorithms:
 
@@ -283,7 +284,7 @@ Proving such a relation can easily by achieved by modifying the above protocol a
   \item
     In step \ref{item:basic:v:checks}, the verifier additionally checks that $A(s_1,\dots,s_n)=(c+1)(b_1,\dots,b_k)$ and outputs $\reject$ if this is not the case.
   \item
-    In step \ref{item:basic:sim:s}, the simulator draws the responses such at they satisfy the verification equations, i.e., such that $A(s_1,\dots,s_n)=(c+1)(b_1,\dots,b_k)$. 
+    In step \ref{item:basic:sim:s}, the simulator draws the responses such at they satisfy the verification equations, i.e., such that $A(s_1,\dots,s_n)=(c+1)(b_1,\dots,b_k)$.
 \end{itemize}
 
 
@@ -452,7 +453,7 @@ For a given challenge $c\in\ZZ_p$, the simulator chooses $s_1,s_2\getsr\ZZ_p$, a
 It then outputs the simulated transcript $((T_1,T_2,T_3),c,(s_1,s_2))$.
 
 As shown in this example, and in contrast to linear relations, multiplicative relations among witnesses typically require a reformulation of the proof goal in order to be compatible with the generic protocol presented above.
-We refer, e.g., to Krenn~\cite{krenn12} for generic techniques. 
+We refer, e.g., to Krenn~\cite{krenn12} for generic techniques.
 
 \subsection{Composition of $\Sigma$-Protocols}\label{sec:composition}
   In this section, we recap composition techniques of $\Sigma$-protocols.
@@ -589,7 +590,7 @@ The first variant has a larger proof size, as the full first message of the prov
 However, the first version allows for \stnote{why again do we want to have the long form?}
 
 The constructions are based on the seminal work of Fiat and Shamir~\cite{C:FiaSha86} and subsequent work, e.g., by Bernhard et al.~\cite{AC:BerPerWar12}.
-The underlying idea of this so-called Fiat-Shamir transform is to simulate the verifier's random challenge by means of a random oracle, depending on the first message computed by the prover. 
+The underlying idea of this so-called Fiat-Shamir transform is to simulate the verifier's random challenge by means of a random oracle, depending on the first message computed by the prover.
 More precisely, the challenge is computed as $c\gets\hash(t,y,\ctx)$, where $t$ is the prover's first message from the $\Sigma$-protocol, and $y$ is the public image for which knowledge of a witness is proven.
 The context string $\ctx$ contains application-specific information, such as:
 \begin{itemize}
@@ -668,7 +669,7 @@ Firstly, all the protocols presented in the previous section are $\Sigma$-protoc
 
 \begin{theorem}
   If, for $i=0,1$, $(\prover_1^i,\prover_2^i,\verifier^i)$ is a $\Sigma$-protocol for relation $\relation^i$ with challenge set $\ZZ_{u^i}$ and simulator $\simulator^i$, then the protocols specified in Section~\ref{sec:composition} are $\Sigma$-protocol with challenge set $\ZZ_u$ and simulator $\simulator$ for relation $\relation^\land$ and $\relation^\lor$, respectively.
-  
+
   It at least one of the composed protocols has unpredictable commitments, then the composed protocol has unpredictable commitments.
 %  If all composed protocols have unique responses, then so has the composed protocol.
 \end{theorem}
@@ -702,18 +703,19 @@ For formal proofs we refer, e.g., to Damg\r{a}rd~\cite{damgard04}.
     If a $\Sigma$-protocol has a negligible soundness error, then the Fiat-Shamir transform is {\bf sound} according to Definition~\ref{def:soundness}.
     This security guarantee also holds against quantum attackers.
 
-    For a proof we refer to Pointcheval and Stern~\cite{JC:PoiSte00} and Unruh~\cite{AC:Unruh17}. 
+    For a proof we refer to Pointcheval and Stern~\cite{JC:PoiSte00} and Unruh~\cite{AC:Unruh17}.
   \item
     If a $\Sigma$-protocol has a negligible soundness error, then the Fiat-Shamir transform is {\bf weakly simulation-sound} according to Definition~\ref{def:xxx}.
     If the protocol additionally has unique responses, then the Fiat-Shamir transform is {\bf strongly simulation-sound} according to Definition~\ref{def:xxx}.
     These security guarantees also holds against quantum attackers.
 
-    For a proof we refer to Unruh~\cite{AC:Unruh17} and Faust et al.~\cite{INDOCRYPT:FKMV12}. 
+    For a proof we refer to Unruh~\cite{AC:Unruh17} and Faust et al.~\cite{INDOCRYPT:FKMV12}.
   \item
     If a $\Sigma$-protocol has a negligible soundness error, then the Fiat-Shamir transform is {\bf simulation-sound extractable} according to Definition~\ref{def:xxx}.
 
-    For a proof we refer to Bernhard et al.~\cite{AC:BerPerWar12}. 
+    For a proof we refer to Bernhard et al.~\cite{AC:BerPerWar12}.
 \end{itemize}
+
 \section{Implementation}
 Implementations available + selecting the ellptic curves + performance table + proof size.
 
@@ -729,7 +731,7 @@ supported statement + latest version with date + benchmarks + creation date + ci
 
 \paragraph{Key Generation.}
 
-\paragraph{Nonce Generation.} The first stem in the generation of a sigma proof is the generation of a cryptographically secure nonce. As mentioned in \Cref{sec:motivation}, the nonce must be distributed uniformly at random, and even a small bias in the distribution could completely compromise zero-knowledge.
+\paragraph{Nonce Generation.} The first step is the generation of a uniformly-distributed random element over $\ZZ_p$. As mentioned in \Cref{sec:motivation}, the nonce must be distributed uniformly at random, and even a small bias in the distribution could completely compromise zero-knowledge.
 The construction of cryptographically secure source of randomness is a difficult problem, that is particularly challenging on embedded devices such as smart-cards or embedded systems.
 For this reason, we propose the generation of a synthetic nonce obtained from hashing the statement and the secret together, as already suggested in previous standards \href{https://tools.ietf.org/html/rfc6979}{RFC6979}.
 
@@ -740,11 +742,15 @@ For this reason, we propose the generation of a synthetic nonce obtained from ha
 \paragraph{Computing the challenge.} just 128 bits expect post-quantum security + use blake2 or sha256 truncated or sha512 read as an element of $\ZZ_p$
 
 
-\section{Open Problems}
-\minote{check multisignatures and add the new problem of computing proofs with devices that share different keys}
-\minote{designated verifier proofs}
+\section{To be discussed}
+If the proposal is accepted, we would discuss the following points in the working group.
+\minote{designated verifier proofs: either or proof I'm you or the staement is true + commitment discrete log}
 \minote{delayed input}
 \minote{batching proofs}
+\section{Open Problems}
+\minote{check multisignatures and add the new problem of computing proofs with devices that share different keys}
+\minote{R1CS compatibility: a unified way of specifying proof goals. Cam-Sta notation ? Compilers}
+
 \bibliographystyle{alpha}
 \bibliography{cryptobib/abbrev3,cryptobib/crypto,additional}
 %
