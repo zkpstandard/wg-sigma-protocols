@@ -748,7 +748,7 @@ For formal proofs we refer, e.g., to Damg\r{a}rd~\cite{damgard04}.
   \caption{Summary of implementations, along with features supported.
   \label{table:implementations}}
   \centering
-\begin{tabular}{r|ccc}
+\begin{tabular}{rccc}
   Project & AND-composition & OR-composition & last activity \\
   \hline
   \emph{SCAPI}~\cite{scapi}\\
@@ -756,6 +756,7 @@ For formal proofs we refer, e.g., to Damg\r{a}rd~\cite{damgard04}.
   zksk~\cite{zksk}\\
   Emmy\\
   Helios \\
+  \hline
 \end{tabular}
 \end{table}
 
@@ -765,7 +766,7 @@ This table is greatly inspired from the remarkable bibliographic work of Lueks e
 \paragraph{Choice of a group.} We advise for the use of prime-order elliptic curves of either 256 or 512 bits of security, depending on the desired security of the upper layers in the protocol\footnote{For instance, proving a DH relation with one fixed group element such as a public key, might expose the protocol to cryptanalytic attacks such as Brown-Gallant~\cite{EPRINT:BroGal04} and Cheon’s attack~\cite{EC:Cheon06}. We consider these attacks out of scope for this standardization effort, and believe this analysis should be deferred to the concrete security study of the larger protocol.}.
 Concretely, we see fit standardized curves such as NIST curves p-521 and p-256~\cite{fips2}, secp256k1~\cite{SECG}, or standardized prime-order group abstractions over non prime-order groups, such as Decaf~\cite{cfrg-ristretto-decaf}.
 
-We think pairing-friendly curves, such as BLS12-381~\cite{XX}, should also be considered for inclusion under relevant assumptions for bilinear groups, such as XDH when dealing with DH triples\footnote{We are aware of the threats reported in
+We think pairing-friendly curves, such as BLS12-381~\cite{bls12}, should also be considered for inclusion under relevant assumptions for bilinear groups, such as XDH when dealing with DH triples\footnote{We are aware of the threats reported in
 \url{https://safecurves.cr.yp.to/}.
 Yet, it's not clear what should be the alternatives, and if dropping their support would hinder adoption.
 }.
@@ -776,14 +777,14 @@ We note that the exists already standards for removing small cofactors in ellipt
 \minote{chek if standards works well}
 
 \paragraph{Commitment.} The first step is the generation of a uniformly-distributed random element over $\ZZ_p$. As mentioned in \Cref{sec:motivation}, the nonce must be distributed uniformly at random, and even a small bias in the distribution could completely compromise zero-knowledge~\cite{XX}.
-The construction of cryptographically secure source of randomness is a difficult problem, that is particularly challenging on embedded devices such as smart-cards or embedded systems.
-We propose the generation of a synthetic nonce obtained from hashing statement, context, and secret together.
-This technique was already suggested in previous standards~\cite{rfc6979}.
-While it is widely recognized that this approach leads to the generation of secure nonces, it might on the other hand leak information about the witness used for a proof, when examining consecutive executions of the protocol. This is e.g. the case of a OR-proof that attempts to preserve anonymity.
- For these cases, the prover should additionally include an internal counter, or 32 bytes of entropy from the operating system's.
 
+We propose the construction of a synthetic nonce obtained from hashing statement, context, and secret, together with 32 additional bytes from operating system's entropy.
 
-\paragraph{Computing the challenge.} In the non-interactive instantiation of sigma protocols, the challenge is the image of a cryptographically-secure hash fucntion,
+The construction of cryptographically secure source of randomness is a difficult problem, that is particularly challenging on embedded devices such as smart-cards or embedded systems. For those applications for which obtaining a high number of entropy is challenging, we propose the use of a stateful counter.
+Hashing the statement and the witness to obtain a commitment was already suggested in previous standards~\cite{rfc6979} in the context of deterministic nonce generation.
+While it is widely recognized that having deterministic nonce helps strengthening the concrete security  and mitigates the risks associated to the generation of a commitment, it could on the other hand leak information about the witness used for a proof, when examining consecutive executions of the protocol. This is e.g. the case of a OR-proof that attempts to preserve anonymity.
+
+\paragraph{Computing the challenge.} In the non-interactive $\Sigma$-protocols, the challenge is the image of a cryptographically-secure hash function,
 given as input the commitment, the context, and the tag.
 
 The hash function can be either blake2~\cite{XX}, SHA-256, or SHA3~\cite{XX} truncated to the first 128 buts, or a more structured hash into a prime $p$.
@@ -811,7 +812,7 @@ be interesting for more tight use cases.
 \minote{designated verifier proofs.\\
  either or proof I'm you or the staement is true + commitment discrete log}
 \minote{delayed input}
-\minote{Batched verification.}
+\paragraph{Batched verification.}
 \minote{Shared proof computation\\
 check multisignatures and add the new problem of computing proofs with devices that share different keys}
 \paragraph{R1CS compatibility.} It is not clear whether it would be beneficial for an API of $\Sigma$-protocols to be aligned with the current zk-proof effort of having a uniform
