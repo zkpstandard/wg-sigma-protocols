@@ -760,11 +760,11 @@ For formal proofs we refer, e.g., to Damg\r{a}rd~\cite{damgard04}.
 \end{tabular}
 \end{table}
 
-In this section, we consider the concrete security of sigma protocols, and illustrate the cardinal points that should be consider when implementing sigma protocols.
-Additionally, in \cref{table:implementations}, we report the implementations that we are currently aware of, and that we believe should be considered when issuing guidelines for a standard.
+In this section, we consider the concrete security of $\Sigma$-protocols, and illustrate the main points that should be consider when implementing them.
+In \cref{table:implementations}, we report the implementations that we are currently aware of, and that we believe should be considered when issuing guidelines for a standard.
 This table is greatly inspired from the remarkable bibliographic work of Lueks et al.~\cite{zksk}.
 \paragraph{Choice of a group.} We advise for the use of prime-order elliptic curves of either 256 or 512 bits of security, depending on the desired security of the upper layers in the protocol\footnote{For instance, proving a DH relation with one fixed group element such as a public key, might expose the protocol to cryptanalytic attacks such as Brown-Gallant~\cite{EPRINT:BroGal04} and Cheon’s attack~\cite{EC:Cheon06}. We consider these attacks out of scope for this standardization effort, and believe this analysis should be deferred to the concrete security study of the larger protocol.}.
-Concretely, we see fit standardized curves such as NIST curves p-521 and p-256~\cite{fips2}, secp256k1~\cite{SECG}, or standardized prime-order group abstractions over non prime-order groups, such as Decaf~\cite{cfrg-ristretto-decaf}.
+Concretely, we see fit standardized curves such as NIST curves p-521 and p-256~\cite{fips2}, secp256k1~\cite{SECG}, or standardized prime-order group abstractions over non prime-order groups, such as Decaf or Ristretto~\cite{cfrg-ristretto-decaf}.
 
 We think pairing-friendly curves, such as BLS12-381~\cite{bls12}, should also be considered for inclusion under relevant assumptions for bilinear groups, such as XDH when dealing with DH triples\footnote{We are aware of the threats reported in
 \url{https://safecurves.cr.yp.to/}.
@@ -773,7 +773,6 @@ Yet, it's not clear what should be the alternatives, and if dropping their suppo
 \minote{how seriously should we consider safe curves and replaces the curves I suggest?}
 We note that the exists already standards for removing small cofactors in elliptic curves~\cite{rfc2785}.
  However we believe that this should be implemented as an abstraction layer over the protocol.
-
 \minote{chek if standards works well}
 
 \paragraph{Commitment.} The first step is the generation of a uniformly-distributed random element over $\ZZ_p$. As mentioned in \Cref{sec:motivation}, the nonce must be distributed uniformly at random, and even a small bias in the distribution could completely compromise zero-knowledge~\cite{XX}.
