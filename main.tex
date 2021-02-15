@@ -31,7 +31,7 @@
     pdftitle={Proposal: Sigma-protocols},
     pdfauthor={Stephan Krenn and Michele Orrù}, pdfpagelabels=true, %linktocpage=true,     backref=page,
     bookmarks,bookmarksopen,bookmarksdepth=3,
-    breaklinks,colorlinks,citecolor=blue,linkcolor=blue
+    breaklinks,colorlinks,citecolor=blue,linkcolor=blue,urlcolor=blue
    ]{hyperref}
 \usepackage[capitalize,nameinlink,sort]{cleveref}
 %
@@ -79,10 +79,11 @@ constructions,
 such as anonymous credentials~\cite{CCS:ChaMeiZav14}, password-authenticated key exchange~\cite{jpake},
 ring signatures, multi signatures, blind signatures, and more.
 Lueks et al.~\cite{zksk}, reported that solely in the years 2018-2019 editions of PETS, ACM CCS, WPES, NDSS,
-7 publications use sigma protocols. All these protocols can be implemented using the API that we propose in section~\cref{sec:composition}.
+7 publications use sigma protocols.
+Yet, there is no standardized way of implementing them, and as a result a lot of implementations have shared, common pitfalls (cf.\ \cref{sec:motivation}).
 
+We make a first attempt at the standardization of $\Sigma$-protocols by proposing an interface and a language for proving statements about the discrete logarithm of elements in a prime-order cyclic group, targeting specifically groups in elliptic curves. To the best of our knowledge, deployed and implemented sigma protocols rely mostly on the following sub-set of features:
 
-Below, we propose here an incomplete list of protocols that rely on sigma protocols, sorted by the required functionality:
 \begin{itemize}
   \item \textbf{Discrete logarithm equality, Diffie-Hellman triples.}
   Proving so-called DLEQ relation is an essential task in some VOPRFs such as~\cite{AC:JarKiaKra14},
@@ -91,18 +92,19 @@ Below, we propose here an incomplete list of protocols that rely on sigma protoc
   Browser, and others.
   There also other works, published in recent academic conferences, that rely on them: Cryptography for \#metoo~\cite{PoPETS:KuyKraRab19}; Solidus~\cite{CCS:CZJKJS17}; ClaimChain~\cite{ClaimChain}.
   \item \textbf{Knowledge of plaintexts, openings of commitments}
-  The AND-composition of the dlog relations has been used over a number of protocols,
+  The so-called AND-composition of the dlog relations has been used over a number of protocols,
   including in Algebraic MACs~\cite{CCS:ChaMeiZav14},
   later implemented in Signal~\cite{CCS:ChaPerZav20} and now deployed to millions of users.
   \item \textbf{Proving knowledge of one among multiple discrete logarithms.}
-  (often referred to as OR composition)
+  OR-composition of sigma protocols
   has been used for ring signatures (e.g.~cite{borromean}) and implementing for private transactions in CryptoNote (Monero)~\cite{monero}, Mesh~\cite{PoPETS:AlTGon19}.
   %\item Coconut~\cite{NDSS:SABMD19} with threshold Issuance Selective Disclosure Credentials with Applications to Distributed Ledgers;
   % \item Anonymous Credentials Light~\cite{CCS:BalLys13}
 \end{itemize}
 
 
-A request for standardization has already been posted on the \href{https://community.zkproof.org/t/standardizing-sigma-protocols/471/}{zk-proof community} and received a fair amount of interest.
+All these protocols can be implemented using the API that we propose in section~\cref{sec:composition}.
+A request for standardization has also been posted on the \href{https://community.zkproof.org/t/standardizing-sigma-protocols/471/}{zk-proof community} and received a fair amount of interest.
 
 % \subsection{Related Work}
 
@@ -119,9 +121,10 @@ due to the use of curve25519 in place of a prime-order curve.
 %\href{https://tools.ietf.org/html/rfc2785#ref-LAW}{RFC2785}, that already provides solutions for avoiding small subgroup attacks)
   \item \textbf{Leakage, partial leakage, or reuse of the commitment is fatal.}
   The first message in a sigma protocol, sometimes called nonce or commitment, must be uniformly distributed in order to preserve zero-knowledge. Re-use of the same nonce~\cite{XX}, or partial leakage allows for the complete recovery of the witness to be proven.
-  A blatant example of this mistake in the wild was uncovered in 2010, by the hacker group \texttt{fail0verflow}. They showed how SONY was reusing the same nonce for digitally signing Playstation 3 games\footnote{\url{https://media.ccc.de/v/27c3-4087-en-console_hacking_2010}}.  The member could exploit this to calculate the private key, and create valid signatures.
+  A blatant instance of this mistake was uncovered in 2010, by the hacker group \texttt{fail0verflow}. They showed how SONY was reusing the same nonce for digitally signing Playstation 3 games\footnote{\url{https://media.ccc.de/v/27c3-4087-en-console_hacking_2010}}.  The member could exploit this to calculate the private key, and create valid signatures.
 
-  \item \textbf{A weak impelmentation of Fiat--Shamir heuristic compromises adaptive security.} The second message in a sigma protocol, sometimes called \emph{challenge}, if computed non-interactives must include non only the commitment, but the full statement and the group description. In fact, if the group generator $G$ is not included in the (EC-DSA) signature, then it is possible to prove statement under a different generator $\alpha G$, for any $\alpha \in \ZZ_p$; if $X \in \GG$, part of the statement, is not included in the query to the random oracle, it is possible to compute proofs for $\beta X$, for any $\beta \in \ZZ_p$.
+  \item \textbf{A weak impelmentation of Fiat--Shamir heuristic compromises adaptive security.} The second message in a sigma protocol, sometimes called \emph{challenge}, if computed non-interactives must include non only the commitment, but the full statement and the group description. For instance, if the group generator $G$ is not included in the (EC-DSA) signature, then it is possible to prove statement under a different generator $\alpha G$, for any $\alpha \in \ZZ_p$.
+  Similairly, if $X \in \GG$, part of the statement, is not included in the query to the random oracle, it is possible to compute proofs for $\beta X$, for any $\beta \in \ZZ_p$.
   Mistakes of this class were uncovered by Bernhard et al.~\cite{AC:BerPerWar12}, by Haines et al.~\cite{SP:HLPT20}, and by Cortier et al.~\cite{cortier2020}.
   They all showed how some voting systems, respectively Helios,  Scytl-SwissPost, and Belenios,
   implemented incorrectly the Fiat--Shamir heuristic, allowing for tampering of votes.
@@ -292,7 +295,7 @@ $$\relation=\{((y_1,\dots,y_m),(w_1,\dots,w_n)) : (y_1,\dots,y_m)=\varphi(w_1,\d
 \end{enumerate}
 \minote{here changed a bit $s, r$ from $\GG$ to $\ZZ_p$}
 
-\subsubsection{Proving linear relations among witnesses}
+\subsubsection{Proving linear relations among witnesses.}
 
   While the above protocol allows one to efficiently prove knowledge of a preimage under a homomorphism, many protocols found in the literature require one to prove relations among witnesses.
   Specifically, they require to prove relations like the following:
@@ -535,7 +538,7 @@ $$
       \item
         It parses $(y^0,y^1)\defeq s$.
       \item
-        It chooses $c\in\ZZ_p$.
+        It chooses $c\in\ZZ_u$.
       \item
         It computes $(t^0,c,s^0)\gets\simulator^0(y^0,c)$ and $(t^1,c,s^1)\gets\simulator^1(y^1,c)$.
       \item
@@ -573,7 +576,7 @@ $$
       \item
 	It parses $\st\defeq(\st^j,c^{1-j},s^{1-j})$.
       \item
-        It computes $c^j\defeq c-c^{1-j}\mod m$, and sets $s^j\gets\prover_2^j(w^j,y^j,c^j,\st^j)$.
+        It computes $c^j\defeq c-c^{1-j}$, and sets $s^j\gets\prover_2^j(w^j,y^j,c^j,\st^j)$.
       \item
         It computes $s^0\gets\prover_2^0(w^0,y^0,c,\st^0)$ and $s^1\gets\prover_2^1(w^1,y^1,c,\st^1)$.
       \item
@@ -583,9 +586,9 @@ $$
     The verifier's algorithm $\verifier(y,t,c,s)$ proceeds as follow:
     \begin{enumerate}
       \item
-        It  parses $(s^0,s^1,c^0)\defeq$.
+        It  parses $(s^0,s^1,c^0)\defeq s$.
       \item
-        It sets $c^1\defeq c-c^0\mod m$.
+        It sets $c^1\defeq c-c^0$.
       \item
 	The algorithm outputs $\verifier^0(y^0,t^0,c^0,s^0)\land\verifier^1(y^1,t^1,c^1,s^1)$.
     \end{enumerate}
@@ -595,7 +598,7 @@ $$
       \item
         It parses $(y^0,y^1)\defeq y$.
       \item
-        It chooses a random $c^0$ in $\ZZ_p$ and computes $c^1\defeq c-c^0 \mod m$.
+        It chooses a random $c^0$ in $\ZZ_u$ and computes $c^1\defeq c-c^0$.
       \item
         It then computes $(t^0,c^0,s^0)\gets\simulator^0(y^0,c^0)$ and $(t^1,c^1,s^1)\gets\simulator^1(y^1,c^1)$.
       \item
@@ -743,6 +746,8 @@ For formal proofs we refer, e.g., to Damg\r{a}rd~\cite{damgard04}.
 \begin{table}[t]
   \caption{Summary of implementations, along with features supported.  }
 \begin{tabular}{r|ccc}
+  Project & AND-composition & OR-composition & last activity \\
+  \hline
   \emph{SCAPI}~\cite{scapi}\\
   zkp~\cite{zkp}\\
   zksk~\cite{zksk}\\
@@ -754,29 +759,39 @@ For formal proofs we refer, e.g., to Damg\r{a}rd~\cite{damgard04}.
 In this section, we consider the concrete security of sigma protocols, and illustrate the cardinal points that should be consider when implementing sigma protocols.
 
 \paragraph{Choice of a group.} We advise for the use of prime-order elliptic curves of either 256 or 512 bits of security, depending on the desired security of the upper layers in the protocol\footnote{For instance, proving a DH relation with one fixed group element such as a public key, might expose the protocol to cryptanalytic attacks such as Choen attack or XXX. We consider these attacks out of scope for our paper, and believe this analysis should be deferred to the concrete security study of the larger protocol.}.
-Concretely, we see fir standardized curves such as curve p-521, p-256~\cite{XXX}, BITCOIN CURVE~\cite{XX}, or standardized prime-order group abstractions over non prime-order groups, such as ristretto XXX.
+Concretely, we see fit standardized curves such as curve p-521, p-256~\cite{XXX}, BITCOIN CURVE~\cite{XX}, or standardized prime-order group abstractions over non prime-order groups, such as ristretto XXX.
 
-We think a modern standard should also take into account pairing-friendly curves, such as XXX, under relevant assumptions for bilinear groups, such as SXDH
+We think pairing-friendly curves, such as BLS12-381~\cite{XX}, should also be considered for inclusion under relevant assumptions for bilinear groups, such as XDH when dealing with DH triples.
 \minote{how seriously should we consider safe curves and replaces the curves I suggest?}
-We note that the exists already standards for removing small cofactors in elliptic curves~\cite{XX}, howeve we believe that this should be implemented as an abstraction layer over the protocol.
+We note that the exists already standards for removing small cofactors in elliptic curves~\cite{XX}.
+ However we believe that this should be implemented as an abstraction layer over the protocol.
 
 \minote{chek if standards works well}
 
-\paragraph{Commitment.} The first step is the generation of a uniformly-distributed random element over $\ZZ_p$. As mentioned in \Cref{sec:motivation}, the nonce must be distributed uniformly at random, and even a small bias in the distribution could completely compromise zero-knowledge.
+\paragraph{Commitment.} The first step is the generation of a uniformly-distributed random element over $\ZZ_p$. As mentioned in \Cref{sec:motivation}, the nonce must be distributed uniformly at random, and even a small bias in the distribution could completely compromise zero-knowledge~\cite{XX}.
 The construction of cryptographically secure source of randomness is a difficult problem, that is particularly challenging on embedded devices such as smart-cards or embedded systems.
-We propose the generation of a synthetic nonce obtained from hashing the statement, the context, and the secret together, as already suggested in previous standards \href{https://tools.ietf.org/html/rfc6979}{RFC6979}.
+We propose the generation of a synthetic nonce obtained from hashing statement, context, and secret together.
+This technique was already suggested in previous standards \href{https://tools.ietf.org/html/rfc6979}{RFC6979}.
 While it is widely recognized that this approach leads to the generation of secure nonces, it might on the other hand leak information about the witness used for a proof, when examining consecutive executions of the protocol. This is e.g. the case of a OR-proof that attempts to preserve anonymity.
- For these cases, the prover can either rely on an internal counter, or simply rely on the operating system's random number generator.
+ For these cases, the prover should additionally include an internal counter, or 32 bytes of entropy from the operating system's.
 
 
 \paragraph{Computing the challenge.} In the non-interactive instantiation of sigma protocols, the challenge is the image of a cryptographically-secure hash fucntion,
 given as input the commitment, the context, and the tag.
 
-The hash function can be either blake2 or sha256 truncated to the first 128 buts, or a more structured hash into a prime $p$. For this, we direct the reader to XX.
+The hash function can be either blake2~\cite{XX}, SHA-256, or SHA3~\cite{XX} truncated to the first 128 buts, or a more structured hash into a prime $p$.
+The first provides an efficient way of hashing into the curve, but collision resistance might be impacted for e.g. post-quantum security.
+The latter guarantees more seucirty, but requires a more involved implementation.
+We direct the curious reader to~\cite{XX} for further information.
 
 \minote{what is the post-quantum impact of 128-bits truncated hash?}
 The context is composed of: domain separator, any information provided to the external protocol.
-\minote{mention concatenation could lead to attacks. zkp uses strobe to get aroudn it.}
+\minote{mention concatenation could lead to attacks. zkp uses strobe to get around it.}
+
+\paragraph{Response and proof output.} The response is computed using standard field addition and multiplication.
+\paragraph{Verification.}
+
+
 
 
 In \cref{table:implmentations}, we report the implementations that we are currently aware of, and that we believe should be considered when issuing guidelines for a standard.
@@ -788,7 +803,6 @@ be interesting for more tight use cases.
  either or proof I'm you or the staement is true + commitment discrete log}
 \minote{delayed input}
 \minote{Batched verification.}
-\section{Open Problems}
 \minote{Shared proof computation\\
 check multisignatures and add the new problem of computing proofs with devices that share different keys}
 \minote{R1CS compatibility.\\ a unified way of specifying proof goals}
