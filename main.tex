@@ -114,7 +114,7 @@ So far, there has been little literature meant to help cryptography engineers im
 Despite Schnorr signatures and zero-knowledge proofs have already been standardized (respectively in \cite{rfc8032} and \cite{rfc8235}), there is still no formal, established way to implement sigma protocols and their composition.
  Additionally, as academic papers focus on proving the security of sigma protocols in generic cyclic groups, the implementation details are often times overlooked, and, as a result, a lot of insecure implementations have been published in the past. To name a few, well-known pitfalls that have led to insecure implementations:
 \begin{itemize}
-  \item \textbf{Implementation over non-prime order groups could lead to small subgroup attacks}. The cyclic group where proofs are being implemented must be carefully selected. Implementing $\sigma$-protocol over Weierstrass curves is appealing for its performances and straight-line scalar multiplication formul\ae.
+  \item \textbf{Implementation over non-prime order groups could lead to small subgroup attacks}. The cyclic group where proofs are being implemented must be carefully selected. Implementing $\Sigma$-protocol over Weierstrass curves is appealing for its performances and straight-line scalar multiplication formul\ae.
    However, the presence of a small cofactor could be fatal for security.
 In 2017, Monero\footnote{\url{https://www.getmonero.org/2017/05/17/disclosure-of-a-major-bug-in-cryptonote-based-currencies.html}} disclosed a vulnerability in Cryptonote-based e-currencies that would allow double-spending
 due to the use of curve25519 in place of a prime-order curve.
