@@ -164,3 +164,70 @@ isbn="978-3-642-22137-8"
   booktitle={E-Vote-Id 2020-The International Conference for Electronic Voting},
   year={2020}
 }
+
+
+@article{csproofs,
+  title={Proof systems for general statements about discrete logarithms},
+  author={Camenisch, Jan and Stadler, Markus},
+  journal={Technical Report/ETH Zurich, Department of Computer Science},
+  volume={260},
+  year={1997},
+  publisher={ETH Zurich}
+}
+
+
+
+@misc{jr1cs,
+  title={J-R1CS – a JSON Lines format for R1CS},
+  author={Guillaume Drevon},
+  howpublished = {zkproof Proposal},
+  year={2019},
+  note={Available at: \url{https://docs.zkproof.org/pages/standards/accepted-workshop2/proposal--zk-interop-jr1cs.pdf}}
+}
+
+
+@misc{fips2,
+  title={Digital Signature Standard},
+  author={NIST},
+  year={2000},
+  howpublished = {FIPS 186-2},
+  note={Available at: \url{https://csrc.nist.gov/csrc/media/publications/fips/186/2/archive/2000-01-27/documents/fips186-2.pdf}}
+}
+
+@techreport{cfrg-ristretto-decaf,
+	number =	{draft-irtf-cfrg-ristretto255-decaf448-00},
+	type =		{Internet-Draft},
+	institution =	{Internet Engineering Task Force},
+	publisher =	{Internet Engineering Task Force},
+	note =		{Work in Progress},
+	url =		{https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-ristretto255-decaf448-00},
+        author =	{Henry de Valence and Jack Grigg and George Tankersley and Filippo Valsorda and Isis Lovecruft and Mike Hamburg},
+	title =		{{The ristretto255 and decaf448 Groups}},
+	pagetotal =	26,
+	year =		2020,
+	month =		oct,
+	day =		5,
+	abstract =	{This memo specifies two prime-order groups, ristretto255 and decaf448, suitable for safely implementing higher-level and complex cryptographic protocols. The ristretto255 group can be implemented using Curve25519, allowing existing Curve25519 implementations to be reused and extended to provide a prime-order group. Likewise, the decaf448 group can be implemented using edwards448.}
+}
+
+@misc{zkp,
+  title={zkp: a toolkit for Schnorr proofs},
+  author={Henry de Valence},
+  year={2019},
+  note={Available at: \url{zkp: a toolkit for Schnorr proofs}}
+}
+
+@misc{rfc6979,
+	series =	{Request for Comments},
+	number =	6979,
+	howpublished =	{RFC 6979},
+	publisher =	{RFC Editor},
+	doi =		{10.17487/RFC6979},
+	url =		{https://rfc-editor.org/rfc/rfc6979.txt},
+        author =	{Thomas Pornin},
+	title =		{{Deterministic Usage of the Digital Signature Algorithm (DSA) and Elliptic Curve Digital Signature Algorithm (ECDSA)}},
+	pagetotal =	79,
+	year =		2013,
+	month =		aug,
+	abstract =	{This document defines a deterministic digital signature generation procedure. Such signatures are compatible with standard Digital Signature Algorithm (DSA) and Elliptic Curve Digital Signature Algorithm (ECDSA) digital signatures and can be processed with unmodified verifiers, which need not be aware of the procedure described therein. Deterministic signatures retain the cryptographic security features associated with digital signatures but can be more easily implemented in various environments, since they do not need access to a source of high-quality randomness.},
+}

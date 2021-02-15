@@ -134,7 +134,7 @@ We stress that this is not straightforward:
 %Despite Schnorr proofs have been standardized as zero-knowledge proofs (c.f.\ \href{https://tools.ietf.org/html/rfc8235}{RFC8235}) and signatures (c.f.\ ed25519 in \href{https://tools.ietf.org/html/rfc8032}{RFC8032}),
 for instance,
 the current standardized ed25519 cannot be immediately adapted to a zero-knowledge proof in a secure way,
-because of its malleability~\cite[p. 7]{JCEng:BDLSY12g},  and the different behavior on the batched and compressed
+because of its malleability~\cite[p. 7]{JCEng:BDLSY12},  and the different behavior on the batched and compressed
 form\footnote{\url{https://hdevalence.ca/blog/2020-10-04-its-25519am}}.
 
 We hence hereby propose the creation of a working group that includes both recent cryptanalytic insights as well as the
@@ -693,9 +693,9 @@ Firstly, all the protocols presented in the previous section are $\Sigma$-protoc
 
 \begin{theorem}
   If, for $i=0,1$, $(\prover_1^i,\prover_2^i,\verifier^i)$ is a $\Sigma$-protocol for relation $\relation^i$ with challenge set $\ZZ_{u^i}$ and simulator $\simulator^i$, then the protocols specified in Section~\ref{sec:composition} are $\Sigma$-protocol with challenge set $\ZZ_u$ and simulator $\simulator$ for relation $\relation^\land$ and $\relation^\lor$, respectively.
-  
+
   If at least one of the composed protocols has unpredictable commitments, then so has the protocol for $\relation^\land$.
-  If both protocols have unique responses, then so has the protocol for $\relation^\land$. 
+  If both protocols have unique responses, then so has the protocol for $\relation^\land$.
 %  If all composed protocols have unique responses, then so has the composed protocol.
 \end{theorem}
 
@@ -745,7 +745,9 @@ For formal proofs we refer, e.g., to Damg\r{a}rd~\cite{damgard04}.
 \section{Instantiation }
 
 \begin{table}[t]
-  \caption{Summary of implementations, along with features supported.  }
+  \caption{Summary of implementations, along with features supported.
+  \label{table:implementations}}
+  \centering
 \begin{tabular}{r|ccc}
   Project & AND-composition & OR-composition & last activity \\
   \hline
@@ -758,13 +760,17 @@ For formal proofs we refer, e.g., to Damg\r{a}rd~\cite{damgard04}.
 \end{table}
 
 In this section, we consider the concrete security of sigma protocols, and illustrate the cardinal points that should be consider when implementing sigma protocols.
+Additionally, in \cref{table:implementations}, we report the implementations that we are currently aware of, and that we believe should be considered when issuing guidelines for a standard.
+This table is greatly inspired from the remarkable bibliographic work of Lueks et al.~\cite{zksk}.
+\paragraph{Choice of a group.} We advise for the use of prime-order elliptic curves of either 256 or 512 bits of security, depending on the desired security of the upper layers in the protocol\footnote{For instance, proving a DH relation with one fixed group element such as a public key, might expose the protocol to cryptanalytic attacks such as Brown-Gallant~\cite{EPRINT:BroGal04} and Cheon’s attack~\cite{EC:Cheon06}. We consider these attacks out of scope for this standardization effort, and believe this analysis should be deferred to the concrete security study of the larger protocol.}.
+Concretely, we see fit standardized curves such as NIST curves p-521 and p-256~\cite{fips2}, secp256k1~\cite{SECG}, or standardized prime-order group abstractions over non prime-order groups, such as Decaf~\cite{cfrg-ristretto-decaf}.
 
-\paragraph{Choice of a group.} We advise for the use of prime-order elliptic curves of either 256 or 512 bits of security, depending on the desired security of the upper layers in the protocol\footnote{For instance, proving a DH relation with one fixed group element such as a public key, might expose the protocol to cryptanalytic attacks such as Choen attack or XXX. We consider these attacks out of scope for our paper, and believe this analysis should be deferred to the concrete security study of the larger protocol.}.
-Concretely, we see fit standardized curves such as curve p-521, p-256~\cite{XXX}, BITCOIN CURVE~\cite{XX}, or standardized prime-order group abstractions over non prime-order groups, such as ristretto XXX.
-
-We think pairing-friendly curves, such as BLS12-381~\cite{XX}, should also be considered for inclusion under relevant assumptions for bilinear groups, such as XDH when dealing with DH triples.
+We think pairing-friendly curves, such as BLS12-381~\cite{XX}, should also be considered for inclusion under relevant assumptions for bilinear groups, such as XDH when dealing with DH triples\footnote{We are aware of the threats reported in
+\url{https://safecurves.cr.yp.to/}.
+Yet, it's not clear what should be the alternatives, and if dropping their support would hinder adoption.
+}.
 \minote{how seriously should we consider safe curves and replaces the curves I suggest?}
-We note that the exists already standards for removing small cofactors in elliptic curves~\cite{XX}.
+We note that the exists already standards for removing small cofactors in elliptic curves~\cite{rfc2785}.
  However we believe that this should be implemented as an abstraction layer over the protocol.
 
 \minote{chek if standards works well}
@@ -772,7 +778,7 @@ We note that the exists already standards for removing small cofactors in ellipt
 \paragraph{Commitment.} The first step is the generation of a uniformly-distributed random element over $\ZZ_p$. As mentioned in \Cref{sec:motivation}, the nonce must be distributed uniformly at random, and even a small bias in the distribution could completely compromise zero-knowledge~\cite{XX}.
 The construction of cryptographically secure source of randomness is a difficult problem, that is particularly challenging on embedded devices such as smart-cards or embedded systems.
 We propose the generation of a synthetic nonce obtained from hashing statement, context, and secret together.
-This technique was already suggested in previous standards \href{https://tools.ietf.org/html/rfc6979}{RFC6979}.
+This technique was already suggested in previous standards~\cite{rfc6979}.
 While it is widely recognized that this approach leads to the generation of secure nonces, it might on the other hand leak information about the witness used for a proof, when examining consecutive executions of the protocol. This is e.g. the case of a OR-proof that attempts to preserve anonymity.
  For these cases, the prover should additionally include an internal counter, or 32 bytes of entropy from the operating system's.
 
@@ -790,13 +796,15 @@ The context is composed of: domain separator, any information provided to the ex
 \minote{mention concatenation could lead to attacks. zkp uses strobe to get around it.}
 
 \paragraph{Response and proof output.} The response is computed using standard field addition and multiplication.
-\paragraph{Verification.}
+\paragraph{Verification.} The \verb|proof| object should support two different verification functions, for batched and short verification.
+If verification fails, an exception should be raised.
+If input parsing fails, an exception should be raised.
+Otherwise, the verifier outputs $\pctrue$.
 
 
 
 
-In \cref{table:implmentations}, we report the implementations that we are currently aware of, and that we believe should be considered when issuing guidelines for a standard.
-This table is greatly inspired from the remarkable bibliographic work of XX.
+
 \section{Looking Ahead}
 To keep this proposal short and open the discussion to a wider community, we purposely left open some topics that could
 be interesting for more tight use cases.
@@ -806,7 +814,9 @@ be interesting for more tight use cases.
 \minote{Batched verification.}
 \minote{Shared proof computation\\
 check multisignatures and add the new problem of computing proofs with devices that share different keys}
-\minote{R1CS compatibility.\\ a unified way of specifying proof goals}
+\paragraph{R1CS compatibility.} It is not clear whether it would be beneficial for an API of $\Sigma$-protocols to be aligned with the current zk-proof effort of having a uniform
+language for expressing relations (c.f.\ the community reference~\cite[section 3]{zkproof-reference}, and Drevon's proposal~\cite{jr1cs}).
+Generally, statements about discrete logarithms are dealt with so-called Camenisch--Stadler notation, and it is not clear what would be the computational burden of expressing the relation in R1CS language.
 
 \bibliographystyle{alpha}
 \bibliography{cryptobib/abbrev3,cryptobib/crypto,additional}
