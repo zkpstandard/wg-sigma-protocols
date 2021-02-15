@@ -54,8 +54,8 @@
 %
 \titlerunning{Proposal: $\Sigma$-protocols}
 
-\author{Stephan Krenn\and
-        Michele Orr\`u}
+\author{Stephan Krenn\inst{1} \and
+        Michele Orr\`u\inst{2}}
 
 \authorrunning{S. Krenn and M. Orr\`u}
 
@@ -71,45 +71,73 @@
 \end{abstract}
 
 \section{Introduction}
-Non-intearctive sigma protocols are zero-knowledge~\cite{GolMicRac89} proofs of knowledge~\cite{C:BelGol92} without SRS, proven secure in the random oracle model.
-They have been introduced by Schnorr~\cite{JC:Schnorr91} and so far have there have been widespread implementations because of their simplicity, maturity, and versatility.
-Recently, Lueks et al.~\cite{zksk},
+Sigma protocols are zero-knowledge~\cite{GolMicRac89} proofs of knowledge~\cite{C:BelGol92} without SRS, proven secure in the random oracle model.
+Introduced by Schnorr~\cite{JC:Schnorr91} over 30 years ago, they are now widely used  in practice because of their simplicity, maturity, and versatility.
 
-Sigma protocols have already been employed for anonymous credentials, password-authenticated key exchange~\cite{jpake}, (ring, multi)  signatues, and other
-cryptographic constructions. Solely in the past XX years, we recall the
+They played an essential component in the building of a number of cryptographic
+constructions,
+such as anonymous credentials~\cite{CCS:ChaMeiZav14}, password-authenticated key exchange~\cite{jpake},
+ring signatures, multi signatures, blind signatures, and more.
+Recently, Lueks et al.~\cite{zksk}, reported that solely in the years 2018-2019 editions of PETS, ACM CCS, WPES, NDSS,
+7 publications use sigma protocols. All these protocols can be implemented using the API that we propose in section~\cref{sec:composition}.
+
+
+Below, we propose here an incomplete list of protocols that rely on sigma protocols, sorted by the required functionality:
 \begin{itemize}
-  \item DLEQ in some VOPRFs~\cite{cfrg-voprf}, Privacy pass~\cite{PoPETS:DGSTV18}
-  \item AND+DLEQ anonymous credentials; (at least) AND+DLEQ: Signal~\cite{CCS:ChaPerZav20}, openings on Pedersen commitments, or plaintexts of ElGamal encryptions; DH tuple: Cryptography for \#metoo~\cite{PoPETS:KuyKraRab19}; Solidus~\cite{CCS:CZJKJS17}; ClaimChain~\cite{ClaimChain}
-  \item OR for Ring Signatures: CryptoNote (Monero)~\cite{monero}, Mesh~\cite{PoPETS:AlTGon19};
-  \item Signal, who's been using Algebraic MACs~\cite{CCS:ChaMeiZav14}; for group chats;
-  \item Coconut~\cite{NDSS:SABMD19} with threshold Issuance Selective Disclosure Credentials with Applications to Distributed Ledgers;
-   \item Anonymous Credentials Light~\cite{CCS:BalLys13}
+  \item \textbf{Discrete logarithm equality, Diffie-Hellman triples.}
+  Proving so-called DLEQ relation is an essential task in some VOPRFs such as~\cite{AC:JarKiaKra14},
+  which is currently in process of standardization, thanks to sigma protocols~\cite{cfrg-voprf}.
+  DLEQ proofs are also being used by Privacy pass~\cite{PoPETS:DGSTV18}, a lightweight anonymous credential that has been implemented and deployed at scale by Cloudflare, Brave
+  Browser, and others.
+  There also other works, published in recent academic conferences, that rely on them: Cryptography for \#metoo~\cite{PoPETS:KuyKraRab19}; Solidus~\cite{CCS:CZJKJS17}; ClaimChain~\cite{ClaimChain}.
+  \item \textbf{Knowledge of plaintexts, openings of commitments}
+  The AND-composition of the dlog relations has been used over a number of protocols,
+  including in Algebraic MACs~\cite{CCS:ChaMeiZav14},
+  later implemented in Signal~\cite{CCS:ChaPerZav20} and now deployed to millions of users.
+  \item \textbf{Proving knowledge of one among multiple discrete logarithms.}
+  (often referred to as OR composition)
+  has been used for ring signatures (e.g.~cite{borromean}) and implementing for private transactions in CryptoNote (Monero)~\cite{monero}, Mesh~\cite{PoPETS:AlTGon19}.
+  %\item Coconut~\cite{NDSS:SABMD19} with threshold Issuance Selective Disclosure Credentials with Applications to Distributed Ledgers;
+  % \item Anonymous Credentials Light~\cite{CCS:BalLys13}
 \end{itemize}
 
-A request for standardization has already been posted on the zk-proof community\footnote{\url{https://community.zkproof.org/t/standardizing-sigma-protocols/471/}} and received a fair amount of interest.
 
-\subsection{Related Work}
+A request for standardization has already been posted on the \href{https://community.zkproof.org/t/standardizing-sigma-protocols/471/}{zk-proof community} and received a fair amount of interest.
+
+% \subsection{Related Work}
 
 \section{Background and Motivation}
 \label{sec:motivation}
 So far, there has been little literature meant to help cryptography engineers implement correctly Sigma protocols for arbitrary statements about discrete logs.
-Despite Schnorr signatures and zero-knowledge proofs have already been standardized (respectively in XX and XX), there is no formal, established way to implement sigma protocols and their composition. We stress that this is not straightforward:
-%Despite Schnorr proofs have been standardized as zero-knowledge proofs (c.f.\ \href{https://tools.ietf.org/html/rfc8235}{RFC8235}) and signatures (c.f.\ ed25519 in \href{https://tools.ietf.org/html/rfc8032}{RFC8032}),
- for instance, the current standardized ed25519 cannot be immediately adapted to a zero-knowledge proof in a secure way, because of its malleability~\cite[p. 7]{JCEng:BDLSY12g},  and the different behavior on the batched and compressed form\footnote{\url{https://hdevalence.ca/blog/2020-10-04-its-25519am}}.
- Additionally, as academic papers focus on proving the security of sigma protocols in generic prime-order groups, the implementation details are often times overlooked, and, as a result, a lot of insecure implementations have been published in the past. To name a few, well-known pitfalls that have led to insecure implementations:
+Despite Schnorr signatures and zero-knowledge proofs have already been standardized (respectively in \cite{rfc8032} and \cite{rfc8235}), there is still no formal, established way to implement sigma protocols and their composition.
+ Additionally, as academic papers focus on proving the security of sigma protocols in generic cyclic groups, the implementation details are often times overlooked, and, as a result, a lot of insecure implementations have been published in the past. To name a few, well-known pitfalls that have led to insecure implementations:
 \begin{itemize}
-  \item \textbf{Implementation over non-prime order groups could lead to small subgroup attacks}. The cyclic group where proofs are being implemented must be carefully selected. Implementing sigma protocol over Wirstrass curves is appealing for its performances and no general formulas. However, the presence of a small cofactor could be fatal for security. For instance, in 2017, Monero\footnote{\url{https://www.getmonero.org/2017/05/17/disclosure-of-a-major-bug-in-cryptonote-based-currencies.html}} disclosed a vulnerability in Cryptonote-based e-currencies that would allow double-spending.\href{https://tools.ietf.org/html/rfc2785#ref-LAW}{RFC2785}, that already provides solutions for avoiding small subgroup attacks)
+  \item \textbf{Implementation over non-prime order groups could lead to small subgroup attacks}. The cyclic group where proofs are being implemented must be carefully selected. Implementing $\sigma$-protocol over Weierstrass curves is appealing for its performances and straight-line scalar multiplication formul\ae.
+   However, the presence of a small cofactor could be fatal for security.
+In 2017, Monero\footnote{\url{https://www.getmonero.org/2017/05/17/disclosure-of-a-major-bug-in-cryptonote-based-currencies.html}} disclosed a vulnerability in Cryptonote-based e-currencies that would allow double-spending
+due to the use of curve25519 in place of a prime-order curve.
+%\href{https://tools.ietf.org/html/rfc2785#ref-LAW}{RFC2785}, that already provides solutions for avoiding small subgroup attacks)
   \item \textbf{Leakage, partial leakage, or reuse of the commitment is fatal.}
   The first message in a sigma protocol, sometimes called nonce or commitment, must be uniformly distributed in order to preserve zero-knowledge. Re-use of the same nonce~\cite{XX}, or partial leakage allows for the complete recovery of the witness to be proven.
   A blatant example of this mistake in the wild was uncovered in 2010, by the hacker group \texttt{fail0verflow}. They showed how SONY was reusing the same nonce for digitally signing Playstation 3 games\footnote{\url{https://media.ccc.de/v/27c3-4087-en-console_hacking_2010}}.  The member could exploit this to calculate the private key, and create valid signatures.
 
   \item \textbf{A weak impelmentation of Fiat--Shamir heuristic compromises adaptive security.} The second message in a sigma protocol, sometimes called \emph{challenge}, if computed non-interactives must include non only the commitment, but the full statement and the group description. In fact, if the group generator $G$ is not included in the (EC-DSA) signature, then it is possible to prove statement under a different generator $\alpha G$, for any $\alpha \in \ZZ_p$; if $X \in \GG$, part of the statement, is not included in the query to the random oracle, it is possible to compute proofs for $\beta X$, for any $\beta \in \ZZ_p$.
-  A mistake of this type was uncovered in 2012, by Bernhard et al.~\cite{AC:BerPerWar12}.
-  They demonstrated that Helios, a platform for e-voting, calculated the challenge using the Fiat--Shamir heuristic, without including the generator, allowing for tampering of votes.
+  A mistake of this type was uncovered in 2012, by Bernhard et al.~\cite{AC:BerPerWar12}, and more recently by Haines et al.~\cite{SP:HLPT20}.
+  They both demostrated how two platfrms for e-voting, respectively Helios and Scytl-SwissPost,
+  implemented incorrectly the Fiat--Shamir heuristic, allowing for tampering of votes.
 
 \end{itemize}
+We stress that this is not straightforward:
+%Despite Schnorr proofs have been standardized as zero-knowledge proofs (c.f.\ \href{https://tools.ietf.org/html/rfc8235}{RFC8235}) and signatures (c.f.\ ed25519 in \href{https://tools.ietf.org/html/rfc8032}{RFC8032}),
+for instance,
+the current standardized ed25519 cannot be immediately adapted to a zero-knowledge proof in a secure way,
+because of its malleability~\cite[p. 7]{JCEng:BDLSY12g},  and the different behavior on the batched and compressed
+form\footnote{\url{https://hdevalence.ca/blog/2020-10-04-its-25519am}}.
 
+We hence hereby propose the creation of a working group that includes both recent cryptanalytic insights as well as the
+(partial) solutions described in other known standardization documents.
 \section{Notation and Terminology}
+\label{sec:notation}
 %Following [BFS], we consider a deterministic parameter genration algorithm Pgen that returns a group description $\Gamma \defeq (p, G, \GG)$ of a (cyclic) additive, prime order group $\GG = \langle G \rangle$ of order $p$.
 For the purpose of this document, the following notation will be used:
 
@@ -117,39 +145,35 @@ For the purpose of this document, the following notation will be used:
     $\secpar$ & main security parameter\\
     $\GG = \langle G \rangle$ & cyclic group of prime order $p$ generated by $G$\\
     $\prover,\verifier,\dots$ & potentially randomized algorithms\\
-    $x\getsr\someset$ & assignment of a uniformly random element in $\someset$ to $x$\\
-    $x\getsr\alg(in)$ & assignment of the ouput of a randomized algorithm $\alg$ on input $in$ to $x$\\
+    $x \defeq 1$ & assignment of the value 1 to $x$. \\
+    $x\sample\someset$ & assignment of a uniformly random element in $\someset$ to $x$\\
+    $x\gets\alg(in)$ & assignment of the ouput of a randomized algorithm $\alg$ on input $in$ to $x$\\
     $\relation$ & binary relation\\
     $\lang(\relation)$ & language induced by a binary relation $\relation$, i.e., $\lang(\relation)=\{y\in\{0,1\}^*:\exists w$ such that $(y,w)\in\relation\}$.\\
     $|y|$ & bitlength of a string\\
     $\NN,\ZZ$ & non-negative natural numbers and integers, respectively
 \end{tabular}
 
-
-Following~\cite{AC:BelFucSca16}, we consider a deterministic parameter generation algorithm $\grgen$ that returns a group description $\Gamma \defeq (p, G, \GG)$ of a (cyclic) additive, prime order group $\GG = \langle G \rangle$ of order $p$. With $\secpar$, we denote the security parameter.
-
-
-
 \subsection{Formal Definitions}
   In the following we provide the formal definitions required for the remainder of this document.
 
 \subsubsection{$\Sigma$-Protocols}~\\
 
-In the following we formally describe the class of $\Sigma$-protocols, which cover all protocols considered in the remainder of this document.
- For an in-depth discussion of the underlying theory we refer, e.g., to Cramer~\cite{cramer97}.
+In the following, we formally describe the class of $\Sigma$-protocols, which covers all protocols considered in the remainder of this document.
+ For an in-depth discussion of the underlying theory we refer to Cramer~\cite{cramer97}.
 \begin{definition}\label{def:sigma}
   Let $\relation$ be a binary relation and let $(y,w)\in\relation$.
   An interactive two-party protocol specified by algorithms $(\prover_1,\prover_2,\verifier)$ is called a \emph{$\Sigma$-protocol} for $\relation$ with challenge set $\CS$, public input $y$, and private input $w$, if and only if it satisfies the following conditions:
   \begin{description}
     \item[\bf 3-move form:]
-      The protocol is of the following form (cf. also Protocol~\ref{fig:generic}):
+      The protocol is of the following form (cf. also~\cref{fig:generic}):
       \begin{itemize}
         \item
-          The prover computes $(t,\st) \getsr \prover_1(w,y)$ and sends $t$ to the verifier, while keeping $\st$ secret.
+          The prover computes $(t,\st) \gets \prover_1(w,y)$ and sends $t$ to the verifier, while keeping $\st$ secret.
         \item
-          The verifier draws $c\getsr\CS$ and returns it to the prover.
+          The verifier draws $c\sample\CS$ and returns it to the prover.
         \item
-          The prover computes $s\getsr\prover_2(w,y,c,\st)$ and sends $s$ to the verifier.
+          The prover computes $s\gets\prover_2(w,y,c,\st)$ and sends $s$ to the verifier.
         \item
           The verifier accepts the protocol run, if and only if $\verifier(y,t,c,s)=\accept$, otherwise it rejects.
       \end{itemize}
@@ -158,24 +182,25 @@ In the following we formally describe the class of $\Sigma$-protocols, which cov
       If $(y,w)\in\relation$, then the verifier always outputs $\accept$.
     \item[\bf $t$-special soundness:]
       There exists an efficient algorithm $\extr$ which, given $y$ and $t$ accepting protocol transcripts $(t,c_i,s_i)$ for $i=1,\dots,t$ for public input $y$ with the same first message but pairwise distinct challenges (i.e., $c_i\ne c_j$ for $i\ne j$), returns $w$ such that $(y,w)\in\relation$.
-    \item[\bf Special honest-verifier zero-knowledge:]
+   \minote{$t$ here creates confusion with the commitment}
+      \item[\bf Special honest-verifier zero-knowledge:]
       There exists an efficient algorithm $\simulator$, which on input $y$ and a challenge $c\in\CS$, outputs transcripts of the form $(t,c,s)$ whose distribution is indinstinguishable from accepting protocol transcripts generated by real protocol runs on public input $y$ and with challenge $c$.
   \end{description}
     \begin{protocol}{Generic flow of a $\Sigma$-protocol\\[-2.25em]}{fig:generic}{t!}
       \begin{tabular}{@{}l@{\hspace{-2em}}c@{\hspace{-2em}}r@{}}
-        $\prover[w,y,R]$ & & $\verifier[y,R]$  \\
+        $\prover(w,y,R)$ & & $\verifier(y,R)$  \\
         \hline  \\
       % -----------------------------P1-------------------------------
-        $ (t,\st) \getsr \prover_1(w,y)$\\
+        $ (t,\st) \gets \prover_1(w,y)$\\
         & $\sendr{t}{100}$ \\[2 ex]
       % -----------------------------CHALLENGE-------------------------------
         & & $c \getsr \CS$ \\
         & $\sendl{c}{100}$ & \\[2 ex]
       % -----------------------------P2-------------------------------
-        $ s \getsr \prover_2(w,y,c,\st)$\\
+        $ s \gets \prover_2(w,y,c,\st)$\\
         & $\sendr{s}{100}$ \\[2 ex]
       % -----------------------------V-------------------------------
-        & & $\accept/\reject \getsr \verifier(y,t,c,s)$ \\
+        & & $\accept/\reject \gets \verifier(y,t,c,s)$ \\
       \end{tabular}
     \end{protocol}
 \end{definition}
@@ -184,10 +209,10 @@ However, we use the above generalized definition as certain practically relevant
 
 A $\Sigma$-protocol is said to have \emph{unpredictable commitments} if the probability of generating a collision in the first message is negligible, i.e., if there is a negligible function $\negl$ such that for all $(y,w)\in\relation$ it holds that:
 $$
-  \Pr[t'=t'' : t'\getsr\prover_1(w,y), t''\getsr\prover_1(w,y)] \leq \negl\,.
+  \Pr[t'=t'' : t'\gets\prover_1(w,y), t''\gets\prover_1(w,y)] \leq \negl\,.
 $$
 
-A $\Sigma$-protocol is furthermore said to have \emph{unique reponses} if it is infeasible to find two distinct valid responses for a given first message and fixed challenge, i.e., there exist no values $y,t,c,s',s''$ with $s'\ne s''$ such that $\verifier(y,t,c,s')=\verifier(y,t,c,s'')=\accept$.
+A $\Sigma$-protocol is said to have \emph{unique reponses} if it is infeasible to find two distinct valid responses for a given first message and fixed challenge, i.e., there exist no values $y,t,c,s',s''$ with $s'\ne s''$ such that $\verifier(y,t,c,s')=\verifier(y,t,c,s'')=\accept$.
 
 \subsubsection{Proof Systems and Proofs of Knowledge}~\\
 
@@ -196,7 +221,7 @@ The definitions in the following are due to Bellare and Goldreich~\cite{C:BelGol
 
 Intuitively, a proof system is sound, if it is not possible to make the verifier accept for statements for which no valid witness exists, cf. also~\cite[1.6.2]{zkproof-reference}.
 \begin{definition}\label{def:soundness}
-  Let $\relation$ be a binary relation, $\sigma:\NN\to[0,1]$ and let $\prover$ and $\verifier$ specify a probabilistic interactive protocol, where at least $\verifier$ is polynomial time.
+  Let $\relation$ be a binary relation, $\sigma:\NN\to[0,1]$ be a function, and let $\prover$ and $\verifier$ specify a probabilistic interactive protocol, where at least $\verifier$ is polynomial time.
   The protocol is called \emph{sound} with \emph{soundness error} $\sigma$, if for every $y\notin\lang(\relation)$, every $w\in\{0,1\}^*$, and every interactive algorithm $\prover^*$, the probability that $\prover^*$ makes $\verifier$ output $\accept$ on common input $y$ is bounded above by $\sigma(|y|)$.
 \end{definition}
 
@@ -209,7 +234,7 @@ Informally, an interactive protocol is a proof of knowledge, if every party that
       If $(y,w)\in\relation$, then the verifier (on input $y$) always outputs $\accept$ in an interaction with the prover (on input $(y,w)$).
     \item[Knowledge soundness:]
       There exists a probabilistic algorithm $\extr$ (the \emph{knowledge extractor}) and a polynomial $\poly$ such that the following holds:
-      For every interactive algorithm $\prover^*$ and every $y\in\lang(\relation)$, let $\varepsilon(y,\prover^*)$ be the probability that $\prover^*$ makes $\verifier$ output $\accept$ on common input $y$.
+      for every interactive algorithm $\prover^*$ and every $y\in\lang(\relation)$, let $\varepsilon(y,\prover^*)$ be the probability that $\prover^*$ makes $\verifier$ output $\accept$ on common input $y$.
       If $\varepsilon(y,\prover^*)>\kappa(|y|)$, then $\extr$, having rewindable blackbox access to $\prover^*$, outputs $w'$ satisfying $(y,w')\in\relation$ in an expected number of steps bounded by $\frac{\poly[|y|]}{\varepsilon(y,\prover^*)-\kappa(|y|)}$.
   \end{description}
 \end{definition}
@@ -225,11 +250,11 @@ $$\relation=\{((y_1,\dots,y_m),(w_1,\dots,w_n)) : (y_1,\dots,y_m)=\varphi(w_1,\d
     The prover's first algorithm $\prover_1(w,y)$ consists of the following steps:
     \begin{enumerate}
       \item\label{item:basic:p1:randomness}
-        It chooses a random element $r_1,\dots,r_n\getsr\GG$.
+        It chooses a random element $r_1,\dots,r_n\getsr\ZZ_p$.
       \item
         It then computes $(t_1,\dots,t_m)\gets\varphi(r_1,\dots,r_n)$.
       \item
-	The algorithm sets $\st\gets (r_1,\dots,r_n)$ and $t\gets(t_1,\dots,t_m)$.
+	The algorithm sets $\st\defeq (r_1,\dots,r_n)$ and $t\defeq(t_1,\dots,t_m)$.
       \item
         It finally outputs outputs $(t,\st)$.
     \end{enumerate}
@@ -239,15 +264,14 @@ $$\relation=\{((y_1,\dots,y_m),(w_1,\dots,w_n)) : (y_1,\dots,y_m)=\varphi(w_1,\d
       \item
         It checks that $c\in\ZZ_u$ and aborts if this is not the case.
       \item
-	It then parses $\st=(r_1,\dots,r_n)$ and $w=(w_1,\dots,w_n)$.
+	It then parses $(r_1,\dots,r_n)\defeq \st$ and $(w_1,\dots,w_n)\defeq w$.
       \item
-        It computes its output as $s_i\gets r_i+cw_i$ for $i=1,\dots,n$.
+        It computes its output as $s_i\defeq r_i+cw_i$ for $i=1,\dots,n$.
     \end{enumerate}
   \item\label{item:basic:v}
     The verifier's algorithm $\verifier(y,t,c,s)$ proceeds as follow:
     \begin{enumerate}
       \item
-        It parses $y=(y_1,\dots,y_m)$, $t=(t_1,\dots,t_m)$, and $s=(s_1,\dots,s_n)$.
       \item\label{item:basic:v:checks}
         It checks that $s_i\in\ZZ_p$ for $i=1,\dots,n$ and $t_j\in\GG$ for $j=1,\dots,m$, and outputs $0$ if this is not the case.
       \item
@@ -257,15 +281,16 @@ $$\relation=\{((y_1,\dots,y_m),(w_1,\dots,w_n)) : (y_1,\dots,y_m)=\varphi(w_1,\d
     The required simulator $\simulator(y,c)$ for a basic $\Sigma$-protocol works as follows:
     \begin{enumerate}
       \item
-        It parses $y=(y_1,\dots,y_m)$.
+        It parses $(y_1,\dots,y_m)\defeq y$.
       \item\label{item:basic:sim:s}
-        It chooses $s_1,\dots,s_n\getsr\GG$.
+        It chooses $s_1,\dots,s_n\getsr\ZZ_p$.
       \item
-        It sets $(t_1,\dots,t_m) \gets \varphi(s_1,\dots,s_n) - c(y_1,\dots,y_m)$.
+        It sets $(t_1,\dots,t_m) \defeq \varphi(s_1,\dots,s_n) - c(y_1,\dots,y_m)$.
       \item
-        Finally, the algorithm ouputs the simulated transcript by setting $(t,c,s)\gets((t_1,\dots,t_m),c,(s_1,\dots,s_n)$.
+        Finally, the algorithm ouputs the simulated transcript by setting $(t,c,s)\defeq((t_1,\dots,t_m),c,(s_1,\dots,s_n)$.
     \end{enumerate}
 \end{enumerate}
+\minote{here changed a bit $s, r$ from $\GG$ to $\ZZ_p$}
 
 \subsubsection{Proving linear relations among witnesses}
 
@@ -298,10 +323,10 @@ Proving knowledge of the discrete logarithm $w$ of a point $Y$ in base $G$ means
 For a description of this proof goal in residue classes, we also refer to~\cite[1.4.1]{zkproof-reference}.
 
 Using the above notation, we have $\varphi:\ZZ_p\to\GG:x\mapsto xG$.
-The protocol flow is then as depicted in Protocol~\ref{fig:dlog}.
+The protocol flow is then as depicted in~\cref{fig:dlog}.
     \begin{protocol}{Proving knowledge of a discrete logarithm.\\[-2.25em]}{fig:dlog}{h!}
       \begin{tabular}{@{}l@{\hspace{2em}}c@{\hspace{-3em}}r@{}}
-        $\prover[w,Y,G]$ & & $\verifier[Y,G]$  \\
+        $\prover\left(w,Y,G\right)$ & & $\verifier\left(Y,G\right)$  \\
         \hline  \\
       % -----------------------------P1-------------------------------
         $ r\getsr\ZZ_p$ & &\\
@@ -311,7 +336,7 @@ The protocol flow is then as depicted in Protocol~\ref{fig:dlog}.
         & & $c \getsr \ZZ_p$ \\
         & $\sendl{c}{100}$ & \\[2 ex]
       % -----------------------------P2-------------------------------
-        $ s \gets r + cw$\\
+        $ s \defeq r + cw$\\
         & $\sendr{s}{100}$ \\[2 ex]
       % -----------------------------V-------------------------------
         & & Return $1$ if and only if \\
@@ -329,18 +354,18 @@ Proving equality of the known discrete logarithm $w$ of $Y_1$ in base $G$ and $Y
 
 Using the above notation, we have $\varphi:\ZZ_p\to\GG\times\GG:(x_1,x_2)\mapsto (x_1G,x_2H)$.
 The linear system of equations $A(w_1,w_2)=b$ is given by $w_1-w_2=0$.
-The protocol flow is then as depicted in Protocol~\ref{fig:dleq}.
+The protocol flow is then as depicted in~\cref{fig:dleq}.
     \begin{protocol}{Proving knowledge of equality of two discrete logarithms.\\[-2.25em]}{fig:dleq}{h!}
       \begin{tabular}{@{}l@{\hspace{-4em}}c@{\hspace{-3em}}r@{}}
-        $\prover[(w_1,w_2),(Y_1,Y_2),(G,H)]$ & & $\verifier[(Y_1,Y_2),(G,H)]$  \\
+        $\prover\left( (w_1,w_2),(Y_1,Y_2),(G,H)\right)$ & & $\verifier\left((Y_1,Y_2),(G,H)\right)$  \\
         \hline  \\
       % -----------------------------P1-------------------------------
-        $ r_1,r_2\getsr\ZZ_p$ such that $r_1-r_2=0$ & &\\
+        $ r_1,r_2\sample\ZZ_p$ such that $r_1-r_2=0$ & &\\
         $ T_1 \gets r_1G$ & & \\
         $ T_2 \gets r_2H$ & & \\
         & $\sendr{T_1,T_2}{100}$ \\[2 ex]
       % -----------------------------CHALLENGE-------------------------------
-        & & $c \getsr \ZZ_p$ \\
+        & & $c \sample \ZZ_p$ \\
         & $\sendl{c}{100}$ & \\[2 ex]
       % -----------------------------P2-------------------------------
         $ s_1 \gets r_1 + cw_1$\\
@@ -358,14 +383,14 @@ For a given challenge $c\in\ZZ_p$, the simulator chooses $s_1,s_2\getsr\ZZ_p$ su
 It then outputs the simulated transcript $((T_1,T_2),c,(s_1,s_2))$.
 
 \paragraph{Example 3 (DLEQ; alternative).}
-The same proofgoal as in the previous example can also be achieved by considering a slightly different homomorphism which directly encodes the linear relation, that is $\varphi:\ZZ_p\to\GG\times\GG:x\mapsto (xG,xH)$.
-The protocol flow is then as depicted in Protocol~\ref{fig:dleq_2}.
+The same proof goal as in the previous example can also be achieved by considering a slightly different homomorphism, which directly encodes the linear relation, that is $\varphi:\ZZ_p\to\GG\times\GG:x\mapsto (xG,xH)$.
+The protocol flow is then as depicted in~\cref{fig:dleq_2}.
     \begin{protocol}{Proving knowledge of equality of two discrete logarithms (alternative).\\[-2.25em]}{fig:dleq_2}{h!}
       \begin{tabular}{@{}l@{\hspace{2em}}c@{\hspace{-3em}}r@{}}
-        $\prover[w,(Y_1,Y_2),(G,H)]$ & & $\verifier[(Y_1,Y_2),(G,H)]$  \\
+        $\prover \left(w,(Y_1,Y_2),(G,H) \right)$ & & $\verifier \left((Y_1,Y_2),(G,H)\right)$  \\
         \hline  \\
       % -----------------------------P1-------------------------------
-        $ r\getsr\ZZ_p$ & &\\
+        $ r\sample\ZZ_p$ & &\\
         $ T_1 \gets rG$ & & \\
         $ T_2 \gets rH$ & & \\
         & $\sendr{T_1,T_2}{100}$ \\[2 ex]
@@ -373,8 +398,6 @@ The protocol flow is then as depicted in Protocol~\ref{fig:dleq_2}.
         & & $c \getsr \ZZ_p$ \\
         & $\sendl{c}{100}$ & \\[2 ex]
       % -----------------------------P2-------------------------------
-        $ s \gets r + cw$\\
-        & $\sendr{s}{100}$ \\[2 ex]
       % -----------------------------V-------------------------------
         & & Return $1$ if and only if \\
         & & $T_1 + cY_1 = sG$ \\
@@ -386,14 +409,14 @@ For a given challenge $c\in\ZZ_p$, the simulator chooses $s\getsr\ZZ_p$, and set
 It then outputs the simulated transcript $((T_1,T_2),c,s)$.
 
 \paragraph{Example 4 (REP).}
-Let $\GG$ be a group over an elliptic curve with prime order $p$.
+Let $\GG$ be a group over an elliptic curve of prime order $p$.
 Proving knowledge of a valid opening of a Pedersen commitment means proving knowledge of $w_1,w_2\in\ZZ_p$ such that $Y=w_1G + w_2H$.
 
 Using the above notation, we have $\varphi:\ZZ_p\times\ZZ_p\to\GG:(x_1,x_2)\mapsto x_1G + x_2H$.
-The protocol flow is then as depicted in Protocol~\ref{fig:rep}.
+The protocol flow is then as depicted in~\cref{fig:rep}.
     \begin{protocol}{Proving knowledge of representation.\\[-2.25em]}{fig:rep}{h!}
       \begin{tabular}{@{}l@{\hspace{2em}}c@{\hspace{-3em}}r@{}}
-        $\prover[(w_1,w_2),Y,(G,H)]$ & & $\verifier[Y,(G,H)]$  \\
+        $\prover \left( (w_1,w_2),Y,(G,H)\right)$ & & $\verifier \left(Y,(G,H)\right)$  \\
         \hline  \\
       % -----------------------------P1-------------------------------
         $ r_1\getsr\ZZ_p$ & &\\
@@ -404,8 +427,8 @@ The protocol flow is then as depicted in Protocol~\ref{fig:rep}.
         & & $c \getsr \ZZ_p$ \\
         & $\sendl{c}{100}$ & \\[2 ex]
       % -----------------------------P2-------------------------------
-        $ s_1 \gets r_1 + cw_1$\\
-        $ s_2 \gets r_2 + cw_2$\\
+        $ s_1 \defeq r_1 + cw_1$\\
+        $ s_2 \defeq r_2 + cw_2$\\
         & $\sendr{s_1,s_2}{100}$ \\[2 ex]
       % -----------------------------V-------------------------------
         & & Return $1$ if and only if \\
@@ -422,10 +445,10 @@ Proving knowledge of the exponents of a valid Diffie-Hellman triple means provin
 Yet, the mapping $\ZZ_p^2\to\GG^3:(x_1,x_2)\mapsto (x_1G,x_2G,x_1x_2G)$ is not a homomorphism, and consequently the basic protocol presented before cannot be deployed directly.
 However, the required multiplicative relation can be proven by observing that the proof goal is equivalent to $Y_1=w_1G$, $Y_2=w_2G$, and $Y_3=w_2Y_1$, leading the homomorphism $\varphi:\ZZ_p^2\to\GG^3:(x_1,x_2)\mapsto(x_1G,x_2G,x_2Y_1)$.
 
-The protocol flow is then as depicted in Protocol~\ref{fig:dh}.
+The protocol flow is then as depicted in~\cref{fig:dh}.
     \begin{protocol}{Proving knowledge of representation.\\[-2.25em]}{fig:dh}{h!}
       \begin{tabular}{@{}l@{\hspace{-3em}}c@{\hspace{-2em}}r@{}}
-        $\prover[(w_1,w_2),(Y_1,Y_2,Y_3),G)]$ & & $\verifier[(Y_1,Y_2,Y_3),G]$  \\
+        $\prover\left( (w_1,w_2),(Y_1,Y_2,Y_3),G)\right)$ & & $\verifier\left((Y_1,Y_2,Y_3),G \right)$  \\
         \hline  \\
       % -----------------------------P1-------------------------------
         $ r_1\getsr\ZZ_p$ & &\\
@@ -480,29 +503,29 @@ $$
     The prover's first algorithm $\prover_1(w,y)$ consists of the following steps:
     \begin{enumerate}
       \item
-        The algorithm parses $w=(w^0,w^1)$ and $y=(y^0,y^1)$.
+        The algorithm parses $(w^0,w^1)\defeq w$ and $(y^0,y^1)\defeq y$.
       \item
-        It computes $(t^0,\st^0)\getsr\prover_1^0(y^0,w^0)$ and $(t^1,\st^1)\getsr\prover_1^1(y^1,w^1)$.
+        It computes $(t^0,\st^0)\gets\prover_1^0(y^0,w^0)$ and $(t^1,\st^1)\gets\prover_1^1(y^1,w^1)$.
       \item
-	The algorithm outputs $(t,\st) = ((t^0,t^1),(\st^0,\st^1))$.
+	The algorithm outputs $(t,\st) \defeq ((t^0,t^1),(\st^0,\st^1))$.
     \end{enumerate}
   \item
     The prover's second algorithm $\prover_2(w,y,c,\st)$ proceeds as follows:
     \begin{enumerate}
       \item
-        It checks that $c\in\ZZ_u$ and aborts if this is not the case.
+        It checks that $c\in\ZZ_p$ and aborts if this is not the case.
       \item
-	It parses $\st=(\st^0,\st^1)$
+	It parses $(\st^0,\st^1)\defeq \st$
       \item
-        It computes $s^0\getsr\prover_2^0(w^0,y^0,c,\st^0)$ and $s^1\getsr\prover_2^1(w^1,y^1,c,\st^1)$.
+        It computes $s^0\gets\prover_2^0(w^0,y^0,c,\st^0)$ and $s^1\gets\prover_2^1(w^1,y^1,c,\st^1)$.
       \item
-        It outputs $s\gets(s^0,s^1)$.
+        It outputs $s\defeq(s^0,s^1)$.
     \end{enumerate}
   \item
     The verifier's algorithm $\verifier(y,t,c,s)$ proceeds as follow:
     \begin{enumerate}
       \item
-        It  parses $s=(s^0,s^1)$.
+        It  parses $(s^0,s^1)\defeq s$.
       \item
 	The algorithm outputs $\verifier^0(y^0,t^0,c,s^0)\land\verifier^1(y^1,t^1,c,s^1)$.
     \end{enumerate}
@@ -510,13 +533,13 @@ $$
     The required simulator $\simulator(y,c)$ works as follows:
     \begin{enumerate}
       \item
-        It parses $y=(y^0,y^1)$.
+        It parses $(y^0,y^1)\defeq s$.
       \item
-        It chooses $c\in\ZZ_u$.
+        It chooses $c\in\ZZ_p$.
       \item
-        It computes $(t^0,c,s^0)\getsr\simulator^0(y^0,c)$ and $(t^1,c,s^1)\getsr\simulator^1(y^1,c)$.
+        It computes $(t^0,c,s^0)\gets\simulator^0(y^0,c)$ and $(t^1,c,s^1)\gets\simulator^1(y^1,c)$.
       \item
-        Finally, the algorithm then outputs $(t,c,s)=((t^0,t^1),c,(s^0,s^1))$.
+        Finally, the algorithm then outputs $(t,c,s)\defeq((t^0,t^1),c,(s^0,s^1))$.
     \end{enumerate}
 \end{enumerate}
 
@@ -534,35 +557,35 @@ $$
     The prover's first algorithm $\prover_1(w,y)$ consists of the following steps:
     \begin{enumerate}
       \item
-        The algorithm parses $w=(w^0,w^1)$ and $y=(y^0,y^1)$, where $w^{1-j}=\bot$.
+        The algorithm parses $(w^0,w^1)\defeq w$ and $(y^0,y^1)\defeq y$, where $w^{1-j}=\bot$.
       \item
         It computes $(t^j,\st^j)\getsr\prover_1^j(y^j,w^j)$.
       \item
         It computes a simulated transcript for the unknown witness by choosing $c^{1-j}\getsr\ZZ_u$ and setting $(t^{1-j},c^{1-j},s^{1-j})\getsr\simulator^{1-j}(y^{1-j},c^{1-j})$.
       \item
-	The algorithm outputs $(t,\st) = ((t^0,t^1),(\st^j,c^{1-j},s^{1-j}))$.
+	The algorithm outputs $(t,\st) \defeq ((t^0,t^1),(\st^j,c^{1-j},s^{1-j}))$.
     \end{enumerate}
   \item
     The prover's second algorithm $\prover_2(w,y,c,\st)$ proceeds as follows:
     \begin{enumerate}
       \item
-        It checks that $c\in\ZZ_u$ and aborts if this is not the case.
+        It checks that $c\in\ZZ_p$ and aborts if this is not the case.
       \item
-	It parses $\st=(\st^j,c^{1-j},s^{1-j})$.
+	It parses $\st\defeq(\st^j,c^{1-j},s^{1-j})$.
       \item
-        It computes $c^j\gets c-c^{1-j}\mod m$, and sets $s^j\getsr\prover_2^j(w^j,y^j,c^j,\st^j)$.
+        It computes $c^j\defeq c-c^{1-j}\mod m$, and sets $s^j\gets\prover_2^j(w^j,y^j,c^j,\st^j)$.
       \item
-        It computes $s^0\getsr\prover_2^0(w^0,y^0,c,\st^0)$ and $s^1\getsr\prover_2^1(w^1,y^1,c,\st^1)$.
+        It computes $s^0\gets\prover_2^0(w^0,y^0,c,\st^0)$ and $s^1\gets\prover_2^1(w^1,y^1,c,\st^1)$.
       \item
-        It outputs $s\gets(s^0,s^1,c^0)$.
+        It outputs $s\defeq(s^0,s^1,c^0)$.
     \end{enumerate}
   \item
     The verifier's algorithm $\verifier(y,t,c,s)$ proceeds as follow:
     \begin{enumerate}
       \item
-        It  parses $s=(s^0,s^1,c^0)$.
+        It  parses $(s^0,s^1,c^0)\defeq$.
       \item
-        It sets $c^1\gets c-c^0\mod m$.
+        It sets $c^1\defeq c-c^0\mod m$.
       \item
 	The algorithm outputs $\verifier^0(y^0,t^0,c^0,s^0)\land\verifier^1(y^1,t^1,c^1,s^1)$.
     \end{enumerate}
@@ -570,13 +593,13 @@ $$
     The required simulator $\simulator(y,c)$ works as follows:
     \begin{enumerate}
       \item
-        It parses $y=(y^0,y^1)$.
+        It parses $(y^0,y^1)\defeq y$.
       \item
-        It chooses a random $c^0$ in $\ZZ_u$ and computes $c^1\gets c-c^0 \mod m$.
+        It chooses a random $c^0$ in $\ZZ_p$ and computes $c^1\defeq c-c^0 \mod m$.
       \item
-        It then computes $(t^0,c^0,s^0)\getsr\simulator^0(y^0,c^0)$ and $(t^1,c^1,s^1)\getsr\simulator^1(y^1,c^1)$.
+        It then computes $(t^0,c^0,s^0)\gets\simulator^0(y^0,c^0)$ and $(t^1,c^1,s^1)\gets\simulator^1(y^1,c^1)$.
       \item
-        Finally, the algorithm then outputs $(t,c,s)=((t^0,t^1),c,(s^0,s^1,c^0))$.
+        Finally, the algorithm then outputs $(t,c,s)\defeq((t^0,t^1),c,(s^0,s^1,c^0))$.
     \end{enumerate}
 \end{enumerate}
 
@@ -585,13 +608,13 @@ $$
 All protocols describes so far require three messages being exchanged between the prover and the verifier.
 However, communication rounds are often considered expensive from an efficiency point of view, and for many applications interactivy is not desirable.
 
-The following two variants tp achieve non-interactivity require identical computations on the prover's side.
-The first variant has a larger proof size, as the full first message of the prover is part of the proof, whereas the second variant only has a hash value instead.
-However, the first version allows for \stnote{why again do we want to have the long form?}
+We describe two variants for achieving non-interactivity. Both variants require identical computations on the prover's side.
+The first variant allows for efficient batching, but requires point validation and (depending on the hash function, or the elliptic curve chosen) might lead
+slightly larger proof sizes. The second variant requires no point validation and only has the hash value.
 
 The constructions are based on the seminal work of Fiat and Shamir~\cite{C:FiaSha86} and subsequent work, e.g., by Bernhard et al.~\cite{AC:BerPerWar12}.
 The underlying idea of this so-called Fiat-Shamir transform is to simulate the verifier's random challenge by means of a random oracle, depending on the first message computed by the prover.
-More precisely, the challenge is computed as $c\gets\hash(t,y,\ctx)$, where $t$ is the prover's first message from the $\Sigma$-protocol, and $y$ is the public image for which knowledge of a witness is proven.
+More precisely, the challenge is computed as $c\defeq\hash(t,y,\ctx)$, where $t$ is the prover's first message from the $\Sigma$-protocol, and $y$ is the public image for which knowledge of a witness is proven.
 The context string $\ctx$ contains application-specific information, such as:
 \begin{itemize}
   \item
@@ -600,7 +623,7 @@ The context string $\ctx$ contains application-specific information, such as:
     local context information (e.g., session identifiers of higher level protocols) to avoid replay-attacks, or shared randomness or a timestamp to guarantee freshness of the proof.
 \end{itemize}
 
-\subsubsection{Long form}
+\subsubsection{Batchable form}
 
 
 \begin{enumerate}
@@ -608,11 +631,11 @@ The context string $\ctx$ contains application-specific information, such as:
     The prover's algorithm $\prover'(y,w,\ctx)$ works as follows:
     \begin{enumerate}
       \item
-        The algorithm first computes $(t,\st)\getsr\prover_1(y,w)$.
+        The algorithm first computes $(t,\st)\gets\prover_1(y,w)$.
       \item
-        It computes the challenge by setting $c\gets\hash(t,y,\ctx)$.
+        It computes the challenge by setting $c\defeq\hash(t,y,\ctx)$.
       \item
-        The algorithm defines $s\getsr\prover_2(y,w,c,\st)$.
+        The algorithm defines $s\gets\prover_2(y,w,c,\st)$.
       \item
         The algorithm outputs $(t,s)$.
     \end{enumerate}
@@ -632,11 +655,11 @@ The context string $\ctx$ contains application-specific information, such as:
     The prover's algorithm $\prover''(y,w,\ctx)$ works as follows:
     \begin{enumerate}
       \item
-        The algorithm first computes $(t,\st)\getsr\prover_1(y,w)$.
+        The algorithm first computes $(t,\st)\defeq\prover_1(y,w)$.
       \item
-        It computes the challenge by setting $c\gets\hash(t,y,\ctx)$.
+        It computes the challenge by setting $c\defeq\hash(t,y,\ctx)$.
       \item
-        The algorithm defines $s\getsr\prover_2(y,w,c,\st)$.
+        The algorithm defines $s\gets\prover_2(y,w,c,\st)$.
       \item
         The algorithm outputs $(c,s)$.
     \end{enumerate}
@@ -650,25 +673,23 @@ The context string $\ctx$ contains application-specific information, such as:
     \end{enumerate}
 \end{enumerate}
 
-More specifically, when calling $\simulator$ in Step~\ref{item:fslong:v:recomputet}, the verifier does not draw the reponse $s$ at random, as is the case in all the protocols introduced before;
+More specifically, when calling $\simulator$ in~\cref{item:fslong:v:recomputet}, the verifier does not draw the response $s$ at random, as is the case in all the protocols introduced before;
 instead it uses the value specified in the proof.
 
 \section{Security Considerations}
-\minote{mention simulation extractability? XXX}
-\minote{mention post-quantum security guarantees?}
 
 In the following, we give a concise overview of the most important security guarantees provided by the constructions presented above.
 
-Firstly, all the protocols presented in the previous section are $\Sigma$-protocols according to Definition~\ref{def:sigma}.
+Firstly, all the protocols presented in the previous section are $\Sigma$-protocols according to~\cref{def:sigma}.
 \begin{theorem}
-  If $\GG$ is a cyclic group of prime order $p$, $\varphi:\ZZ_p^n\to\GG^m$ is a group homomorphism, and $u\leq p$, then the basic protocol in Section~\ref{sec:basicsigma} is a $\Sigma$-protocol with simulator $\simulator$.
+  If $\GG$ is a cyclic group of prime order $p$, $\varphi:\ZZ_p^n\to\GG^m$ is a group homomorphism, and $u\leq p$, then the basic protocol in~\cref{sec:basicsigma} is a $\Sigma$-protocol with simulator $\simulator$.
 
   If $\varphi$ is non-trivial, the protocol has unpredictable commitments.
   Finally, if $\varphi(x')\ne\varphi(x'')$ for all $x'\ne x''$, the protocol has unique responses.
 \end{theorem}
 
 \begin{theorem}
-  If, for $i=0,1$, $(\prover_1^i,\prover_2^i,\verifier^i)$ is a $\Sigma$-protocol for relation $\relation^i$ with challenge set $\ZZ_{u^i}$ and simulator $\simulator^i$, then the protocols specified in Section~\ref{sec:composition} are $\Sigma$-protocol with challenge set $\ZZ_u$ and simulator $\simulator$ for relation $\relation^\land$ and $\relation^\lor$, respectively.
+  If, for $i=0,1$, $(\prover_1^i,\prover_2^i,\verifier^i)$ is a $\Sigma$-protocol for relation $\relation^i$ with challenge set $\ZZ_{u^i}$ and simulator $\simulator^i$, then the protocols specified in~\cref{sec:composition} are $\Sigma$-protocol with challenge set $\ZZ_u$ and simulator $\simulator$ for relation $\relation^\land$ and $\relation^\lor$, respectively.
 
   It at least one of the composed protocols has unpredictable commitments, then the composed protocol has unpredictable commitments.
 %  If all composed protocols have unique responses, then so has the composed protocol.
@@ -686,9 +707,10 @@ In a nutshell, $\Sigma$-protocols are honest-verifier zero-knowledge proofs of k
 
 
 For full details and proofs, we refer to the original literature.
+\minote{citation needed}
 \begin{itemize}
   \item
-    If $\prover_1,\prover_2,\verifier$ specify a $\Sigma$-protocol for $\relation$ according to Definition~\ref{def:sigma}, then they also specify an honest-verifier zero-knowledge proof of knowledge with soundness error $\sigma=1/m$ and knowledge error $\kappa=1/m$ for $\relation$.
+    If $\prover_1,\prover_2,\verifier$ specify a $\Sigma$-protocol for $\relation$ according to~\cref{def:sigma}, then they also specify an honest-verifier zero-knowledge proof of knowledge with soundness error $\sigma=1/m$ and knowledge error $\kappa=1/m$ for $\relation$.
 
 For formal proofs we refer, e.g., to Damg\r{a}rd~\cite{damgard04}.
   \item
@@ -700,7 +722,7 @@ For formal proofs we refer, e.g., to Damg\r{a}rd~\cite{damgard04}.
 
     For a proof we refer to Faust et al.~\cite{INDOCRYPT:FKMV12} and Unruh~\cite{AC:Unruh17}.
   \item
-    If a $\Sigma$-protocol has a negligible soundness error, then the Fiat-Shamir transform is {\bf sound} according to Definition~\ref{def:soundness}.
+    If a $\Sigma$-protocol has a negligible soundness error, then the Fiat-Shamir transform is {\bf sound} according to~\cref{def:soundness}.
     This security guarantee also holds against quantum attackers.
 
     For a proof we refer to Pointcheval and Stern~\cite{JC:PoiSte00} and Unruh~\cite{AC:Unruh17}.
@@ -716,7 +738,7 @@ For formal proofs we refer, e.g., to Damg\r{a}rd~\cite{damgard04}.
     For a proof we refer to Bernhard et al.~\cite{AC:BerPerWar12}.
 \end{itemize}
 
-\section{Implementation}
+\section{Candidate implementation }
 Implementations available + selecting the ellptic curves + performance table + proof size.
 
 \subsection{Pre-existing implementations}
@@ -727,7 +749,7 @@ supported statement + latest version with date + benchmarks + creation date + ci
 \paragraph{zksk.}
 \paragraph{Emmy}
 \paragraph{Helios}
-\subsection{A candidate API design}
+\subsection{API design}
 
 \paragraph{Key Generation.}
 
@@ -742,14 +764,17 @@ For this reason, we propose the generation of a synthetic nonce obtained from ha
 \paragraph{Computing the challenge.} just 128 bits expect post-quantum security + use blake2 or sha256 truncated or sha512 read as an element of $\ZZ_p$
 
 
-\section{To be discussed}
-If the proposal is accepted, we would discuss the following points in the working group.
-\minote{designated verifier proofs: either or proof I'm you or the staement is true + commitment discrete log}
+\section{Looking Ahead}
+To keep this proposal short and open the discussion to a wider community, we purposely left open some topics that could
+be interesting for more tight use cases.
+\minote{designated verifier proofs.\\
+ either or proof I'm you or the staement is true + commitment discrete log}
 \minote{delayed input}
-\minote{batching proofs}
+\minote{Batched verification.}
 \section{Open Problems}
-\minote{check multisignatures and add the new problem of computing proofs with devices that share different keys}
-\minote{R1CS compatibility: a unified way of specifying proof goals. Cam-Sta notation ? Compilers}
+\minote{Shared proof computation\\
+check multisignatures and add the new problem of computing proofs with devices that share different keys}
+\minote{R1CS compatibility.\\ a unified way of specifying proof goals}
 
 \bibliographystyle{alpha}
 \bibliography{cryptobib/abbrev3,cryptobib/crypto,additional}
