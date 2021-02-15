@@ -191,7 +191,7 @@ In the following, we formally describe the class of $\Sigma$-protocols, which co
   \end{description}
     \begin{protocol}{Generic flow of a $\Sigma$-protocol\\[-2.25em]}{fig:generic}{t}
       \begin{tabular}{@{}l@{\hspace{-2em}}c@{\hspace{-2em}}r@{}}
-        $\prover(w,y,R)$ & & $\verifier(y,R)$  \\
+        $\prover(w,y,\relation)$ & & $\verifier(y,\relation)$  \\
         \hline  \\
       % -----------------------------P1-------------------------------
         $ (t,\st) \gets \prover_1(w,y)$\\
@@ -278,7 +278,7 @@ $$\relation=\{((y_1,\dots,y_m),(w_1,\dots,w_n)) : (y_1,\dots,y_m)=\varphi(w_1,\d
       \item\label{item:basic:v:checks}
         It checks that $s_i\in\ZZ_p$ for $i=1,\dots,n$ and $t_j\in\GG$ for $j=1,\dots,m$, and outputs $0$ if this is not the case.
       \item
-	It checks whether $(t_1 + cy_1,\dots,t_m + cy_m) = \varphi(s_1,\dots,s_n)$, and outputs $1$ if this is the case; otherwise, $\verifier$ outputs $\reject$.
+	It checks whether $(t_1 + cy_1,\dots,t_m + cy_m) = \varphi(s_1,\dots,s_n)$, and outputs $\accept$ if this is the case; otherwise, $\verifier$ outputs $\reject$.
     \end{enumerate}
   \item\label{item:basic:sim}
     The required simulator $\simulator(y,c)$ for a basic $\Sigma$-protocol works as follows:
@@ -342,7 +342,7 @@ The protocol flow is then as depicted in~\cref{fig:dlog}.
         $ s \defeq r + cw$\\
         & $\sendr{s}{100}$ \\[2 ex]
       % -----------------------------V-------------------------------
-        & & Return $1$ if and only if \\
+        & & Return $\accept$ if and only if \\
         & & $T + cY = sG$ \\
       \end{tabular}
     \end{protocol}
@@ -375,7 +375,7 @@ The protocol flow is then as depicted in~\cref{fig:dleq}.
         $ s_2 \gets r_2 + cw_2$\\
         & $\sendr{s_1,s_2}{100}$ \\[2 ex]
       % -----------------------------V-------------------------------
-        & & Return $1$ if and only if \\
+        & & Return $\accept$ if and only if \\
         & & $T_1 + cY_1 = s_1G$ \\
         & & $T_2 + cY_2 = s_2H$ \\
         & & and $s_1-s_2=0$.
@@ -402,7 +402,7 @@ The protocol flow is then as depicted in~\cref{fig:dleq_2}.
         & $\sendl{c}{100}$ & \\[2 ex]
       % -----------------------------P2-------------------------------
       % -----------------------------V-------------------------------
-        & & Return $1$ if and only if \\
+        & & Return $\accept$ if and only if \\
         & & $T_1 + cY_1 = sG$ \\
         & & and $T_2 + cY_2 = sH$. \\
       \end{tabular}
@@ -434,7 +434,7 @@ The protocol flow is then as depicted in~\cref{fig:rep}.
         $ s_2 \defeq r_2 + cw_2$\\
         & $\sendr{s_1,s_2}{100}$ \\[2 ex]
       % -----------------------------V-------------------------------
-        & & Return $1$ if and only if \\
+        & & Return $\accept$ if and only if \\
         & & $T + cY = s_1G + s_2H$ \\
       \end{tabular}
     \end{protocol}
@@ -468,9 +468,9 @@ The protocol flow is then as depicted in~\cref{fig:dh}.
         $ s_2 \gets r_2 + cw_2$\\
         & $\sendr{s_1,s_2}{100}$ \\[2 ex]
       % -----------------------------V-------------------------------
-        & & Return $1$ if and only if \\
-        & & $T_1 + cY_1 = s_1$ \\
-        & & $T_2 + cY_2 = s_2$ \\
+        & & Return $\accept$ if and only if \\
+        & & $T_1 + cY_1 = s_1G$ \\
+        & & $T_2 + cY_2 = s_2G$ \\
         & & and $T_3 + cY_3 = s_2Y_1$ \\
       \end{tabular}
     \end{protocol}
@@ -516,7 +516,7 @@ $$
     The prover's second algorithm $\prover_2(w,y,c,\st)$ proceeds as follows:
     \begin{enumerate}
       \item
-        It checks that $c\in\ZZ_p$ and aborts if this is not the case.
+        It checks that $c\in\ZZ_u$ and aborts if this is not the case.
       \item
 	It parses $(\st^0,\st^1)\defeq \st$
       \item
