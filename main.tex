@@ -692,9 +692,10 @@ Firstly, all the protocols presented in the previous section are $\Sigma$-protoc
 \end{theorem}
 
 \begin{theorem}
-  If, for $i=0,1$, $(\prover_1^i,\prover_2^i,\verifier^i)$ is a $\Sigma$-protocol for relation $\relation^i$ with challenge set $\ZZ_{u^i}$ and simulator $\simulator^i$, then the protocols specified in~\cref{sec:composition} are $\Sigma$-protocol with challenge set $\ZZ_u$ and simulator $\simulator$ for relation $\relation^\land$ and $\relation^\lor$, respectively.
-
-  It at least one of the composed protocols has unpredictable commitments, then the composed protocol has unpredictable commitments.
+  If, for $i=0,1$, $(\prover_1^i,\prover_2^i,\verifier^i)$ is a $\Sigma$-protocol for relation $\relation^i$ with challenge set $\ZZ_{u^i}$ and simulator $\simulator^i$, then the protocols specified in Section~\ref{sec:composition} are $\Sigma$-protocol with challenge set $\ZZ_u$ and simulator $\simulator$ for relation $\relation^\land$ and $\relation^\lor$, respectively.
+  
+  If at least one of the composed protocols has unpredictable commitments, then so has the protocol for $\relation^\land$.
+  If both protocols have unique responses, then so has the protocol for $\relation^\land$. 
 %  If all composed protocols have unique responses, then so has the composed protocol.
 \end{theorem}
 
