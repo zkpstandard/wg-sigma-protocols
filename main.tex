@@ -76,10 +76,10 @@ Introduced by Schnorr~\cite{JC:Schnorr91} over 30 years ago, they are now widely
 
 They played an essential component in the building of a number of cryptographic
 constructions,
-such as anonymous credentials~\cite{CCS:ChaMeiZav14}, password-authenticated key exchange~\cite{jpake}, signatures,
+such as anonymous credentials~\cite{CCS:ChaMeiZav14}, password-authenticated key exchange~\cite{jpake}, signatures~\cite{C:Schnorr89},
 ring signatures~\cite{borromeansig}, blind signatures~\cite{CCS:PoiSte97}. It has also inspired the a multitude of constructions, such as multi signatures~\cite{CCS:NRSW20}, threshold signatures, and more.
 Lueks et al.~\cite{zksk}, reported that solely in the years 2018-2019 editions of PETS, ACM CCS, WPES, NDSS,
-7 publications use sigma protocols.
+7 publications use  $\Sigma$-protocols.
 Yet, there is no standardized way of implementing them and as a result a lot of implementations have shared common pitfalls (cf.\ \cref{sec:motivation}).
 
 We make a first attempt at the standardization of $\Sigma$-protocols by proposing an interface and a language for proving statements about the discrete logarithm of elements in a prime-order cyclic group, targeting specifically groups in elliptic curves. To the best of our knowledge, deployed and implemented sigma protocols rely mostly on the following sub-set of features:
@@ -117,7 +117,7 @@ Despite Schnorr signatures and zero-knowledge proofs have already been standardi
 \begin{itemize}
   \item \textbf{Implementation over non-prime order groups led to small subgroup attacks}. The cyclic group where proofs are being implemented must be carefully selected. Implementing $\Sigma$-protocol over Weierstrass curves is appealing for its performances and straight-line scalar multiplication formul\ae.
    However, the presence of a small cofactor could be fatal for security.
-In 2017, Monero\footnote{\url{https://www.getmonero.org/2017/05/17/disclosure-of-a-major-bug-in-cryptonote-based-currencies.html}} disclosed a vulnerability in Cryptonote-based e-currencies that would allow double-spending
+In 2017, Monero~\cite{monero-fail} disclosed a vulnerability in Cryptonote-based e-currencies that would allow double-spending
 due to the use of \verb|curve25519|~\cite{PKC:Bernstein06} in place of a prime-order curve.
 %\href{https://tools.ietf.org/html/rfc2785#ref-LAW}{RFC2785}, that already provides solutions for avoiding small subgroup attacks)
   \item \textbf{Leakage, partial leakage, or reuse of the commitment is fatal.}
@@ -137,11 +137,11 @@ due to the use of \verb|curve25519|~\cite{PKC:Bernstein06} in place of a prime-o
 We stress that this is not straightforward:
 %Despite Schnorr proofs have been standardized as zero-knowledge proofs (c.f.\ \href{https://tools.ietf.org/html/rfc8235}{RFC8235}) and signatures (c.f.\ ed25519 in \href{https://tools.ietf.org/html/rfc8032}{RFC8032}),
 for instance,
-the current standardized ed25519 cannot be immediately adapted to a zero-knowledge proof in a secure way,
+the current standardized \verb|ed25519| cannot be immediately adapted to a zero-knowledge proof in a secure way,
 because of its malleability~\cite[p. 7]{JCEng:BDLSY12},  and the different behavior on the batched and compressed
 form\footnote{\url{https://hdevalence.ca/blog/2020-10-04-its-25519am}}.
 
-We hence hereby propose the creation of a working group that includes both recent cryptanalytic insights as well as the
+Hence, we hereby propose the creation of a working group that includes both recent cryptanalytic insights as well as the
 (partial) solutions described in other known standardization documents.
 \section{Notation and Terminology}
 \label{sec:notation}
@@ -268,7 +268,6 @@ A basic $\Sigma$-protocol for the relation:
         It then computes $(T_1,\dots,T_m)\gets\varphi(r_1,\dots,r_n)$.
       \item
 	The algorithm sets $\st\defeq (r_1,\dots,r_n)$ and $T\defeq(T_1,\dots,T_m)$.
-  \minote{confusion between $n$ and $m$? If this deals with the compressing $\varphi$, write it explicitly?}
       \item
         It finally outputs outputs $(T,\st)$.
     \end{enumerate}
@@ -683,7 +682,7 @@ The context string $\ctx$ contains application-specific information, such as:
     The prover's algorithm $\prover''(Y,w,\ctx)$ works as follows:
     \begin{enumerate}
       \item
-        The algorithm first computes $(T,\st)\defeq\prover_1(Y,w)$.
+        The algorithm first computes $(T,\st)\gets\prover_1(Y,w)$.
         \minote{sometimes we use lower-case, sometimes upper-case for indexing?}
       \item
         It computes the challenge by setting $c\defeq\hash(T,Y,\ctx)$.
@@ -775,14 +774,16 @@ For formal proofs we refer, e.g., to Damg\r{a}rd~\cite{damgard04}.
   \caption{Summary of open-source projects that implement sigma protocols, along with features supported.
   \label{table:implementations}}
   \centering
-\begin{tabular}{rccc}
-  Project & AND-composition & OR-composition & last activity \\
+  \setlength{\tabcolsep}{12pt}
+\begin{tabular}{rcccc}
+  Project & Language & AND-composition & OR-composition \\
   \hline
-  \verb|SCAPI| \cite{scapi}\\
-  \verb|zkp| \cite{zkp}\\
-  \verb|zksk| \cite{zksk}\\
-  \verb|Emmy|\\
-  \verb|Helios| \cite{USENIX:Adida08} \\
+  \verb|Emmy| & \\
+  %\verb|Helios| \cite{USENIX:Adida08} & \\
+  \verb|Kyber| & Go \\
+  \verb|SCAPI| \cite{scapi} & \\
+  \verb|zkp| \cite{zkp} & Rust\\
+  \verb|zksk| \cite{zksk} & Python\\
   \hline
 \end{tabular}
 \end{table}
