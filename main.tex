@@ -124,7 +124,10 @@ due to the use of \verb|curve25519|~\cite{PKC:Bernstein06} in place of a prime-o
   The first message in a  $\Sigma$-protocol, sometimes called \emph{nonce} or \emph{commitment}, must be uniformly distributed in order to preserve zero-knowledge. Re-use of the same nonce~\cite{CCS:ANTTY20}, or partial leakage allows for the complete recovery of the witness to be proven.
   A blatant instance of this mistake was uncovered in 2010, by the hacker group \texttt{fail0verflow}. They showed how SONY was reusing the same nonce for digitally signing Playstation 3 games\footnote{\url{https://media.ccc.de/v/27c3-4087-en-console_hacking_2010}}.  The member could exploit this to calculate the private key, and create valid signatures.
 
-  \item \textbf{A weak impelmentation of Fiat--Shamir heuristic compromises adaptive security.} The second message in a sigma protocol, sometimes called \emph{challenge}, if computed non-interactively must include not only the commitment, but the full statement and the group description. For instance, if the group generator $G$ is not included in the hash input, then it is possible to prove statements under a different generator $\alpha G$, for any $\alpha \in \ZZ_p$.
+  \item \textbf{A weak impelmentation of Fiat--Shamir heuristic compromises adaptive security.} The second message in a sigma protocol, sometimes called \emph{challenge}, if computed non-interactively must include not only the commitment, but the full statement and the group description.
+
+  If the random oracle is invoked solely on the commitment (c.f.\ weak Fiat-Shamir transformation~\cite[Def.\ 2]{AC:BerPerWar12}), then it is possible, given a proof $\pi$, to produce another proof $\pi'$ for a different statement without knowing the witness.
+  For instance, if the group generator $G$ is not included in the hash input, then it is possible to prove statements under a different generator $\alpha G$, for any $\alpha \in \ZZ_p$.
   Similairly, if $X \in \GG$, part of the statement, is not included in the query to the random oracle, it is possible to compute proofs for $\beta X$, for any $\beta \in \ZZ_p$.
   Mistakes of this class were uncovered by Bernhard et al.~\cite{AC:BerPerWar12}, by Haines et al.~\cite{SP:HLPT20}, and by Cortier et al.~\cite{cortier2020}.
   They all showed how some voting systems, respectively Helios,  Scytl-SwissPost, and Belenios, incorrectly
@@ -306,11 +309,11 @@ A basic $\Sigma$-protocol for the relation:
 
   While the above protocol allows one to efficiently prove knowledge of a pre-image under a homomorphism, many protocols found in the literature require one to prove relations among witnesses.
   Specifically, they require to prove relations like the following:
-\begin{equation}
+\begin{equation*}
 \relation=\set{((Y_1,\dots,Y_m),(w_1,\dots,w_n)) :
 \begin{array}{c} (Y_1,\dots,Y_m)=\varphi(w_1,\dots,w_n) \\
                   A(w_1,\dots,w_n) = (b_1,\dots,b_k)\end{array}}\,,
-\end{equation}
+\end{equation*}
 where the matrix $A\in\ZZ_p^{k\times n}$ and vector $(b_1,\dots,b_k)\in\ZZ_p^k$ specify the system of linear equations.
 
 Proving such a relation can easily by achieved by modifying the above protocol as follows:
@@ -427,7 +430,7 @@ Proving knowledge of a valid opening of a Pedersen commitment means proving know
 
 Using the above notation, we have $\varphi:\ZZ_p\times\ZZ_p\to\GG:(x_1,x_2)\mapsto x_1G + x_2H$.
 The protocol flow is then as depicted in~\cref{fig:rep}.
-    \begin{protocol}{Proving knowledge of representation.\\[-2.25em]}{fig:rep}{h!}
+    \begin{protocol}{Proving knowledge of representation.\\[-2.25em]}{fig:rep}{t}
       \begin{tabular}{@{}l@{\hspace{2em}}c@{\hspace{-3em}}r@{}}
         $\prover \left( (w_1,w_2),Y,(G,H)\right)$ & & $\verifier \left(Y,(G,H)\right)$  \\
         \hline  \\
@@ -589,7 +592,7 @@ We refer, e.g., to Krenn~\cite{krenn12} for generic techniques.
     The prover's second algorithm $\prover_2(w,Y,c,\st)$ proceeds as follows:
     \begin{enumerate}
       \item
-        It checks that $c\in\ZZ_p$ and aborts if this is not the case.
+        It checks that $c\in\ZZ_u$ and aborts if this is not the case.
       \item
 	It parses $\st\defeq(\st^j,c^{1-j},s^{1-j})$.
       \item
@@ -622,6 +625,8 @@ We refer, e.g., to Krenn~\cite{krenn12} for generic techniques.
         Finally, the algorithm then outputs $(t,c,s)\defeq((t^0,t^1),c,(s^0,s^1,c^0))$.
     \end{enumerate}
 \end{enumerate}
+
+\jannote{how about changing all scalars to the same letter than the corresponding group element}
 
 
 \subsection{Achieving Non-Interactivity -- The Fiat-Shamir Transform}
@@ -670,6 +675,8 @@ The context string $\ctx$ contains application-specific information, such as:
     \end{enumerate}
 \end{enumerate}
 
+\jannote{Describe how batching works and why points need to be validated}
+
 \subsubsection{Short form}
 \begin{enumerate}
   \item
@@ -710,11 +717,12 @@ Firstly, all the protocols presented in the previous section are $\Sigma$-protoc
   Finally, if $\varphi(x')\ne\varphi(x'')$ for all $x'\ne x''$, the protocol has unique responses.
 \end{theorem}
 
+\jannote{define non-trivial}
 \begin{theorem}
   If, for $i=0,1$, $(\prover_1^i,\prover_2^i,\verifier^i)$ is a $\Sigma$-protocol for relation $\relation^i$ with challenge set $\ZZ_{u^i}$ and simulator $\simulator^i$, then the protocols specified in Section~\ref{sec:composition} are $\Sigma$-protocol with challenge set $\ZZ_u$ and simulator $\simulator$ for relation $\relation^\land$ and $\relation^\lor$, respectively.
 
-  If at least one of the composed protocols has unpredictable commitments, then so has the protocol for $\relation^\land$.
-  If both protocols have unique responses, then so has the protocol for $\relation^\land$.
+  If at least one of the composed protocols has unpredictable commitments, then so has the protocol for $\relation^\land$ (respectively, $\relation^\lor)$.
+  If both protocols have unique responses, then so has the protocol for $\relation^\land$ (respectively, $\relation^\lor$).
 %  If all composed protocols have unique responses, then so has the composed protocol.
 \end{theorem}
 \minote{The $u^i$ above is a bit confusing}
@@ -779,39 +787,43 @@ For formal proofs we refer, e.g., to Damg\r{a}rd~\cite{damgard04}.
 \end{tabular}
 \end{table}
 
-In this section, we consider the concrete security of $\Sigma$-protocols and illustrate the main points that should be consider when implementing them.
-In \cref{table:implementations}, we report the implementations that we are currently aware of, and that we believe should be considered when issuing guidelines for a standard.
+In this section, we consider the concrete security of $\Sigma$-protocols and illustrate the main points that should be considered when implementing them.
+In \cref{table:implementations}, we report the implementations that we are currently aware of, and that we believe should be used as guidelines for a standard.
 This table is greatly inspired from the remarkable bibliographic work of Lueks et al.~\cite{zksk}.
-\paragraph{Choice of a group.} We advise for the use of prime-order elliptic curves of either 256 or 512 bits of security, depending on the desired security of the upper layers in the protocol\footnote{For instance, proving a DH relation with one fixed group element such as a public key, might expose the protocol to cryptanalytic attacks such as Brown-Gallant~\cite{EPRINT:BroGal04} and Cheon’s attack~\cite{EC:Cheon06}. We consider these attacks out of scope for this standardization effort, and believe this analysis should be deferred to the concrete security study of the larger protocol.}.
+\paragraph{Choice of a group.} We advise for the use of prime-order elliptic curves of size either 256 or 512 bits, depending on the desired security of the upper layers in the protocol\footnote{For instance, proving a DH relation with one fixed group element such as a public key, might expose the protocol to cryptanalytic attacks such as Brown-Gallant~\cite{EPRINT:BroGal04} and Cheon’s attack~\cite{EC:Cheon06}. We consider these attacks out of scope for this standardization effort, and believe this analysis should be deferred to the concrete security study of the larger protocol.}.
 Concretely, we see fit standardized curves such as NIST curves \verb|p-521| and \verb|p-256|~\cite{fips2}, \verb|secp256k1|~\cite{SECG}, or standardized prime-order group abstractions over non prime-order groups, such as Decaf or Ristretto~\cite{cfrg-ristretto-decaf}.
 
 We think pairing-friendly curves, such as BLS12-381~\cite{bls12}, should also be considered for inclusion under relevant assumptions for bilinear groups, such as XDH when dealing with DH triples\footnote{We are aware of the threats reported in
 \url{https://safecurves.cr.yp.to/}.
 It's however not clear what should be the alternatives, and if dropping their support would hinder adoption.
 }.
-We note that the exists already standards for removing small cofactors in elliptic curves~\cite{rfc2785}.
- However we believe that the complexity added by integrating the handling og the cofactor within the verification equations is deleterious for the other supported curves.
+We note that there exists already standards for removing small cofactors in elliptic curves~\cite{rfc2785}.
+ However we believe that the complexity added by integrating the handling of the cofactor within the verification equations is deleterious for the other supported curves.
 \minote{chek if standards works well}
 
 \paragraph{Commitment.} The first step is the generation of uniformly-distributed random element(s) over $\ZZ_p$. As mentioned in \Cref{sec:motivation}, the nonce must be distributed uniformly at random, and even a small bias in the distribution could completely compromise zero-knowledge~\cite{XX}.
 
 We propose the construction of a synthetic nonce obtained from hashing statement, context, and secret, together with 32 additional bytes from operating system's entropy.
 \minote{more concrete here}
+\minote{motivate that rejection sampling is a bad idea.}
 
 The construction of cryptographically secure source of randomness is a difficult problem, that is particularly challenging on embedded devices such as smart-cards or embedded systems. For those applications for which obtaining a high-quality entropy is challenging, we propose the use of a stateful counter.
 
 Hashing the statement and the witness to obtain a commitment was already suggested in previous standards~\cite{rfc6979} in the context of deterministic nonce generation.
 While it is widely recognized that having deterministic nonce helps strengthening the concrete security  and mitigates the risks associated to the generation of a commitment, it could on the other hand leak information about the witness used for a proof, when examining consecutive executions of the protocol. This is e.g. the case of a OR-proof that attempts to preserve anonymity.
+\jannote{state more clearly}
 
 \paragraph{Computing the challenge.} In the non-interactive $\Sigma$-protocols, the challenge is the image of a cryptographically-secure hash function,
 given as input the commitment, the context, and the tag.
+\minote{mention the tag before}
 
-The hash function can be either blake2~\cite{XX}, SHA-256, or SHA3~\cite{XX} truncated to the first 128 buts, or a more structured hash into a prime $p$.
+The hash function can be either blake2~\cite{XX}, SHA-256, or SHA3~\cite{XX} truncated to the first 128 bits, or a more structured hash into $\ZZ_p$.
 The first provides an efficient way of hashing into the curve, but collision resistance might be impacted for e.g. post-quantum security.
-The latter guarantees more seucirty, but requires a more involved implementation.
+The latter guarantees more security, but requires a more involved implementation.
 We direct the curious reader to~\cite{XX} for further information.
 
 \minote{what is the post-quantum impact of 128-bits truncated hash?}
+\minote{motivate taht PQ security in prme groups here is not so much of a problem.}
 The context is composed of: domain separator, any information provided to the external protocol.
 \minote{mention concatenation could lead to attacks. zkp uses strobe to get around it.}
 
