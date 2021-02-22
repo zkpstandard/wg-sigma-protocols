@@ -51,7 +51,7 @@
 \maketitle              % typeset the header of the contribution
 %
 \begin{abstract}
-  We submit a proposal for the standardization of non-interactive sigma protocols in prime order groups, allowing for AND and OR composition, either in compact form (challenge, response) or batchable (commitment, response). We provide examples and propose a selection of elliptic curves and hash functions suitable for implementations. We sketch with a minimal API that should be consistent across implementations.
+  We submit a proposal for the standardization of non-interactive $\Sigma$-protocols in prime order groups, allowing for AND and OR composition, either in compact form (challenge, response) or batchable (commitment, response). We provide examples and propose a selection of elliptic curves and hash functions suitable for implementations. We sketch with a minimal API that should be consistent across implementations.
 
 %\keywords{First keyword  \and Second keyword \and Another keyword.}
 \end{abstract}
@@ -63,7 +63,7 @@ Introduced by Schnorr~\cite{JC:Schnorr91} over 30 years ago, they are now widely
 They played an essential component in the building of a number of cryptographic
 constructions,
 such as anonymous credentials~\cite{CCS:ChaMeiZav14}, password-authenticated key exchange~\cite{jpake}, signatures~\cite{C:Schnorr89},
-ring signatures~\cite{borromeansig}, blind signatures~\cite{CCS:PoiSte97}. It has also inspired the a multitude of constructions, such as multi signatures~\cite{CCS:NRSW20}, threshold signatures, and more.
+ring signatures~\cite{borromeansig}, blind signatures~\cite{CCS:PoiSte97}, multi signatures~\cite{CCS:NRSW20}, threshold signatures~\cite{EPRINT:KomGol20} and more.
 Lueks et al.~\cite{zksk}, reported that solely in the years 2018-2019 editions of PETS, ACM CCS, WPES, NDSS,
 7 publications use  $\Sigma$-protocols.
 Yet, there is no standardized way of implementing them and as a result a lot of implementations have shared common pitfalls (cf.\ \cref{sec:motivation}).
@@ -98,8 +98,8 @@ A request for standardization has also been posted on the \href{https://communit
 \section{Background and Motivation}
 \label{sec:motivation}
 So far, there has been little literature meant to help cryptography engineers implement correctly $\Sigma$-protocols for arbitrary statements about discrete logs.
-Despite Schnorr signatures and zero-knowledge proofs have already been standardized (respectively in \cite{rfc8032} and \cite{rfc8235}), there is still no formal, established way to implement sigma protocols and their composition.
- Additionally, as academic papers focus on proving the security of sigma protocols in generic cyclic groups, the implementation details are often times overlooked, and, as a result, a lot of insecure implementations have been published in the past. To name a few, well-known pitfalls that have led to insecure implementations:
+Despite Schnorr signatures and zero-knowledge proofs have already been standardized (respectively in \cite{rfc8032} and \cite{rfc8235}), there is still no formal, established way to implement  $\Sigma$-protocols and their composition.
+ Additionally, as academic papers focus on proving the security of  $\Sigma$-protocols in generic cyclic groups, the implementation details are often times overlooked, and, as a result, a lot of insecure implementations have been published in the past. To name a few, well-known pitfalls that have led to insecure implementations:
 \begin{itemize}
   \item \textbf{Implementation over non-prime order groups led to small subgroup attacks}. The cyclic group where proofs are being implemented must be carefully selected. Implementing $\Sigma$-protocol over Weierstrass curves is appealing for its performances and straight-line scalar multiplication formul\ae.
    However, the presence of a small cofactor could be fatal for security.
@@ -110,7 +110,7 @@ due to the use of \verb|curve25519|~\cite{PKC:Bernstein06} in place of a prime-o
   The first message in a  $\Sigma$-protocol, sometimes called \emph{nonce} or \emph{commitment}, must be uniformly distributed in order to preserve zero-knowledge. Re-use of the same nonce~\cite{CCS:ANTTY20}, or partial leakage allows for the complete recovery of the witness to be proven.
   A blatant instance of this mistake was uncovered in 2010, by the hacker group \texttt{fail0verflow} (for EC-DSA). They showed how SONY was reusing the same nonce for digitally signing Playstation 3 games\footnote{\url{https://media.ccc.de/v/27c3-4087-en-console_hacking_2010}}.  The member could exploit this to calculate the private key, and create valid signatures.
 
-  \item \textbf{A weak implementation of Fiat--Shamir heuristic compromises adaptive security.} The second message in a sigma protocol, sometimes called \emph{challenge}, if computed non-interactively must include not only the commitment, but the full statement and the group description.
+  \item \textbf{A weak implementation of Fiat--Shamir heuristic compromises adaptive security.} The second message in a  $\Sigma$-protocol, sometimes called \emph{challenge}, if computed non-interactively must include not only the commitment, but the full statement and the group description.
 
   If the random oracle is invoked solely on the commitment (c.f.\ weak Fiat-Shamir transformation~\cite[Def.\ 2]{AC:BerPerWar12}), then it is possible, given a proof $\pi$, to produce another proof $\pi'$ for a different statement without knowing its witness.
   For instance, if the group generator $G$ is not included in the hash input, then it is possible to prove statements under a different generator $\alpha G$, for any $\alpha \in \ZZ_p$.
