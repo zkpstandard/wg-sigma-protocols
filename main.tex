@@ -417,7 +417,8 @@ It then outputs the simulated transcript $((\commitment_1,\commitment_2),\challe
 
 
 \begin{remark}
-  The two protocols illustrated prove the same statement, but they have different tradeoffs.
+  The two protocols illustrated prove the same statement, but they have different tradeoffs: the first protocol uses the more general framework of liner relations among the discrete log, while the first one
+  While the first protocol accepts
 \end{remark}
 
 \paragraph{Example 4 (REP).}
@@ -620,9 +621,6 @@ We refer, e.g., to Krenn~\cite{krenn12} for generic techniques.
         Finally, the algorithm then outputs $(\vec \commitment,\challenge,\vec s)\defeq ((\commitment^0,\commitment^1),\challenge,(s^0,s^1,c^0))$.
     \end{enumerate}
 \end{enumerate}
-
-\jannote{how about changing all scalars to the same letter than the corresponding group element}
-\stnote{nooooooo ;) but maybe we can somewhere (outside the definition of sigma protocols, i.e., in Sec 3 or so) explain that (T,c,s) is our convention for the three messages in a sigma protocol?}
 
 \subsection{Achieving Non-Interactivity -- The Fiat-Shamir Transform}\label{sec:fs}
 All protocols described so far require three messages being exchanged between the prover and the verifier.
@@ -857,7 +855,7 @@ For formal proofs we refer, e.g., to Damg\r{a}rd~\cite{damgard04}.
   \label{table:implementations}}
   \centering
   \setlength{\tabcolsep}{6pt}
-\begin{tabular}{rcccccc}
+\begin{tabular}{lcccccc}
 \toprule
   Project & Language & AND-composition & OR-composition & INT & FS \\
   \hline
