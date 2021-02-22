@@ -57,7 +57,7 @@
 \end{abstract}
 
 \section{Introduction}
-Sigma protocols are zero-knowledge~\cite{GolMicRac89} proofs of knowledge~\cite{C:BelGol92} without SRS, proven secure in the random oracle model.
+$\Sigma$-protocols are zero-knowledge~\cite{GolMicRac89} proofs of knowledge~\cite{C:BelGol92} without SRS, proven secure in the random oracle model.
 Introduced by Schnorr~\cite{JC:Schnorr91} over 30 years ago, they are now widely used  in practice because of their simplicity, maturity, and versatility.
 
 They played an essential component in the building of a number of cryptographic
@@ -73,7 +73,7 @@ We make a first attempt at the standardization of $\Sigma$-protocols by proposin
 \begin{itemize}
   \item \textbf{Discrete logarithm equality, Diffie-Hellman triples.}
   Proving so-called DLEQ relations is an essential task in some VOPRFs such as~\cite{AC:JarKiaKra14},
-  which is currently in process of standardization, thanks to sigma protocols~\cite{cfrg-voprf}.
+  which is currently in process of standardization, thanks to $\Sigma$-protocols~\cite{cfrg-voprf}.
   DLEQ proofs are also being used by Privacy pass~\cite{PoPETS:DGSTV18}, a lightweight anonymous credential that has been implemented and deployed at scale by Cloudflare, Brave
   Browser, and others.
   There are also other works, published in recent academic conferences, that rely on the same type of relations: Cryptography for \#metoo~\cite{PoPETS:KuyKraRab19}; Solidus~\cite{CCS:CZJKJS17}; ClaimChain~\cite{ClaimChain}.
@@ -82,7 +82,7 @@ We make a first attempt at the standardization of $\Sigma$-protocols by proposin
   including in Algebraic MACs~\cite{CCS:ChaMeiZav14}.
   Algrbraic MACs are now used in Signal's group chats~\cite{CCS:ChaPerZav20} and deployed to millions of users.
   \item \textbf{Proving knowledge of one among multiple discrete logarithms.}
-  OR-composition of sigma protocols
+  OR-composition of $\Sigma$-protocols
   has been used for range proofs~\cite{borromeansig}, and ring signatures: it enables for private transactions in CryptoNote (Monero)~\cite{monero}.
   OR-composition is also used in other tools such as Mesh~\cite{PoPETS:AlTGon19}.
   %\item Coconut~\cite{NDSS:SABMD19} with threshold Issuance Selective Disclosure Credentials with Applications to Distributed Ledgers;
@@ -737,7 +737,7 @@ Damg\r{a}rd~\cite{EC:Damgard00}
 	It samples $c\sample\ZZ_p$ and computes $(com,o)\defeq{\sf Commit}(ck,c)$.
       \item
         It sets $\st_\verifier\defeq(c,o)$.
-      \item 
+      \item
         It sends $com$ to the prover.
     \end{enumerate}
   \item
@@ -844,7 +844,7 @@ For formal proofs we refer, e.g., to Damg\r{a}rd~\cite{damgard04}.
 \label{sec:instantiation}
 
 \begin{table}[t]
-  \caption{Summary of open-source projects that implement sigma protocols, along with features supported.
+  \caption{Summary of open-source projects that implement $\Sigma$-protocols, along with features supported.
   INT stands for \emph{interactive}; FS stands for \emph{Fiat-Shamir}.
   Most of this table's data comes from the work of Lueks et al.~\cite{zksk}.
   \label{table:implementations}}
