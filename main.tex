@@ -870,6 +870,26 @@ be interesting for more tight use cases.
  either or proof I'm you or the staement is true + commitment discrete log}
 
 \paragraph{Delayed input.}
+Even though in our notation we have assumed that the prover receives as input
+instance and witness already when computing the first  message, there are
+ $\Sigma$-protocols (e.g., the one of Schnorr) where knowledge of instance
+ and wintess is required only in the last round. This means that
+ the first two messages can be pre-preocessed obtaining better efficiency
+ especially when $\Sigma$-protocols are used inside larger protocols.
+ Obviously this feature is not very relevant when $\Sigma$-protocols become non-interative in the random oracle model. However, there are scenarios where the need of deniability or of unconditional soundness might actually suggest to stick
+ with interactive $\Sigma$-protocols.
+
+Unfortunately the OR composition discussed above affects the possible
+delayed-input property of the underlying $\Sigma$-protocols. Consider for instance
+the simple OR composition allowing to prove knowledge of at least one out of
+two discrete logarithms. Even though the underlying two $\Sigma$-protocols
+satisfy the delayed-property, the compound $\Sigma$-protocol obtained through CDS94
+forces knowledge of the instances already before computing the first message.
+
+Alternative information-theoretic OR compositions have been proposed in [CSSPV16a]
+for practical classes of $\Sigma$-protocols requiring that only one out of two
+instances is known when the protocol starts and obtaining a compund dealayed-input
+$\Sigma$-protocol. Relying on computational (i.e., DDH) assumptions, in [CSSPV16b] it is shown how to generically (i.e., not just two and no further restrictions) compose dealyed-input $\Sigma$-protocols obtaining a compound delayed-input $\Sigma$ protocol.
 \paragraph{Designated verifier proofs.} There are two simple techniques for achieving designated-verifier proofs:
 \paragraph{Shared proof computation.} Splitting the witness across multiple devices is very appealing from an applied security perspective.
 Recently, we saw a number of protocols based on the same template of of \cref{fig:generic} ~\cite{EPRINT:KomGol20,EPRINT:NicRufSeu20}, especially targeting applications in signatures for cryptocurrencies.
