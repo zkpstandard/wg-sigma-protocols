@@ -74,9 +74,9 @@ We make a first attempt at the standardization of $\Sigma$-protocols by proposin
   \item \textbf{Discrete logarithm equality, Diffie-Hellman triples.}
   Proving discrete logarithm equality, DDH triples, or more in general linear relations among secrets is an essential task for some protocols. This is the case of some VOPRFs such as~\cite{AC:JarKiaKra14},
   which is currently in process of standardization~\cite{cfrg-voprf}, and internally employs $\Sigma$-protocols to prove discrete logarithm equality.
-  DLEQ proofs are also being used by Privacy pass~\cite{PoPETS:DGSTV18}, a lightweight anonymous credential that has been implemented and deployed at scale by Cloudflare, Brave
+  DLEQ proofs are also being used by Privacy Pass~\cite{PoPETS:DGSTV18}, a lightweight anonymous credential that has been implemented and deployed at scale by Cloudflare, Brave
   Browser, and others.
-  There are also other works, published in recent academic conferences, that rely on the same type of relations: Cryptography for \#metoo~\cite{PoPETS:KuyKraRab19}; Solidus~\cite{CCS:CZJKJS17}; ClaimChain~\cite{ClaimChain}.
+  There are also other works, published in recent academic conferences, that rely on this type of relations: Cryptography for \#metoo~\cite{PoPETS:KuyKraRab19}; Solidus~\cite{CCS:CZJKJS17}; ClaimChain~\cite{ClaimChain}.
   \item \textbf{Knowledge of plaintexts, openings of commitments}
   The so-called AND-composition of dlog relations has been used over a number of protocols,
   including in Algebraic MACs~\cite{CCS:ChaMeiZav14}.
@@ -883,8 +883,7 @@ We think pairing-friendly curves, such as BLS12-381~\cite{bls12}, should also be
 
 
 
- \paragraph{Choice of the hash funcitons.} We advise for the use of consolidated hash functions such as \verb|SHA2|, \verb|SHA3|, and \verb|BLAKE2|, \verb|BLAKE3|.
- We did not examine closely algebraic hashes for this draft, and velieve this must include much deeper cryptanalitic analysis within a working group.
+ \paragraph{Choice of the hash funcitons.} We advise for the use of consolidated hash functions such as \verb|SHA2|, \verb|SHA3|, and \verb|BLAKE2|, \verb|BLAKE3|\footnote{We did not examine closely algebraic hashes for this draft, but we stress that their adoption could be appealing for a number of applications requiring recursive proofs. Unfortunately, this requires a much deeper cryptanalysis within a working group.}
 
 
 \paragraph{Commitment.} The first step is the generation of uniformly-distributed random element(s) over $\ZZ_p$. As mentioned in \Cref{sec:motivation}, the nonce must be distributed uniformly at random, and even a small bias in the distribution could completely compromise zero-knowledge~\cite{XX}.
@@ -901,7 +900,10 @@ While it is widely recognized that having deterministic nonce helps strengthenin
 
 \paragraph{Computing the challenge.} In the non-interactive $\Sigma$-protocols, the image of the random oracle is assumed to be over the field. This leaves opend the path for 3 different implementation routes:
 \begin{enumerate}[label=$(\alph*)$]
-  \item  aa
+  \item  truncating the output of the hash to 128 bits
+  \item  truncating the output of the ahsh to 256 bits
+  \item adding 64 bytes and trucnating mod p
+  \item rejection sampling
 \end{enumerate}
  is the image of a cryptographically-secure hash function,
 given as input the commitment, the context, and the tag.
@@ -962,7 +964,8 @@ Nothing prevents those same techniques to be adopted in the (more general) topic
 language for expressing relations (c.f.\ the community reference~\cite[section 3]{zkproof-reference}, and Drevon's proposal~\cite{jr1cs}).
 Generally, statements about discrete logarithms are dealt with so-called Camenisch--Stadler notation, and we believe community should come to agree on the acceptable tradeoffs for expressing the relation in R1CS language.
 
-
+\section*{Acknowledgements}
+The authors thank Jan Bobolz and Ivan Visconti for their invaluable reviews and discussions during the early stage of this work.
 \bibliographystyle{alpha}
 \bibliography{cryptobib/abbrev3,cryptobib/crypto,additional}
 %
