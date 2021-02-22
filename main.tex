@@ -415,6 +415,11 @@ The protocol flow is then as depicted in~\cref{fig:dleq_2}.
 For a given challenge $c\in\ZZ_p$, the simulator chooses $s\sample\ZZ_p$, and sets $\commitment_1\gets sG-c\statement_1$ and $\commitment_2\gets sH - c\statement_2$.
 It then outputs the simulated transcript $((\commitment_1,\commitment_2),\challenge,s)$.
 
+
+\begin{remark}
+  The two protocols illustrated prove the same statement, but they have different tradeoffs.
+\end{remark}
+
 \paragraph{Example 4 (REP).}
 Let $\GG$ be a group over an elliptic curve of prime order $p$.
 Proving knowledge of a valid opening of a Pedersen commitment means proving knowledge of $w_1,w_2\in\ZZ_p$ such that $Y=w_1G + w_2H$.
@@ -859,11 +864,11 @@ For formal proofs we refer, e.g., to Damg\r{a}rd~\cite{damgard04}.
   \verb|Cashlib|~\cite{USENIX:MEKHL10} & C++ & \cmark & \xmark & \xmark & \cmark \\
   \verb|Emmy|~\cite{emmy} & Go &  \xmark & \xmark & \cmark & \xmark \\
   %\verb|Helios| \cite{USENIX:Adida08} & \\
-  \verb|Kyber| & Go &  \cmark & \cmark & \cmark & \cmark \\
+  \verb|Kyber|~\cite{kyber} & Go &  \cmark & \cmark & \cmark & \cmark \\
   \verb|SCAPI| \cite{scapi} &  C++ & \cmark & \cmark & \cmark & \cmark\\
-  \verb|YAZKC|~\cite{ESORICS:ABBKSS10, CCS:ABBBKZ12} & C & \cmark & \cmark& \cmark & \cmark \\
-  \verb|zkp| \cite{zkp} & Rust & \cmark & \xmark & \xmark & \cmark \\
-  \verb|zksk| \cite{zksk} & Python & \cmark & \cmark & \cmark & \cmark\\
+  \verb|YAZKC|~\cite{ESORICS:ABBKSS10,CCS:ABBBKZ12} & C & \cmark & \cmark& \cmark & \cmark \\
+  \verb|zkp|~\cite{zkp} & Rust & \cmark & \xmark & \xmark & \cmark \\
+  \verb|zksk|~\cite{zksk} & Python & \cmark & \cmark & \cmark & \cmark\\
   \bottomrule
 \end{tabular}
 \end{table}
