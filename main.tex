@@ -72,8 +72,8 @@ We make a first attempt at the standardization of $\Sigma$-protocols by proposin
 
 \begin{itemize}
   \item \textbf{Discrete logarithm equality, Diffie-Hellman triples.}
-  Proving so-called DLEQ relations is an essential task in some VOPRFs such as~\cite{AC:JarKiaKra14},
-  which is currently in process of standardization, thanks to $\Sigma$-protocols~\cite{cfrg-voprf}.
+  Proving discrete logarithm equality, DDH triples, or more in general linear relations among secrets is an essential task for some protocols. This is the case of some VOPRFs such as~\cite{AC:JarKiaKra14},
+  which is currently in process of standardization~\cite{cfrg-voprf}, and internally employs $\Sigma$-protocols to prove discrete logarithm equality.
   DLEQ proofs are also being used by Privacy pass~\cite{PoPETS:DGSTV18}, a lightweight anonymous credential that has been implemented and deployed at scale by Cloudflare, Brave
   Browser, and others.
   There are also other works, published in recent academic conferences, that rely on the same type of relations: Cryptography for \#metoo~\cite{PoPETS:KuyKraRab19}; Solidus~\cite{CCS:CZJKJS17}; ClaimChain~\cite{ClaimChain}.
