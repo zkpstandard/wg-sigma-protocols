@@ -886,7 +886,16 @@ We think pairing-friendly curves, such as BLS12-381~\cite{bls12}, should also be
 
 
 
- \paragraph{Choice of the hash funcitons.} We advise for the use of consolidated hash functions such as \verb|SHA2|, \verb|SHA3|, and \verb|BLAKE2|, \verb|BLAKE3|\footnote{We did not examine closely algebraic hashes for this draft, but we stress that their adoption could be appealing for a number of applications requiring recursive proofs. Unfortunately, this requires a much deeper cryptanalysis within a working group.}
+ \paragraph{Choice of the hash funcitons.} We advise for the use of consolidated hash functions such as \verb|SHA2|, \verb|SHA3|, and \verb|BLAKE2|, \verb|BLAKE3|\footnote{We did not examine closely algebraic hashes for this draft, but we stress that their adoption could be appealing for a number of applications requiring recursive proofs. Unfortunately, this requires a much deeper cryptanalysis within a working group.}.
+ In the non-interactive $\Sigma$-protocols, the image of the random oracle is assumed to be over the field.  There are three ways in which we can
+\begin{enumerate}[label=$(\alph*)$]
+  \item  truncating the output of the hash to 128 bits
+  \item  truncating the output of the ahsh to 256 bits
+  \item adding 64 bytes and trucnating mod p
+  \item rejection sampling: sample uniformly at random from $[0, 2^\secpar]$, until a value in the interval [0, p] is found.
+\end{enumerate}
+The latter is undesirable due to the difficulty of implementing a constant-time version (which could lead a secret for the deterministic computation of the commitment). T
+ is the image of a cryptographically-secure hash function,
 
 
 \paragraph{Commitment.} The first step is the generation of uniformly-distributed random element(s) over $\ZZ_p$. As mentioned in \Cref{sec:motivation}, the nonce must be distributed uniformly at random, and even a small bias in the distribution could completely compromise zero-knowledge~\cite{XX}.
@@ -901,14 +910,7 @@ Hashing the statement and the witness to obtain a commitment was already suggest
 While it is widely recognized that having deterministic nonce helps strengthening the concrete security  and mitigates the risks associated to the generation of a commitment, it could on the other hand leak information about the witness used for a proof, when examining consecutive executions of the protocol. This is e.g. the case of a OR-proof that attempts to preserve anonymity.
 \jannote{state more clearly}
 
-\paragraph{Computing the challenge.} In the non-interactive $\Sigma$-protocols, the image of the random oracle is assumed to be over the field. This leaves opend the path for 3 different implementation routes:
-\begin{enumerate}[label=$(\alph*)$]
-  \item  truncating the output of the hash to 128 bits
-  \item  truncating the output of the ahsh to 256 bits
-  \item adding 64 bytes and trucnating mod p
-  \item rejection sampling
-\end{enumerate}
- is the image of a cryptographically-secure hash function,
+\paragraph{Computing the challenge.}
 given as input the commitment, the context, and the tag.
 
 The hash function can be either blake2~\cite{XX}, SHA-256, or SHA3~\cite{XX} truncated to the first 128 bits, or a more structured hash into $\ZZ_p$.
