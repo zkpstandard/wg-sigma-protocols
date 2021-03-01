@@ -1,4 +1,10 @@
 \documentclass[runningheads]{llncs}
+
+\newif\ifanonymous
+\anonymoustrue
+
+
+\usepackage{adjustbox}
 \usepackage{amsmath}
 \usepackage{amssymb}
 
@@ -35,18 +41,21 @@
 
 \begin{document}
 
-\title{Proposal: $\Sigma$-protocols%
-\thanks{This work has partially been funded by the European Union's Horizon 2020 framework programme under grant agreement no. 830929 (CyberSec4Europe).}}
+\title{Proposal: $\Sigma$-protocols}
 %
 \titlerunning{Proposal: $\Sigma$-protocols}
 
+\ifanonymous
+\author{}
+\institute{}
+\else
 \author{Stephan Krenn\inst{1} \and
         Michele Orr\`u\inst{2}}
-
 \authorrunning{S. Krenn and M. Orr\`u}
-
 \institute{AIT Austrian Institute of Technology, Vienna, Austria \and
            University of California, Berkeley, United States}
+
+\fi
 %
 \maketitle              % typeset the header of the contribution
 %
@@ -344,7 +353,7 @@ The protocol flow is then as depicted in~\cref{fig:dlog}.
         $ s \defeq r + cw$\\
         & $\sendr{s}{100}$ \\[2 ex]
       % -----------------------------V-------------------------------
-        & & Return $\accept$ if and only if \\
+        & & Return $\accept$ iff \\
         & & $T + cY = sG$ \\
       \end{tabular}
     \end{protocol}
@@ -377,7 +386,7 @@ The protocol flow is then as depicted in~\cref{fig:dleq}.
         $ s_2 \defeq r_2 + cw_2$\\
         & $\sendr{s_1,s_2}{100}$ \\[2 ex]
       % -----------------------------V-------------------------------
-        & & Return $\accept$ if and only if \\
+        & & Return $\accept$ iff \\
         & & $\commitment_1 + c\statement_1 = s_1G$ \\
         & & $\commitment_2 + c\statement_2 = s_2H$ \\
         & & and $s_1-s_2=0$.
@@ -406,7 +415,7 @@ The protocol flow is then as depicted in~\cref{fig:dleq_2}.
       $s \defeq r + cw $& & \\
       & $\sendr{s}{100}$\\[2ex]
       % -----------------------------V-------------------------------
-        & & Return $\accept$ if and only if \\
+        & & Return $\accept$ iff \\
         & & $\commitment_1 + c\statement_1 = sG$ \\
         & & and $\commitment_2 + c\statement_2 = sH$. \\
       \end{tabular}
@@ -427,7 +436,7 @@ Proving knowledge of a valid opening of a Pedersen commitment means proving know
 
 Using the above notation, we have $\varphi:\ZZ_p^2\to\GG:(x_1,x_2)\mapsto x_1G + x_2H$.
 The protocol flow is then as depicted in~\cref{fig:rep}.
-    \begin{protocol}{Proving knowledge of representation.\\[-2.25em]}{fig:rep}{t}
+    \begin{protocol}{Proving knowledge of representation.\\[-2.25em]}{fig:rep}{hbpt}
       \begin{tabular}{@{}l@{\hspace{2em}}c@{\hspace{-3em}}r@{}}
         $\prover \left( (w_1,w_2),Y,(G,H)\right)$ & & $\verifier \left(Y,(G,H)\right)$  \\
         \hline  \\
@@ -444,7 +453,7 @@ The protocol flow is then as depicted in~\cref{fig:rep}.
         $ s_2 \defeq r_2 + cw_2$\\
         & $\sendr{s_1,s_2}{100}$ \\[2 ex]
       % -----------------------------V-------------------------------
-        & & Return $\accept$ if and only if \\
+        & & Return $\accept$ iff \\
         & & $T + cY = s_1G + s_2H$ \\
       \end{tabular}
     \end{protocol}
@@ -459,7 +468,7 @@ Yet, the mapping $\ZZ_p^2\to\GG^3:(x_1,x_2)\mapsto (x_1G,x_2G,x_1x_2G)$ is not a
 However, the required multiplicative relation can be proven by observing that the proof goal is equivalent to $\statement_1=w_1G$, $\statement_2=w_2G$, and $\statement_3=w_2\statement_1$, leading the homomorphism $\varphi:\ZZ_p^2\to\GG^3:(x_1,x_2)\mapsto(x_1G,x_2G,x_2\statement_1)$.
 
 The protocol flow is then as depicted in~\cref{fig:dh}.
-    \begin{protocol}{Proving knowledge of representation.\\[-2.25em]}{fig:dh}{t}
+    \begin{protocol}{Proving knowledge of representation.\\[-2.25em]}{fig:dh}{tbph}
       \begin{tabular}{@{}l@{\hspace{-3em}}c@{\hspace{-2em}}r@{}}
         $\prover\left( (w_1,w_2),(\statement_1,\statement_2,\statement_3),G)\right)$ & & $\verifier\left((\statement_1,\statement_2,\statement_3),G \right)$  \\
         \hline  \\
@@ -478,14 +487,12 @@ The protocol flow is then as depicted in~\cref{fig:dh}.
         $ s_2 \defeq r_2 + cw_2$\\
         & $\sendr{s_1,s_2}{100}$ \\[2 ex]
       % -----------------------------V-------------------------------
-        & & Return $\accept$ if and only if \\
+        & & Return $\accept$ iff \\
         & & $\commitment_1 + c\statement_1 = s_1G$ \\
         & & $\commitment_2 + c\statement_2 = s_2G$ \\
         & & and $\commitment_3 + c\statement_3 = s_2\statement_1$ \\
       \end{tabular}
     \end{protocol}
-    \minote{put the protoocols together face to face?}
-    \stnote{I would rather go for a [h!] to make sure that it's always on the right page... but I don't have a strong opinion on that}
 
 For a given challenge $c\in\ZZ_p$, the simulator chooses $s_1,s_2\sample\ZZ_p$, and sets $\commitment_1\defeq s_1G -c\statement_1$, $\commitment_2\defeq s_2G-c\statement_2$, and $\commitment_3\defeq s_2\statement_1-c\statement_3$.
 It then outputs the simulated transcript $((\commitment_1,\commitment_2,\commitment_3),\challenge,(s_1,s_2))$.
@@ -493,9 +500,12 @@ It then outputs the simulated transcript $((\commitment_1,\commitment_2,\commitm
 As shown in this example, and in contrast to linear relations, multiplicative relations among witnesses typically require a reformulation of the proof goal in order to be compatible with the generic protocol presented above.
 We refer, e.g., to Krenn~\cite{krenn12} for generic techniques.
 
-\subsection{Composition of $\Sigma$-Protocols}\label{sec:composition}
+\subsection{Composition of $\Sigma$-Protocols}
+\label{sec:composition}
+\label{sec:or-comp}
+\label{sec:and-comp}
   In this section, we recap composition techniques of $\Sigma$-protocols.
-  Specifically, we define mechanisms for proving knowledge of multiple independent witnesses (``AND-composition''), and for proving knowledge for one out of a set of witnesses (``OR-composition'').
+  Specifically, we define mechanisms for proving knowledge of multiple independent witnesses (\emph{AND composition}), and for proving knowledge for one out of a set of witnesses (\emph{OR composition}).
   Without loss of generality, the techniques presented in the following focus on the composition of two protocols;
   proving knowledge of more than two witnesses, or for out of a larger set of witnesses, can directly be achieved by iteratively deploying the techniques.
 
@@ -854,9 +864,10 @@ For formal proofs we refer, e.g., to Damg\r{a}rd~\cite{damgard04}.
   Most of this table's data comes from the work of Lueks et al.~\cite{zksk}.
   \label{table:implementations}}
   \centering
-  \setlength{\tabcolsep}{6pt}
-\begin{tabular}{lcccccc}
-\toprule
+  \setlength{\tabcolsep}{4pt}
+  \begin{adjustbox}{max width=\textwidth}
+  \begin{tabular}{lcccccc}
+  \toprule
   Project & Language & AND-composition & OR-composition & INT & FS \\
   \hline
   \verb|Cashlib|~\cite{USENIX:MEKHL10} & C++ & \cmark & \xmark & \xmark & \cmark \\
@@ -868,9 +879,9 @@ For formal proofs we refer, e.g., to Damg\r{a}rd~\cite{damgard04}.
   \verb|zkp|~\cite{zkp} & Rust & \cmark & \xmark & \xmark & \cmark \\
   \verb|zksk|~\cite{zksk} & Python & \cmark & \cmark & \cmark & \cmark\\
   \bottomrule
-\end{tabular}
+  \end{tabular}
+\end{adjustbox}
 \end{table}
-
 In this section, we consider the concrete security of $\Sigma$-protocols and illustrate the main points that should be considered when implementing them.
 In \cref{table:implementations}, we report the implementations that we are currently aware of.
 This table is greatly inspired from the remarkable bibliographic work of Lueks et al.~\cite{zksk}.
@@ -886,17 +897,27 @@ We think pairing-friendly curves, such as BLS12-381~\cite{bls12}, should also be
 
 
 
- \paragraph{Choice of the hash funcitons.} We advise for the use of consolidated hash functions such as \verb|SHA2|, \verb|SHA3|, and \verb|BLAKE2|, \verb|BLAKE3|\footnote{We did not examine closely algebraic hashes for this draft, but we stress that their adoption could be appealing for a number of applications requiring recursive proofs. Unfortunately, this requires a much deeper cryptanalysis within a working group.}.
- In the non-interactive $\Sigma$-protocols, the image of the random oracle is assumed to be over the field.  There are three ways in which we can
-\begin{enumerate}[label=$(\alph*)$]
-  \item  truncating the output of the hash to 128 bits
-  \item  truncating the output of the ahsh to 256 bits
-  \item adding 64 bytes and trucnating mod p
-  \item rejection sampling: sample uniformly at random from $[0, 2^\secpar]$, until a value in the interval [0, p] is found.
-\end{enumerate}
-The latter is undesirable due to the difficulty of implementing a constant-time version (which could lead a secret for the deterministic computation of the commitment). T
- is the image of a cryptographically-secure hash function,
+ \paragraph{Choice of the hash funcitons.} We advise for the use of consolidated, cryptographically secure hash functions such as \verb|SHA2|, \verb|SHA3|, and \verb|BLAKE2|, \verb|BLAKE3|\footnote{We did not examine closely algebraic hashes for this draft, but we stress that their adoption could be appealing for a number of applications requiring recursive proofs. Unfortunately, this requires a much deeper cryptanalysis within a working group.}.
+ In the non-interactive $\Sigma$-protocols, the image of the random oracle is assumed to be over the field, and translating the output of the hash function (in $\bin^*$) into an integer mod $p$ requires care to preserve indifferentiability.
 
+ The best options for performing this operation are the following :
+\begin{enumerate}[label=$(\alph*)$]
+  \item\label{item:truncate-128}  Truncating the output of the hash to 128 bits, and interpreting it as a small integer mod $p$.
+  Despite being the most efficient option at our disposal, it is unclear if the collision probability of $2^{-64}$ could be too small for certain applications;
+  \item\label{item:truncate-256}  Truncating the output of the hash to 256 bits, and then reducing mod $p$.
+  This is by far the most natural approach; however, the output distribution could be potentially far from uniformly random, in terms of statistical distance.
+ Consider e.g.\ a prime $p$ that is close to $3/4 \cdot 2^{256}$. Reducing a random $256$-bit integer modulo this $p$ yields a value that is in the range $[0, p / 3]$ with probability roughly $1/2$~\cite{hash-to-curve}.
+  We remark that, nonetheless, min-entropy wise this only costs (less than) a bit of security, i.e., the chances of a specific challenge being hit by the hash function is still less than $2/p$.
+  \minote{check that curves proposed have a very small range. }
+  \item\label{item:truncate-cfrg} Truncating the output of the hash to $\ceil{\log_2 p} + \kappa$ bits (where $\kappa$ is the targeted statistical
+  security level), and then reducing mod $p$.
+  This is essentially the procedure
+  \verb|hash_to_field| as described in~\cite[Section 5]{hash-to-curve}.
+  This approach leads to a random value statistically close ($2^{-\kappa}$) to a value sampled uniformly at random in $\ZZ_p$.
+  \item Rejection sampling, which consists in sampling uniformly at random in the interval $[0, 2^\secpar]$, until a value in $[0, p]$ is found.
+  Unfortunately, since the hash function is used also for hashing the initial (secret) randomness used for computing the commitment, this method is undesirable due to the difficulty of implementing a constant-time version (which could lead a secret for the deterministic computation of the commitment).
+\end{enumerate}
+For the above reasons, we deem the options \cref{item:truncate-128,item:truncate-256} most fit a a real-wold deployment.
 
 \paragraph{Commitment.} The first step is the generation of uniformly-distributed random element(s) over $\ZZ_p$. As mentioned in \Cref{sec:motivation}, the nonce must be distributed uniformly at random, and even a small bias in the distribution could completely compromise zero-knowledge~\cite{XX}.
 
@@ -911,20 +932,11 @@ While it is widely recognized that having deterministic nonce helps strengthenin
 \jannote{state more clearly}
 
 \paragraph{Computing the challenge.}
-given as input the commitment, the context, and the tag.
-
-The hash function can be either blake2~\cite{XX}, SHA-256, or SHA3~\cite{XX} truncated to the first 128 bits, or a more structured hash into $\ZZ_p$.
-The first provides an efficient way of hashing into the curve, but collision resistance might be impacted for e.g. post-quantum security.
-The latter guarantees more security, but requires a more involved implementation.
-We direct the curious reader to~\cite{XX} for further information.
-
-\minote{what is the post-quantum impact of 128-bits truncated hash?}
-\minote{motivate taht PQ security in prme groups here is not so much of a problem.}
-
+The challenge is computed as the hash of
 
 \paragraph{Response and proof output.} The response is computed using standard field addition and multiplication. The implementation should support batched and short form, as wrappers around the proof transcript as generated by $\prover_2$.
 \paragraph{Verification.} The implementation should support two different verification functions, for batched and short verification.
-The case of batched verification must include a point verification sub-routing that asserts the statement and commitments are in question. Failure to properly check that a commitment is in the group could lead to subgroup attacks XX or XXXX.
+The case of batched verification must include a point verification sub-routing that asserts the statement and commitments are in question. Failure to properly check that a commitment is in the group could lead to subgroup attacks XX or invalid curve attacks XXXX.
 
 If verification fails, an exception should be raised.
 If input parsing fails, an exception should be raised.
@@ -941,23 +953,21 @@ be interesting for more tight use cases.
  either or proof I'm you or the staement is true + commitment discrete log}
 
 \paragraph{Delayed input.}
-Even though in our notation we have assumed that the prover receives as input
-instance and witness already when computing the first  message, there are
- $\Sigma$-protocols (e.g., the one of Schnorr) where knowledge of instance
- and witness is required only in the last round. This means that
- the first two messages can be pre-preocessed obtaining better efficiency
- especially when $\Sigma$-protocols are used inside larger protocols.
- Obviously this feature is not very relevant when $\Sigma$-protocols become non-interactive in the random oracle model. However, there are scenarios where the need of deniability or of unconditional soundness might actually suggest to stick
- with interactive $\Sigma$-protocols.
+Despite throughout this work we have assumed that the prover receives as input
+instance and witness already when computing the first message, in some $\Sigma$-protocols (c.f. \cref{fig:dlog,fig:dleq,fig:dleq_2})  knowledge of instance and witness is required only in the last round. Therefore,
+ the first two messages can be pre-preocessed obtaining better practical efficiency.
+% especially when $\Sigma$-protocols are used inside larger protocols.
+ Obviously, this feature relevant only for interactive protocols, which
+ %is not very relevant when $\Sigma$-protocols become non-interactive in the random oracle model. However, there are
+ might include scenarios requiring deniability or of unconditional soundness.
 
-Unfortunately the OR composition discussed above affects the possible
+Unfortunately, the OR composition discussed in \cref{sec:or-comp} affects the possible
 delayed-input property of the underlying $\Sigma$-protocols. Consider for instance
 the simple OR composition allowing to prove knowledge of at least one out of
 two discrete logarithms. Even though the underlying two $\Sigma$-protocols
 satisfy the delayed-property, the compound $\Sigma$-protocol obtained through~\cite{C:CraDamSch94}
 forces knowledge of the instances already before computing the first message.
-
-Alternative information-theoretic OR compositions have been proposed in~\cite{TCC:CPSSV16}
+Alternative information-theoretic OR compositions have been proposed in~\cite{TCC:CPSSV16},
 for practical classes of $\Sigma$-protocols requiring that only one out of two
 instances is known when the protocol starts and obtaining a compound delayed-input
 $\Sigma$-protocol. Relying on computational (i.e., DDH) assumptions, in~\cite{EC:CPSSV16} it is shown how to generically (i.e., not just two and no further restrictions) compose delayed-input $\Sigma$-protocols obtaining a compound delayed-input $\Sigma$-protocol.
@@ -969,8 +979,11 @@ Nothing prevents those same techniques to be adopted in the (more general) topic
 language for expressing relations (c.f.\ the community reference~\cite[section 3]{zkproof-reference}, and Drevon's proposal~\cite{jr1cs}).
 Generally, statements about discrete logarithms are dealt with so-called Camenisch--Stadler notation, and we believe community should come to agree on the acceptable tradeoffs for expressing the relation in R1CS language.
 
+\ifanonymous\else
 \section*{Acknowledgements}
-The authors thank Jan Bobolz and Ivan Visconti for their invaluable reviews and discussions during the early stage of this work.
+The authors thank Jan Bobolz, Mary Maller, and Ivan Visconti for their precious reviews and comments during the early stage of this work.
+This work has partially been funded by the European Union's Horizon 2020 framework programme under grant agreement no. 830929 (CyberSec4Europe).
+\fi
 \bibliographystyle{alpha}
 \bibliography{cryptobib/abbrev3,cryptobib/crypto,additional}
 %
