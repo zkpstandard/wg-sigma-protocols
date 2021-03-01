@@ -991,8 +991,17 @@ for practical classes of $\Sigma$-protocols requiring that only one out of two
 instances is known when the protocol starts and obtaining a compound delayed-input
 $\Sigma$-protocol. Relying on computational (i.e., DDH) assumptions, in~\cite{EC:CPSSV16} it is shown how to generically (i.e., not just two and no further restrictions) compose delayed-input $\Sigma$-protocols obtaining a compound delayed-input $\Sigma$-protocol.
 
-\paragraph{Designated verifier proofs.} There are two simple techniques for achieving designated-verifier proofs:
-\minote{either or proof I'm you or the staement is true + commitment discrete log}
+\paragraph{Designated verifier proofs.} 
+A designated-verifier zero-knowledge proof of knowledge allows the prover to determine an intended receiver for the proof in a way that guarantees that only the specified receiver can actually obtain any conviction about the validity of the prover's claim.
+This is important, e.g., in cases where deniability of the communication is important for privacy reasons, and the prover needs to be ensured that the verifier cannot credibly forward the proof to any third party, as he could have simulated proofs with the same distribution himself.
+Designated-verifier proofs have been studied profoundly in the academic literature~\cite{EC:JakSakImp96,EC:ChaCou18}.
+The most widely known approach is due to Jakobsson et al.~\cite{EC:JakSakImp96}, which achieves the required functionality basically by proving that ``one either knows the secret key, or one is the designated verifier''. 
+In a nutshell, the idea is that the designated verifier provides the prover with a public key, and the verifier then proves that he knows a witness for the claimed relation, or the secret key corresponding to the public key, using the composition techniques from \cref{sec:composition}.
+The prover is then unable to forward the proof to a third party, as he could have generated the proof himself using the secret key.
+It it worth noting that it is of crucial importance that the prover's public key comes together with a proof that the prover indeed knows the secret key:
+otherwise, by provable sampling the public key at random (e.g., as the hash value of some public string), the prover could credibly claim that he does not know the corresponding key, and thus could not have generated the transcript himself.
+
+
 
 \paragraph{Shared proof computation.} Splitting the witness across multiple devices is very appealing from an applied security perspective.
 Recently, we saw a number of protocols based on the same template of of \cref{fig:generic} ~\cite{EPRINT:KomGol20,EPRINT:NicRufSeu20}, especially targeting applications in signatures for cryptocurrencies.
