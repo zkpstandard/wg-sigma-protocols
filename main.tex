@@ -1,7 +1,7 @@
 \documentclass[runningheads]{llncs}
 
 \newif\ifanonymous
-\anonymoustrue
+\anonymousfalse
 
 
 \usepackage{adjustbox}
@@ -163,10 +163,8 @@ For the purpose of this document, the following notation will be used:
   In the following we provide the formal definitions required for the remainder of this document.
 
 \begin{definition}
-  For two groups $\GG_1,\GG_2$, a function $\varphi:\GG_1\to\GG_2:x\mapsto\varphi(x)$ is a \emph{homomorphism}, if and only if for all $a,b\in\GG_1$ it holds that $\varphi(a+b)=\varphi(a)+\varphi(b)$.
+  For two groups $\GG_1,\GG_2$, a function $\varphi:\GG_1\to\GG_2:x\mapsto\varphi(x)$ is a  \emph{homomorphism}, if and only if for all $a,b\in\GG_1$ it holds that $\varphi(a+b)=\varphi(a)+\varphi(b)$.
 \end{definition}
-
-\stnote{I added this because one of the comments... but how far do we want to go with definitions?}
 
 \subsubsection{$\Sigma$-Protocols}~\\
 
@@ -262,7 +260,7 @@ The following definition is taken from Unruh~\cite{AC:Unruh17}.
   $$
   Here, $H$ is a random oracle that the adversary has access to, and $H'$ is the state of the random oracle after the $\adv$'s output.
   Furthermore, $\mathsf{S}$ is a list of all input/output pairs of $\adv$'s invocations of $\simulator$.
-  
+
   Similarly, the proof system is \emph{weakly simulation sound} if the following probability is negligible:
   $$
     \Pr\left[\verifier^{H'}(\statement,\pi)=\accept\land\statement\notin\lang(\relation)\land\statement\notin\mathsf{S} : (\statement,\pi)\gets\adv^{H,\simulator}(1^\secpar) \right]\,,
@@ -282,8 +280,6 @@ A basic $\Sigma$-protocol for the relation:
 \]
  for a group homomorphism $\varphi:\ZZ_p^n\to\GG^m$ is given by the following algorithms:
 
-
- \viscontinote{Specify the relation that you want to prove to avoid proving weaker statements.}
 \begin{enumerate}
   \item\label{item:basic:p1}
     The prover's first algorithm $\prover_1(\vec \witness,\vec \statement)$ consists of the following steps:
@@ -350,9 +346,6 @@ Proving such a relation can easily by achieved by modifying the above protocol a
   \item
     In step \ref{item:basic:sim:s}, the simulator draws the responses such that they satisfy the verification equations, i.e., such that $A(s_1,\dots,s_n)=(c+1)(b_1,\dots,b_k)$.
 \end{itemize}
-
-\marynote{Why are you multiplying by $(c + 1)$}
-\stnote{just because it works ;) if we sample the randomness for the homogeneous system, we only have c here... just a matter of taste, doesn't make a difference}
 
 
 \subsubsection{Examples}
@@ -490,7 +483,6 @@ For a given challenge $c\in\ZZ_p$, the simulator chooses $s_1,s_2\sample\ZZ_p$, 
 It then outputs the simulated transcript $(\commitment,\challenge,(s_1,s_2))$.
 
 \paragraph{Example 5 (DH).}
-\marynote{Homomorphism has not been defined}
 Let $\GG$ be a group over an elliptic curve with prime order $p$.
 Proving knowledge of the exponents of a valid Diffie-Hellman triple means proving knowledge of $w_1,w_2\in\ZZ_p$ such that $\statement_1=w_1G$, $\statement_2=w_2G$, and $\statement_3=w_1 w_2 G$.
 Yet, the mapping $\ZZ_p^2\to\GG^3:(x_1,x_2)\mapsto (x_1G,x_2G,x_1x_2G)$ is not a homomorphism, and consequently the basic protocol presented before cannot be deployed directly.
@@ -660,7 +652,7 @@ We refer, e.g., to Krenn~\cite{krenn12} for generic techniques.
 \end{enumerate}
 
 \subsection{Achieving Non-Interactivity -- The Fiat-Shamir Transform}\label{sec:fs}
-\marynote{Considering you are stressing the importance of hashing the instance, I would send the instance in the first message of the interactive versions as well.}
+% \marynote{Considering you are stressing the importance of hashing the instance, I would send the instance in the first message of the interactive versions as well.}
 All protocols described so far require three messages being exchanged between the prover and the verifier.
 However, communication rounds are often considered expensive from an efficiency point of view, and for many applications interactivity is not desirable.
 
@@ -680,6 +672,7 @@ More precisely, the challenge is computed as
 $c\defeq\hash(\vec \statement,\vec \commitment, \ctx, \stag)$,
 where $\statement$ is the public image for which knowledge of a witness is proven, $\commitment$ is the prover's first message from the $\Sigma$-protocol, $\stag$ is a (possibly empty) label attached to the proof, and
 The context string $\ctx$ contains the following application-specific information:
+\stnote{incomplete sentence}
 \begin{itemize}
   \item a domain separator (e.g.\ the name of the target application);
   \item a label identifying uniquely the group (e.g.\ \verb|secp-256|)
@@ -719,8 +712,8 @@ We discuss more in details the content the hash in \cref{sec:instantiation}.
 
 
 \paragraph{Verification equation.}
-The batchable form can take advantage of the following fact:
-given the single verification equations of the form:
+The batchable form can take advantage of the following fact.
+Given the single verification equations of the form:
 \[
    \commitment_i + c_i Y_i = \sum_j s_{i, j} G_j
 \]
@@ -759,7 +752,7 @@ The random vector $\vec a$ can be \emph{deterministically} generated by fixing $
     \end{enumerate}
 \end{enumerate}
 
-\stnote{I wouldn't distinguish between $\ctx$ and $\tau$, but consider $\tau$ as part of $\ctx$ (which we can rename to $\sf label$ or so)}
+%\stnote{I wouldn't distinguish between $\ctx$ and $\tau$, but consider $\tau$ as part of $\ctx$ (which we can rename to $\sf label$ or so)}
 
 More specifically, when calling $\simulator$ in~\cref{item:fslong:v:recomputet}, the verifier does not draw the response $\vec s$ at random, as is the case in all the protocols introduced before;
 instead it uses the value specified in the proof.
@@ -830,8 +823,8 @@ For full details and proofs, we refer to the original literature.
   The protocol presented in Section~\ref{sec:basicsigma} is a $\Sigma$-protocol, if $\GG$ is a cyclic group of prime order $p$, and $\varphi:\ZZ_p^n\to\GG^m$ is a group homomorphism.
 
   If $\varphi$ is non-trivial (there exists $\vec x\in\ZZ_p^n$ such that $\varphi(\vec x)\ne (1,\dots,1)\in\GG^m$), the protocol has unpredictable commitments.
-  Finally, if $\varphi$ is an injective function, the protocol has unique responses. 
-  
+  Finally, if $\varphi$ is an injective function, the protocol has unique responses.
+
   For details we refer, e.g., to~\cite{cramer97}.
 
   \item[Composition.]
@@ -841,7 +834,7 @@ For full details and proofs, we refer to the original literature.
 
   If both protocols have unique responses, then so has the protocol for $\relation^\land$.
   Note that unique responses are not preserved under OR-compositions.
-  
+
   \item[Proof of Knowledge.]
     All protocols presented in Sections~\ref{sec:basicsigma} and~\ref{sec:composition} are proofs of knowledge, see Damg\r{a}rd~\cite{damgard04}.
   \item[Concurrent Zero-Knowledge.]
@@ -862,18 +855,18 @@ For full details and proofs, we refer to the original literature.
     This security guarantee also holds against quantum attackers.
 
     For a proof we refer to Pointcheval and Stern~\cite{JC:PoiSte00} and Unruh~\cite{AC:Unruh17}.
+    {Existence of a straight-line extractor for $\Sigma$-protocols was proposed by Fuchsbauer et al.~\cite{C:FucKilLos18}, but under the (stronger) setting of the algebraic group model.}
+
   \item[Simulation soundness.]
     For all protocols presented in Sections~\ref{sec:basicsigma} and~\ref{sec:composition}, the Fiat-Shamir transform is  weakly simulation-sound.
     If the protocol additionally has unique responses, then the Fiat-Shamir transform is  strongly simulation-sound.
     These security guarantees also holds against quantum attackers.
 
     For a proof we refer to Unruh~\cite{AC:Unruh17} and Faust et al.~\cite{INDOCRYPT:FKMV12}.
-\marynote{Simulation sound definitions do not exist anymore. Assuming this is an artefact from an older version.}
   \item[Simulation extractability.]
     For all protocols presented in Sections~\ref{sec:basicsigma} and~\ref{sec:composition}, the Fiat-Shamir transform is  simulation-sound extractable.
 
     For a proof we refer to Bernhard et al.~\cite{AC:BerPerWar12}.
-    \minote{Existence of a straight-line extractor for $\Sigma$-protocols was proposed by Fuchsbauer et al.~\cite{C:FucKilLos18}, but under the (stronger) setting of the algebraic group model.}
 \end{description}
 
 \section{Instantiation}
