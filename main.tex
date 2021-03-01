@@ -996,8 +996,14 @@ A designated-verifier zero-knowledge proof of knowledge allows the prover to det
 This is important, e.g., in cases where deniability of the communication is important for privacy reasons, and the prover needs to be ensured that the verifier cannot credibly forward the proof to any third party, as he could have simulated proofs with the same distribution himself.
 Designated-verifier proofs have been studied profoundly in the academic literature~\cite{EC:JakSakImp96,EC:ChaCou18}.
 The most widely known approach is due to Jakobsson et al.~\cite{EC:JakSakImp96}, which achieves the required functionality basically by proving that ``one either knows the secret key, or one is the designated verifier''. 
-In a nutshell, the idea is that the designated verifier provides the prover with a public key, and the verifier then proves that he knows a witness for the claimed relation, or the secret key corresponding to the public key, using the composition techniques from \cref{sec:composition}.
-The prover is then unable to forward the proof to a third party, as he could have generated the proof himself using the secret key.
+In a nutshell, the idea is that the designated verifier provides the prover with a public key $\statement_{pk}$, and the verifier then proves that he knows a witness $\witness$ for the claimed statement $\statement$ for the given relation $\relation$, or the secret key $\witness_{pk}$ corresponding to $\statement_{pk}$, using the composition techniques from \cref{sec:composition}.
+
+More formally, let $\relation'$ be such that $(\statement_{pk},\witness_{pk})\in\relation'$ if and only if $\witness_{pk}$ is a secret key corresponding to $\statement_{pk}$, e.g., $\relation'=\{(\statement_{pk},\witness_{sk}):\statement=\witness G\}$.
+Then, the prover computes a proof for the following relation:
+$$
+  \relation^{DS} = \{(\statement,\statement_{pk}),(\witness,\witness_{pk}) : (\statement,\witness)\in\relation\lor (\statement_{pk},\witness_{pk})\in\relation'\}\,.
+$$
+It can now be seen that the prover is now unable to forward the proof to a third party, as he could have generated the proof himself using the secret key.
 It it worth noting that it is of crucial importance that the prover's public key comes together with a proof that the prover indeed knows the secret key:
 otherwise, by provable sampling the public key at random (e.g., as the hash value of some public string), the prover could credibly claim that he does not know the corresponding key, and thus could not have generated the transcript himself.
 
