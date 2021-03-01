@@ -501,10 +501,8 @@ We refer, e.g., to Krenn~\cite{krenn12} for generic techniques.
 
   For the rest of this section, we let $(\prover_1^0,\prover_2^0,\verifier^0)$ and $(\prover_1^1,\prover_2^1,\verifier^1)$ be the specifications of two $\Sigma$-protocols for two relations $\relation^0$ and $\relation^1$, and let $\simulator^0$ and $\simulator^1$ be their simulators.
 
-  Furthermore, we assume that the challenge sets are given by $\ZZ_{u^0}$ and $\ZZ_{u^1}$, respectively.
-  We let $u=\min(u^0,u^1)$.
-    Note that this allows for proving statements across different groups, e.g. across different supported elliptic curves\footnote{Composition could actually extend to other groups, e.g. RSA. However, for this proposal, we focus on prime order groups for this work}.
-
+  Furthermore, for the ease of presentation, we assume that all protocols to be composed are based on groups of the same prime order $p$.
+  If this is not the case, the constructions can easily be adapted by setting the challenge set to the smaller of the two challenge sets.
 
 \subsubsection{AND Composition.}
   In the following we explain how to construct a $\Sigma$-protocol proving knowledge of multiple independent witnesses.
@@ -530,7 +528,7 @@ We refer, e.g., to Krenn~\cite{krenn12} for generic techniques.
     The prover's second algorithm $\prover_2(\vec \witness,\vec \statement,\challenge,\st)$ proceeds as follows:
     \begin{enumerate}
       \item
-        It checks that $c\in\ZZ_u$ and aborts if this is not the case.
+        It checks that $c\in\ZZ_p$ and aborts if this is not the case.
       \item
 	It parses $(\st^0,\st^1)\defeq \st$
       \item
@@ -552,7 +550,7 @@ We refer, e.g., to Krenn~\cite{krenn12} for generic techniques.
       \item
         It parses $(\statement^0,\statement^1)\defeq \vec Y$.
       \item
-        It chooses $c\sample\ZZ_u$.
+        It chooses $c\sample\ZZ_p$.
       \item
         It computes $(\commitment^0,\challenge,s^0)\gets\simulator^0(\statement^0,c)$ and $(\commitment^1,\challenge,s^1)\gets\simulator^1(\statement^1,c)$.
       \item
@@ -580,7 +578,7 @@ We refer, e.g., to Krenn~\cite{krenn12} for generic techniques.
       \item
         It computes $(\commitment^j,\st^j)\gets\prover_1^j(Y^j,w^j)$.
       \item
-        It computes a simulated transcript for the unknown witness by choosing $c^{1-j}\sample\ZZ_u$ and setting $(\commitment^{1-j},c^{1-j},s^{1-j})\gets\simulator^{1-j}(Y^{1-j},c^{1-j})$.
+        It computes a simulated transcript for the unknown witness by choosing $c^{1-j}\sample\ZZ_p$ and setting $(\commitment^{1-j},c^{1-j},s^{1-j})\gets\simulator^{1-j}(Y^{1-j},c^{1-j})$.
       \item
 	The algorithm outputs $(\vec \commitment,\st) \defeq ((\commitment^0,\commitment^1),(\st^j,c^{1-j},s^{1-j}))$.
     \end{enumerate}
@@ -588,9 +586,9 @@ We refer, e.g., to Krenn~\cite{krenn12} for generic techniques.
     The prover's second algorithm $\prover_2(\vec \witness, \vec \statement,\challenge,\st)$ proceeds as follows:
     \begin{enumerate}
       \item
-        It checks that $c\in\ZZ_u$ and aborts if this is not the case.
+        It checks that $c\in\ZZ_p$ and aborts if this is not the case.
       \item
-	It parses $\st\defeq(\st^j,c^{1-j},s^{1-j})$.
+	It parses $(\st^j,c^{1-j},s^{1-j})\defeq\st$.
       \item
         It computes $c^j\defeq c-c^{1-j}$, and sets $s^j\gets\prover_2^j(w^j,Y^j,c^j,\st^j)$.
       \item
@@ -614,7 +612,7 @@ We refer, e.g., to Krenn~\cite{krenn12} for generic techniques.
       \item
         It parses $(\statement^0,\statement^1)\defeq \vec \statement$.
       \item
-        It chooses a random $c^0$ in $\ZZ_u$ and computes $c^1\defeq c-c^0$.
+        It chooses a random $c^0$ in $\ZZ_p$ and computes $c^1\defeq c-c^0$.
       \item
         It then computes $(\commitment^0,\challenge^0, \response^0)\gets\simulator^0(\commitment^0,\challenge^0)$ and $(\commitment^1,\challenge^1,\response^1)\gets\simulator^1(\statement^1,\challenge^1)$.
       \item
@@ -733,7 +731,6 @@ The following construction, due to Damg\r{a}rd~\cite{EC:Damgard00}, allows one t
 
 In the following, $({\sf Commit}, {\sf VerCommit})$ is a commitment scheme, where the interfaces are as specified in Benarroch et al.~\cite[Section 4.3]{becafi19}.
 The commitment scheme used in the following is required to be a trapdoor commitment scheme (cf., e.g., Fischlin~\cite{fischlin01} for an in-depth discussion of such schemes), with a natural candidate being the scheme introduced by Pedersen~\cite{C:Pedersen91}.
-\stnote{stephan: add intro}
 \begin{enumerate}
   \item
     The verifier's first algorithm $\verifier_1(\statement)$ proceeds as follows:
@@ -785,65 +782,55 @@ The commitment scheme used in the following is required to be a trapdoor commitm
 \section{Security Considerations}
 
 In the following, we give a concise overview of the most important security guarantees provided by the constructions presented above.
+For full details and proofs, we refer to the original literature.
 
-Firstly, all the protocols presented in the previous section are $\Sigma$-protocols according to~\cref{def:sigma}.
-\begin{theorem}
-  If $\GG$ is a cyclic group of prime order $p$, $\varphi:\ZZ_p^n\to\GG^m$ is a group homomorphism, and $u\leq p$, then the basic protocol in~\cref{sec:basicsigma} is a $\Sigma$-protocol with simulator $\simulator$.
+\begin{description}
+  \item[$\Sigma$-Protocols.]
+  The protocol presented in Section~\ref{sec:basicsigma} is a $\Sigma$-protocol, if $\GG$ is a cyclic group of prime order $p$, and $\varphi:\ZZ_p^n\to\GG^m$ is a group homomorphism.
 
   If $\varphi$ is non-trivial (there exists $x\in\ZZ_p^n$ such that $\varphi(x)\ne (1,\dots,1)\in\GG^m$), the protocol has unpredictable commitments.
-  Finally, if $\varphi(x')\ne\varphi(x'')$ for all $x'\ne x''$, the protocol has unique responses.
-\end{theorem}
+  Finally, if $\varphi$ is an injective function, the protocol has unique responses. 
+  
+  For details we refer, e.g., to~\cite{cramer97}.
 
-\begin{theorem}
-  If, for $i=0,1$, $(\prover_1^i,\prover_2^i,\verifier^i)$ is a $\Sigma$-protocol for relation $\relation^i$ with challenge set $\ZZ_{u^i}$ and simulator $\simulator^i$, then the protocols specified in \cref{sec:composition} are $\Sigma$-protocol with challenge set $\ZZ_u$ and simulator $\simulator$ for relation $\relation^\land$ and $\relation^\lor$, respectively.
+  \item[Composition.]
+    The composed protocols presented in Section~\ref{sec:composition} are $\Sigma$-protocols if the individual protocols are $\Sigma$-protocols, see, e.g.,~\cite{C:CraDamSch94}.
 
-  If at least one of the composed protocols has unpredictable commitments, then so has the protocol for $\relation^\land$ (respectively, $\relation^\lor)$.
-  If both protocols have unique responses, then so has the protocol for $\relation^\land$ (respectively, $\relation^\lor$).
-%  If all composed protocols have unique responses, then so has the composed protocol.
-\end{theorem}
-\minote{The $u^i$ above is a bit confusing}
+  If at least one of the composed protocols has unpredictable commitments, then so have the protocols for $\relation^\land$ and $\relation^\lor$.
 
-In a nutshell, $\Sigma$-protocols are honest-verifier zero-knowledge proofs of knowledge, whose security guarantees are maintained under the Fiat-Shamir transform at least against classical attackers.
+  If both protocols have unique responses, then so has the protocol for $\relation^\land$.
+  Note that unique responses are not preserved under OR-compositions.
+  
+  \item[Proof of Knowledge.]
+    All protocols presented in Sections~\ref{sec:basicsigma} and~\ref{sec:composition} are proofs of knowledge, see Damg\r{a}rd~\cite{damgard04}.
+  \item[Concurrent Zero-Knowledge.]
+    The protocol in Section~\ref{sec:concurrent} is concurrently zero-knowledge against arbitrary verifiers if the used commitment scheme is a trapdoor commitment scheme, cf.~\cite{EC:Damgard00}.
+%
+  \item[Completeness.]
+    For all the $\Sigma$-protocols presented above, the Fiat-Shamir transform is complete.
 
+    For a proof we refer to Unruh~\cite{AC:Unruh17}, which uses the fact that all presented protocols are complete and have unpredictable commitments;
+    Unruh also gives a surprising counter-example in case that commitments are not unpredictable.
+  \item[Zero-Knowledge.]
+    For all $\Sigma$-protocol presented above, the Fiat-Shamir transform yields a zero-knowledge protocol in the random oracle model.
 
-
-
-
-
-
-
-
-For full details and proofs, we refer to the original literature.
-\minote{citation needed}
-\begin{itemize}
-  \item
-    If $\prover_1,\prover_2,\verifier$ specify a $\Sigma$-protocol for $\relation$ according to~\cref{def:sigma}, then they also specify an honest-verifier zero-knowledge proof of knowledge with soundness error $\sigma=1/m$ and knowledge error $\kappa=1/m$ for $\relation$.
-
-For formal proofs we refer, e.g., to Damg\r{a}rd~\cite{damgard04}.
-  \item
-    If a $\Sigma$-protocol is complete and has unpredictable commitments, then the Fiat-Shamir transform is {\bf complete}.
-
-    For a proof we refer to Unruh~\cite{AC:Unruh17}, which also gives a surprising counter-example in case that commitments are not unpredictable.
-  \item
-    If a $\Sigma$-protocol is honest-verifier zero-knowledge and has unpredictable commitments, then the Fiat-Shamir transform yields a {\bf zero-knowledge} protocol in the random oracle model.
-
-    For a proof we refer to Faust et al.~\cite{INDOCRYPT:FKMV12} and Unruh~\cite{AC:Unruh17}. These security guarantees also hold against a quantum attacker.
-  \item
-    If a $\Sigma$-protocol has a negligible soundness error, then the Fiat-Shamir transform is {\bf sound} according to~\cref{def:soundness}.
+    For a proof we refer to Faust et al.~\cite{INDOCRYPT:FKMV12} and Unruh~\cite{AC:Unruh17}. These security guarantees also hold against a quantum attacker, and rely on the honest-verifier zero-knowledge property of $\Sigma$-protocols and the fact that the commitments in all our protocols are unpredictable.
+  \item[Soundness.]
+    If a $\Sigma$-protocol has a negligible soundness error, then the Fiat-Shamir transform is sound according to~\cref{def:soundness}.
     This security guarantee also holds against quantum attackers.
 
     For a proof we refer to Pointcheval and Stern~\cite{JC:PoiSte00} and Unruh~\cite{AC:Unruh17}.
-  \item
-    If a $\Sigma$-protocol has a negligible soundness error, then the Fiat-Shamir transform is {\bf weakly simulation-sound} according to Definition~\ref{def:xxx}.
-    If the protocol additionally has unique responses, then the Fiat-Shamir transform is {\bf strongly simulation-sound} according to Definition~\ref{def:xxx}.
+  \item[Simulation soundness.]
+    For all protocols presented in Sections~\ref{sec:basicsigma} and~\ref{sec:composition}, the Fiat-Shamir transform is  weakly simulation-sound.
+    If the protocol additionally has unique responses, then the Fiat-Shamir transform is  strongly simulation-sound.
     These security guarantees also holds against quantum attackers.
 
     For a proof we refer to Unruh~\cite{AC:Unruh17} and Faust et al.~\cite{INDOCRYPT:FKMV12}.
-  \item
-    If a $\Sigma$-protocol has a negligible soundness error, then the Fiat-Shamir transform is {\bf simulation-sound extractable} according to Definition~\ref{def:xxx}.
+  \item[Simulation extractability.]
+    For all protocols presented in Sections~\ref{sec:basicsigma} and~\ref{sec:composition}, the Fiat-Shamir transform is  simulation-sound extractable.
 
     For a proof we refer to Bernhard et al.~\cite{AC:BerPerWar12}.
-\end{itemize}
+\end{description}
 
 \section{Instantiation}
 \label{sec:instantiation}
