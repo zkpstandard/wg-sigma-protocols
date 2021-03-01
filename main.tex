@@ -99,7 +99,7 @@ We make a first attempt at the standardization of $\Sigma$-protocols by proposin
 \end{itemize}
 
 
-All these protocols can be implemented using the API that we propose in section~\cref{sec:composition}.
+All these protocols can be implemented using the API that we propose in \cref{sec:composition}.
 A request for standardization has also been posted on the \href{https://community.zkproof.org/t/standardizing-sigma-protocols/471/}{zk-proof community} and received a fair amount of interest.
 
 % \subsection{Related Work}
@@ -345,11 +345,11 @@ where the matrix $A\in\ZZ_p^{k\times n}$ and vector $(b_1,\dots,b_k)\in\ZZ_p^k$ 
 Proving such a relation can easily by achieved by modifying the above protocol as follows:
 \begin{itemize}
   \item
-    In step \ref{item:basic:p1:randomness}, the prover draws the randomnesses such that they satisfy the system of equations, i.e., such that $A(r_1,\dots,r_n)=(b_1,\dots,b_k)$.
+    In \cref{item:basic:p1:randomness}, the prover draws the randomnesses such that they satisfy the system of equations, i.e., such that $A(r_1,\dots,r_n)=(b_1,\dots,b_k)$.
   \item
-    In step \ref{item:basic:v:checks}, the verifier additionally checks that $A(s_1,\dots,s_n)=(c+1)(b_1,\dots,b_k)$ and outputs $\reject$ if this is not the case.
+    In \cref{item:basic:v:checks}, the verifier additionally checks that $A(s_1,\dots,s_n)=(c+1)(b_1,\dots,b_k)$ and outputs $\reject$ if this is not the case.
   \item
-    In step \ref{item:basic:sim:s}, the simulator draws the responses such that they satisfy the verification equations, i.e., such that $A(s_1,\dots,s_n)=(c+1)(b_1,\dots,b_k)$.
+    In \cref{item:basic:sim:s}, the simulator draws the responses such that they satisfy the verification equations, i.e., such that $A(s_1,\dots,s_n)=(c+1)(b_1,\dots,b_k)$.
 \end{itemize}
 
 
@@ -825,7 +825,7 @@ For full details and proofs, we refer to the original literature.
 
 \begin{description}
   \item[$\Sigma$-Protocols.]
-  The protocol presented in Section~\ref{sec:basicsigma} is a $\Sigma$-protocol, if $\GG$ is a cyclic group of prime order $p$, and $\varphi:\ZZ_p^n\to\GG^m$ is a group homomorphism.
+  The protocol presented in \cref{sec:basicsigma} is a $\Sigma$-protocol, if $\GG$ is a cyclic group of prime order $p$, and $\varphi:\ZZ_p^n\to\GG^m$ is a group homomorphism.
 
   If $\varphi$ is non-trivial (there exists $\vec x\in\ZZ_p^n$ such that $\varphi(\vec x)\ne (1,\dots,1)\in\GG^m$), the protocol has unpredictable commitments.
   Finally, if $\varphi$ is an injective function, the protocol has unique responses.
@@ -833,7 +833,7 @@ For full details and proofs, we refer to the original literature.
   For details we refer, e.g., to~\cite{cramer97}.
 
   \item[Composition.]
-    The composed protocols presented in Section~\ref{sec:composition} are $\Sigma$-protocols if the individual protocols are $\Sigma$-protocols, see, e.g.,~\cite{C:CraDamSch94}.
+    The composed protocols presented in \cref{sec:composition} are $\Sigma$-protocols if the individual protocols are $\Sigma$-protocols, see, e.g.,~\cite{C:CraDamSch94}.
 
   If at least one of the composed protocols has unpredictable commitments, then so have the protocols for $\relation^\land$ and $\relation^\lor$.
 
@@ -841,9 +841,9 @@ For full details and proofs, we refer to the original literature.
   Note that unique responses are not preserved under OR-compositions.
 
   \item[Proof of Knowledge.]
-    All protocols presented in Sections~\ref{sec:basicsigma} and~\ref{sec:composition} are proofs of knowledge, see Damg\r{a}rd~\cite{damgard04}.
+    All protocols presented in \cref{sec:basicsigma,sec:composition} are proofs of knowledge, see Damg\r{a}rd~\cite{damgard04}.
   \item[Concurrent Zero-Knowledge.]
-    The protocol in Section~\ref{sec:concurrent} is concurrently zero-knowledge against arbitrary verifiers if the used commitment scheme is a trapdoor commitment scheme, cf.~\cite{EC:Damgard00}.
+    The protocol in \cref{sec:concurrent} is concurrently zero-knowledge against arbitrary verifiers if the used commitment scheme is a trapdoor commitment scheme, cf.~\cite{EC:Damgard00}.
 %
   \item[Completeness.]
     For all the $\Sigma$-protocols presented above, the Fiat-Shamir transform is complete.
@@ -863,13 +863,13 @@ For full details and proofs, we refer to the original literature.
     {Existence of a straight-line extractor for $\Sigma$-protocols was proposed by Fuchsbauer et al.~\cite{C:FucKilLos18}, but under the (stronger) setting of the algebraic group model.}
 
   \item[Simulation soundness.]
-    For all protocols presented in Sections~\ref{sec:basicsigma} and~\ref{sec:composition}, the Fiat-Shamir transform is  weakly simulation-sound.
+    For all protocols presented in \cref{sec:basicsigma,sec:composition}, the Fiat-Shamir transform is  weakly simulation-sound.
     If the protocol additionally has unique responses, then the Fiat-Shamir transform is  strongly simulation-sound.
     These security guarantees also holds against quantum attackers.
 
     For a proof we refer to Unruh~\cite{AC:Unruh17} and Faust et al.~\cite{INDOCRYPT:FKMV12}.
   \item[Simulation extractability.]
-    For all protocols presented in Sections~\ref{sec:basicsigma} and~\ref{sec:composition}, the Fiat-Shamir transform is  simulation-sound extractable.
+    For all protocols presented in \cref{sec:basicsigma,sec:composition}, the Fiat-Shamir transform is  simulation-sound extractable.
 
     For a proof we refer to Bernhard et al.~\cite{AC:BerPerWar12}.
 \end{description}
