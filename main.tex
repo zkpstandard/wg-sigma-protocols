@@ -253,6 +253,23 @@ Informally, an interactive protocol is a proof of knowledge, if every party that
   \end{description}
 \end{definition}
 
+Informally, a proof system is simulation sound, if no adversary is able to generate wrong proofs, even if it can request arbitrary fake proofs from a simulator.
+The following definition is taken from Unruh~\cite{AC:Unruh17}.
+\begin{definition}[Informal]
+  A non-interactive proof system $(\prover,\verifier)$ is \emph{stronly simulation sound} with respect to a simulator $\simulator$, if and only if for any (potentially quantum) polynomial-time algorithm $\adv$, the following probability is negligible:
+  $$
+    \Pr\left[\verifier^{H'}(\statement,\pi)=\accept\land\statement\notin\lang(\relation)\land(\statement,\pi)\notin\mathsf{S} : (\statement,\pi)\gets\adv^{H,\simulator}(1^\secpar) \right]\,.
+  $$
+  Here, $H$ is a random oracle that the adversary has access to, and $H'$ is the state of the random oracle after the $\adv$'s output.
+  Furthermore, $\mathsf{S}$ is a list of all input/output pairs of $\adv$'s invocations of $\simulator$.
+  
+  Similarly, the proof system is \emph{weakly simulation sound} if the following probability is negligible:
+  $$
+    \Pr\left[\verifier^{H'}(\statement,\pi)=\accept\land\statement\notin\lang(\relation)\land\statement\notin\mathsf{S} : (\statement,\pi)\gets\adv^{H,\simulator}(1^\secpar) \right]\,,
+  $$
+  where $\mathsf{S}$ now only contains the inputs of $\adv$'s invocations of $\simulator$.
+\end{definition}
+
 \section{Constructions for $\Sigma$-Protocols}
 
 This section is structured in two main parts: in \cref{sec:basicsigma}, we study the generic construction of $\Sigma$-protocols in prime-order groups. In \cref{sec:composition}, we study AND and OR-composition of the basic protocol.
@@ -812,7 +829,7 @@ For full details and proofs, we refer to the original literature.
   \item[$\Sigma$-Protocols.]
   The protocol presented in Section~\ref{sec:basicsigma} is a $\Sigma$-protocol, if $\GG$ is a cyclic group of prime order $p$, and $\varphi:\ZZ_p^n\to\GG^m$ is a group homomorphism.
 
-  If $\varphi$ is non-trivial (there exists $x\in\ZZ_p^n$ such that $\varphi(x)\ne (1,\dots,1)\in\GG^m$), the protocol has unpredictable commitments.
+  If $\varphi$ is non-trivial (there exists $\vec x\in\ZZ_p^n$ such that $\varphi(\vec x)\ne (1,\dots,1)\in\GG^m$), the protocol has unpredictable commitments.
   Finally, if $\varphi$ is an injective function, the protocol has unique responses. 
   
   For details we refer, e.g., to~\cite{cramer97}.
