@@ -21,7 +21,7 @@
             sets]{cryptocode}
 \usepackage{enumitem}
 \usepackage{mathtools}
-\usepackage{todonotes}
+\usepackage[disable]{todonotes}
 
 \usepackage[%dvips,
     pdftex,
@@ -919,7 +919,8 @@ We note that there exists already standards for removing small cofactors in elli
 However we believe that the complexity added by integrating the handling of the cofactor within the verification equations is deleterious for the other supported curves.
 
 We think pairing-friendly curves, such as BLS12-381~\cite{bls12}, should also be considered for inclusion under relevant assumptions for bilinear groups, such as XDH when dealing with DH triples.
-
+\minote{Add point compression and point representation.\\
+To represent point within the elliptic curve we opt for encoding the full $x$-coordinate, and implicitly choosing the $y$ that is even.}
 
 
  \paragraph{Choice of the hash funcitons.} We advise for the use of consolidated, cryptographically secure hash functions such as \verb|SHA2|, \verb|SHA3|, and \verb|BLAKE2|, \verb|BLAKE3|\footnote{We did not examine closely algebraic hashes for this draft, but we stress that their adoption could be appealing for a number of applications requiring recursive proofs. Unfortunately, this requires a much deeper cryptanalysis within a working group.}.
@@ -942,7 +943,7 @@ To the best of our knowledge, the best options for performing this operation are
   \item Rejection sampling, which consists in sampling uniformly at random in the interval $[0, 2^\secpar]$, until a value in $[0, p]$ is found.
   Unfortunately, since the hash function is used also for hashing the initial (secret) randomness used for computing the commitment, this method is undesirable due to the difficulty of implementing in constant-time (which could lead a secret for the deterministic computation of the commitment).
 \end{enumerate}
-Despite options \cref{item:truncate-256,item:truncate-cfrg} are the most fit for computing the challenge, only option \cref{item:truncate-cfrg} is suitable for computing also the initial nonce. in the non-interactive case. \cref{item:truncate-128} is a valid option for the interactive version.
+Despite options \cref{item:truncate-256,item:truncate-cfrg} are the most fit for computing the challenge, only option \cref{item:truncate-cfrg} is suitable for computing deterministically also the initial nonce. in the non-interactive case. \cref{item:truncate-128} is a valid option for the interactive version.
 
 Hashing multiple variable-length messages into a single challenge (such is the case when hashing $\ctx$, $\tau$) requires care, and multiple approaches have been used in the past. We see three options available:
 \begin{enumerate}[label=$(\alph*)$]
@@ -957,21 +958,25 @@ Hashing multiple variable-length messages into a single challenge (such is the c
   \item Using a protocol framework such as \textsc{Strobe}~\cite{EPRINT:Hamburg17} that builds a sponge construction and can be used for building protocol transcripts. For more information, we direct the reader towards \cite[Section 5.3]{EPRINT:Hamburg17}.
 \end{enumerate}
 
+\paragraph{Commitment.} The first step is the generation of uniformly-distributed random element(s) over $\ZZ_p$. As mentioned in \Cref{sec:motivation}, the nonce must be distributed uniformly at random, and even a small bias in the distribution could completely compromise zero-knowledge~\cite{lattice-attack,bleichenbacher,CCS:ANTTY20}.
 
-\paragraph{Commitment.} The first step is the generation of uniformly-distributed random element(s) over $\ZZ_p$. As mentioned in \Cref{sec:motivation}, the nonce must be distributed uniformly at random, and even a small bias in the distribution could completely compromise zero-knowledge~\cite{XX}.
-
-We propose the construction of a synthetic nonce obtained from hashing statement, context, and secret, together with 32 additional bytes from operating system's entropy.
-\minote{more concrete here}
-\minote{motivate that rejection sampling is a bad idea.}
-
-The construction of cryptographically secure source of randomness is a difficult problem, that is particularly challenging on embedded devices such as smart-cards or embedded systems. For those applications for which obtaining a high-quality entropy is challenging, we propose the use of a stateful counter.
+We propose the construction of a synthetic nonce obtained from hashing statement, context, and secret, together with 8 additional bytes from operating system's entropy:
+\[
+  r \defeq \hash(\ctx, \stag, \witness, \mathsf{rnd})
+\]
+where $\mathsf{rnd} \defeq \bin^{64}$ are 64 bits of entropy.
+The construction of cryptographically secure source of randomness is a difficult problem, that is particularly challenging on embedded devices such as smart-cards or embedded systems. For those applications for which obtaining a high-quality entropy is challenging, a stateful counter would be sufficient to achieve random $r$.
 
 Hashing the statement and the witness to obtain a commitment was already suggested in previous standards~\cite{rfc6979} in the context of deterministic nonce generation.
 While it is widely recognized that having deterministic nonce helps strengthening the concrete security  and mitigates the risks associated to the generation of a commitment, it could on the other hand leak information about the witness used for a proof, when examining consecutive executions of the protocol. This is e.g. the case of a OR-proof that attempts to preserve anonymity.
-\jannote{state more clearly}
+Consider a ring signature for the ring \(R = (Y_0 , Y_1)\),
+and two OR-proofs with the same tag $\stag$.  In a scenario where the nonce is deterministically generated, then the proofs are identical if the same key is used, and different otherwise.
 
 \paragraph{Computing the challenge.}
-The challenge is computed as the hash of
+The challenge is computed as:
+\[
+  c \defeq \hash(\vec \statement, \vec \commitment, \ctx, \stag)
+\]
 
 \paragraph{Response and proof output.} The response is computed using standard field addition and multiplication. The implementation should support batched and short form, as wrappers around the proof transcript as generated by $\prover_2$.
 \paragraph{Verification.} The implementation should support two different verification functions, for batched and short verification.
