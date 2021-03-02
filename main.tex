@@ -60,16 +60,21 @@
 \maketitle              % typeset the header of the contribution
 %
 \begin{abstract}
-  We submit a proposal for the standardization of non-interactive $\Sigma$-protocols in prime order groups, allowing for AND and OR composition, either in compact form (challenge, response) or batchable (commitment, response). We provide examples and propose a selection of elliptic curves and hash functions suitable for implementations. We sketch with a minimal API that should be consistent across implementations.
+  Over the last years, zero-knowledge proofs of knowledge based on $\Sigma$-protocols have found numerous applications.
+  However, up to date there is still a lack of standardization of such protocols, potentially hindering even broader deployment, and increasing the risk of insecure implementations. 
+  This document proposes a standardization effort for non-interactive $\Sigma$-protocols in prime order groups, allowing for AND and OR composition, either in compact (challenge, response) or batchable form (commitment, response). 
+  The document provides the necessary formal background, specifies the protocols in full details, provides examples, suggests concrete instantiations (e.g., regarding the selection of elliptic curves or hash functions), and finally sketches a minimal API that should be consistent across implementations.
 
-%\keywords{First keyword  \and Second keyword \and Another keyword.}
+\keywords{Zero-knowledge proofs of knowledge  \and $\Sigma$-protocols.}
 \end{abstract}
 
 \section{Introduction}
-$\Sigma$-protocols are zero-knowledge~\cite{GolMicRac89} proofs of knowledge~\cite{C:BelGol92} without SRS, proven secure in the random oracle model.
+
+Zero-knowledge~\cite{GolMicRac89} proofs of knowledge~\cite{C:BelGol92} allow a prover to convince a verifier that he knows a secret piece of information, without revealing anything else that what is already revealed by the claim itself.
+Many practically relevant proof goals can be realized using so-called $\Sigma$-protocols, or their non-interactive counterparts, which can be proven secure in the random oracle model without the need for a common reference string.
 Introduced by Schnorr~\cite{JC:Schnorr91} over 30 years ago, they are now widely used  in practice because of their simplicity, maturity, and versatility.
 
-They played an essential component in the building of a number of cryptographic
+$\Sigma$-protocols played an essential component in the building of a number of cryptographic
 constructions,
 such as anonymous credentials~\cite{CCS:ChaMeiZav14}, password-authenticated key exchange~\cite{jpake}, signatures~\cite{C:Schnorr89},
 ring signatures~\cite{borromeansig}, blind signatures~\cite{CCS:PoiSte97}, multi signatures~\cite{CCS:NRSW20}, threshold signatures~\cite{EPRINT:KomGol20} and more.
