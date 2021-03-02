@@ -63,7 +63,7 @@
   Over the last years, zero-knowledge proofs of knowledge based on $\Sigma$-protocols have found numerous applications.
   However, up to date there is still a lack of standardization of such protocols, potentially hindering even broader deployment, and increasing the risk of insecure implementations. 
   This document proposes a standardization effort for non-interactive $\Sigma$-protocols in prime order groups, allowing for AND and OR composition, either in compact (challenge, response) or batchable form (commitment, response). 
-  The document provides the necessary formal background, specifies the protocols in full details, provides examples, suggests concrete instantiations (e.g., regarding the selection of elliptic curves or hash functions), and finally sketches a minimal API that should be consistent across implementations.
+  The document provides the necessary formal background, specifies the protocols in full details, provides examples, suggests concrete instantiations (e.g., regarding the selection of elliptic curves or hash functions), and provides guidelines to ease the secure and compatible implementation of $\Sigma$-protocols.
 
 \keywords{Zero-knowledge proofs of knowledge  \and $\Sigma$-protocols.}
 \end{abstract}
@@ -82,7 +82,7 @@ Lueks et al.~\cite{zksk}, reported that solely in the years 2018-2019 editions o
 7 publications use  $\Sigma$-protocols.
 Yet, there is no standardized way of implementing them and as a result a lot of implementations have shared common pitfalls (cf.\ \cref{sec:motivation}).
 
-We make a first attempt at the standardization of $\Sigma$-protocols by proposing an interface and a language for proving statements about the discrete logarithm of elements in a prime-order cyclic group, targeting specifically groups in elliptic curves. To the best of our knowledge, currently deployed and implemented $\Sigma$-protocols mostly rely on the following sub-set of features:
+We make a first attempt at the standardization of $\Sigma$-protocols by proposing a framework for proving statements about discrete logarithms and related relations in prime-order groups, targeting specifically groups in elliptic curves. To the best of our knowledge, currently deployed and implemented $\Sigma$-protocols mostly rely on the following sub-set of features:
 
 \begin{itemize}
   \item \textbf{Discrete logarithm equality, Diffie-Hellman triples.}
