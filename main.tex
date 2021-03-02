@@ -362,7 +362,7 @@ For a description of this proof goal in the general case of residue classes, we 
 
 Using the above notation, we have $\varphi:\ZZ_p^2\to\GG:x\mapsto xG$.
 The protocol flow is then as depicted in~\cref{fig:dlog}.
-    \begin{protocol}{Proving knowledge of a discrete logarithm.\\[-2.25em]}{fig:dlog}{t}
+    \begin{protocol}{Proving knowledge of a discrete logarithm.\\[-2.25em]}{fig:dlog}{bpt}
       \begin{tabular}{@{}l@{\hspace{2em}}c@{\hspace{-3em}}r@{}}
         $\prover\left(\witness,\statement,G\right)$ & & $\verifier\left(\statement,G\right)$  \\
         \hline  \\
@@ -393,7 +393,7 @@ Proving equality of the known discrete logarithm $w$ of $\statement_1$ in base $
 Using the above notation, we have $\varphi:\ZZ_p\to\GG^2:(x_1,x_2)\mapsto (x_1G,x_2H)$.
 The linear system of equations $A(w_1,w_2)=b$ is given by $w_1-w_2=0$.
 The protocol flow is then as depicted in~\cref{fig:dleq}.
-    \begin{protocol}{Proving knowledge of equality of two discrete logarithms.\\[-2.25em]}{fig:dleq}{t}
+    \begin{protocol}{Proving knowledge of equality of two discrete logarithms.\\[-2.25em]}{fig:dleq}{b}
       \begin{tabular}{@{}l@{\hspace{-4em}}c@{\hspace{-3em}}r@{}}
         $\prover\left( (w_1,w_2),(\statement_1,\statement_2),(G,H)\right)$ & & $\verifier\left((\statement_1,\statement_2),(G,H)\right)$  \\
         \hline  \\
@@ -453,8 +453,8 @@ It then outputs the simulated transcript $((\commitment_1,\commitment_2),\challe
   The two protocols illustrated prove the same statement, but achieve this via different approaches.
   The first protocol uses the more general framework of liner relations among witnesses introduced above.
   Alternatively, as shown in the second protocol, the linear relation can also be realized by  directly incorporating the linear relation into the proof goal, thereby achieving a slightly shorter proof size (as the prover's last message consists of one element of $\ZZ_p$ less).
-  
-  However, when proving inhomogeneous linear relations, incorporating the relation into the homomorphism also requires some additional computations in the target group, which in certain cases might compensate the advantage of a smaller proof size.  
+
+  However, when proving inhomogeneous linear relations, incorporating the relation into the homomorphism also requires some additional computations in the target group, which in certain cases might compensate the advantage of a smaller proof size.
 \end{remark}
 
 \paragraph{Example 4 (REP).}
@@ -495,7 +495,7 @@ Yet, the mapping $\ZZ_p^2\to\GG^3:(x_1,x_2)\mapsto (x_1G,x_2G,x_1x_2G)$ is not a
 However, the required multiplicative relation can be proven by observing that the proof goal is equivalent to $\statement_1=w_1G$, $\statement_2=w_2G$, and $\statement_3=w_2\statement_1$, leading the homomorphism $\varphi:\ZZ_p^2\to\GG^3:(x_1,x_2)\mapsto(x_1G,x_2G,x_2\statement_1)$.
 
 The protocol flow is then as depicted in~\cref{fig:dh}.
-    \begin{protocol}{Proving knowledge of representation.\\[-2.25em]}{fig:dh}{tbph}
+    \begin{protocol}{Proving knowledge of representation.\\[-2.25em]}{fig:dh}{t}
       \begin{tabular}{@{}l@{\hspace{-3em}}c@{\hspace{-2em}}r@{}}
         $\prover\left( (w_1,w_2),(\statement_1,\statement_2,\statement_3),G)\right)$ & & $\verifier\left((\statement_1,\statement_2,\statement_3),G \right)$  \\
         \hline  \\
@@ -676,18 +676,17 @@ The constructions are based on the seminal work of Fiat and Shamir~\cite{C:FiaSh
 The underlying idea of the so-called Fiat-Shamir transform is to simulate the verifier's random challenge by means of a random oracle, depending on the first message computed by the prover.
 More precisely, the challenge is computed as
 $c\defeq\hash(\vec \statement,\vec \commitment, \ctx, \stag)$,
-where $\statement$ is the public image for which knowledge of a witness is proven, $\commitment$ is the prover's first message from the $\Sigma$-protocol, $\stag$ is a (possibly empty) label attached to the proof, and
-The context string $\ctx$ contains the following application-specific information:
-\stnote{incomplete sentence}
+where $\statement$ is the public image for which knowledge of a witness is proven, $\commitment$ is the prover's first message from the $\Sigma$-protocol, $\stag$ is a (possibly empty, variable-length) label attached to the proof, and
+the context string $\ctx$ is a tuple $\ctx = (\domsepctx, \curvectx, \generatorsctx, \idctx)$ containing the following application-specific information:
 \begin{itemize}
-  \item a domain separator (e.g.\ the name of the target application);
-  \item a label identifying uniquely the group (e.g.\ \verb|secp-256|)
-  \item
-    a full description of the algebraic setting and proof goal (e.g., group descriptions, generators, etc.) to achieve non-malleability;
-  \item
+  \item $\domsepctx$, a string determining uniquely the name of the target application (and the proof type);
+  \item $\curvectx$, a label identifying uniquely the group (e.g.\ \verb|secp-256|)
+  \item $\generatorsctx$,
+    a full description of the algebraic setting and proof goal (e.g., group generators, and constants fixed in the protocol) to achieve non-malleability;
+  \item \textsf{id},
     local context information (e.g., session identifiers of higher level protocols) to avoid replay-attacks, or shared randomness or a timestamp to guarantee freshness of the proof.
 \end{itemize}
-The tag $\stag$ contains an arbitrary string, possibly empty, that the prover can tie down to the proof.
+The tag $\stag$ contains an arbitrary string, possibly empty, that the prover can attach to the proof. This can allow to construct e.g. signatures and ring signatures.
 We discuss more in details the content the hash in \cref{sec:instantiation}.
 
 \subsubsection{Batchable form}
@@ -752,7 +751,7 @@ The random vector $\vec a$ can be \emph{deterministically} generated by fixing $
     \begin{enumerate}
       \item\label{item:fslong:v:recomputet}
         The algorithm recomputes the first message $\vec \commitment$ by running the appropriate steps of the simulator $\simulator$.
-        
+
          More precisely, we stress that, on input a challenge $\challenge$, all simulators introduced so far first draw a response $\response$, and then compute the commitment $\commitment$ from $\challenge$ and $\response$.
         Instead of sampling $\response$, the algorithm now uses its input value to recompute $\commitment$ according to the remaining steps of the simulator.
         \item
@@ -920,15 +919,15 @@ We think pairing-friendly curves, such as BLS12-381~\cite{bls12}, should also be
 
  \paragraph{Choice of the hash funcitons.} We advise for the use of consolidated, cryptographically secure hash functions such as \verb|SHA2|, \verb|SHA3|, and \verb|BLAKE2|, \verb|BLAKE3|\footnote{We did not examine closely algebraic hashes for this draft, but we stress that their adoption could be appealing for a number of applications requiring recursive proofs. Unfortunately, this requires a much deeper cryptanalysis within a working group.}.
  In the non-interactive $\Sigma$-protocols, the image of the random oracle is assumed to be over the field, and translating the output of the hash function (in $\bin^*$) into an integer mod $p$ requires care to preserve indifferentiability.
-
- The best options for performing this operation are the following :
+To the best of our knowledge, the best options for performing this operation are the following:
 \begin{enumerate}[label=$(\alph*)$]
   \item\label{item:truncate-128}  Truncating the output of the hash to 128 bits, and interpreting it as a small integer mod $p$.
   Despite being the most efficient option at our disposal, it is unclear if the collision probability of $2^{-64}$ could be too small for certain applications;
   \item\label{item:truncate-256}  Truncating the output of the hash to 256 bits, and then reducing mod $p$.
   This is by far the most natural approach; however, the output distribution could be potentially far from uniformly random, in terms of statistical distance.
  Consider e.g.\ a prime $p$ that is close to $3/4 \cdot 2^{256}$. Reducing a random $256$-bit integer modulo this $p$ yields a value that is in the range $[0, p / 3]$ with probability roughly $1/2$~\cite{hash-to-curve}.
-  We remark that, nonetheless, min-entropy wise this only costs (less than) a bit of security, i.e., the chances of a specific challenge being hit by the hash function is still less than $2/p$.
+  We remark that, nonetheless, min-entropy wise this will cost at most one bit of security.
+  Namely, the chances of guessing a specific challenge is still than negligible despite the bias.
   \minote{check that curves proposed have a very small range. }
   \item\label{item:truncate-cfrg} Truncating the output of the hash to $\ceil{\log_2 p} + \kappa$ bits (where $\kappa$ is the targeted statistical
   security level), and then reducing mod $p$.
@@ -938,7 +937,21 @@ We think pairing-friendly curves, such as BLS12-381~\cite{bls12}, should also be
   \item Rejection sampling, which consists in sampling uniformly at random in the interval $[0, 2^\secpar]$, until a value in $[0, p]$ is found.
   Unfortunately, since the hash function is used also for hashing the initial (secret) randomness used for computing the commitment, this method is undesirable due to the difficulty of implementing in constant-time (which could lead a secret for the deterministic computation of the commitment).
 \end{enumerate}
-For the above reasons, we deem the options \cref{item:truncate-256,item:truncate-cfrg} most fit a a real-wold deployment.
+Despite options \cref{item:truncate-256,item:truncate-cfrg} are the most fit for computing the challenge, only option \cref{item:truncate-cfrg} is suitable for computing also the initial nonce. in the non-interactive case. \cref{item:truncate-128} is a valid option for the interactive version.
+
+Hashing multiple variable-length messages into a single challenge (such is the case when hashing $\ctx$, $\tau$) requires care, and multiple approaches have been used in the past. We see three options available:
+\begin{enumerate}[label=$(\alph*)$]
+  \item Replacing variable-length messages with their hash (i.e. hashing multiple values à la \emph{Merkle-Damgard}) and computing:
+  \[
+    \ctx \defeq (\hash(\domsepctx), \curvectx, \generatorsctx, \hash(\idctx))
+  \]
+  this is currently what proposed in \cite{bip-schnorr} for the specific case of the domain separator (in fact, the authors propose to concatenate the same hash twice to fill an entire SHA-256 block and allow for hash pre-processing).
+  \item Encoding the messages in a common format, and hashing the encoded message, i.e.\ computing:
+  \( \ctx \defeq \mathsf{encode}(\ctx)\),
+  where $\mathsf{encode}$ is a serializer such as e.g.\ JSON encoding, or netstring~\cite{bernstein-netstrings-02}.
+  \item Using a protocol framework such as \textsc{Strobe}~\cite{EPRINT:Hamburg17} that builds a sponge construction and can be used for building protocol transcripts. For more information, we direct the reader towards \cite[Section 5.3]{EPRINT:Hamburg17}.
+\end{enumerate}
+
 
 \paragraph{Commitment.} The first step is the generation of uniformly-distributed random element(s) over $\ZZ_p$. As mentioned in \Cref{sec:motivation}, the nonce must be distributed uniformly at random, and even a small bias in the distribution could completely compromise zero-knowledge~\cite{XX}.
 
@@ -991,11 +1004,11 @@ for practical classes of $\Sigma$-protocols requiring that only one out of two
 instances is known when the protocol starts and obtaining a compound delayed-input
 $\Sigma$-protocol. Relying on computational (i.e., DDH) assumptions, in~\cite{EC:CPSSV16} it is shown how to generically (i.e., not just two and no further restrictions) compose delayed-input $\Sigma$-protocols obtaining a compound delayed-input $\Sigma$-protocol.
 
-\paragraph{Designated verifier proofs.} 
+\paragraph{Designated verifier proofs.}
 A designated-verifier zero-knowledge proof of knowledge allows the prover to determine an intended receiver for the proof in a way that guarantees that only the specified receiver can actually obtain any conviction about the validity of the prover's claim.
 This is important, e.g., in cases where deniability of the communication is important for privacy reasons, and the prover needs to be ensured that the verifier cannot credibly forward the proof to any third party, as he could have simulated proofs with the same distribution himself.
 Designated-verifier proofs have been studied profoundly in the academic literature~\cite{EC:JakSakImp96,EC:ChaCou18}.
-The most widely known approach is due to Jakobsson et al.~\cite{EC:JakSakImp96}, which achieves the required functionality basically by proving that ``one either knows the secret key, or one is the designated verifier''. 
+The most widely known approach is due to Jakobsson et al.~\cite{EC:JakSakImp96}, which achieves the required functionality basically by proving that ``one either knows the secret key, or one is the designated verifier''.
 In a nutshell, the idea is that the designated verifier provides the prover with a public key $\statement_{pk}$, and the verifier then proves that he knows a witness $\witness$ for the claimed statement $\statement$ for the given relation $\relation$, or the secret key $\witness_{pk}$ corresponding to $\statement_{pk}$, using the composition techniques from \cref{sec:composition}.
 
 More formally, let $\relation'$ be such that $(\statement_{pk},\witness_{pk})\in\relation'$ if and only if $\witness_{pk}$ is a secret key corresponding to $\statement_{pk}$, e.g., $\relation'=\{(\statement_{pk},\witness_{sk}):\statement=\witness G\}$.

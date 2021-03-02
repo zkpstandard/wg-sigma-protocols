@@ -258,6 +258,24 @@ isbn="978-3-642-22137-8"
 	abstract =	{This memo specifies two prime-order groups, ristretto255 and decaf448, suitable for safely implementing higher-level and complex cryptographic protocols. The ristretto255 group can be implemented using Curve25519, allowing existing Curve25519 implementations to be reused and extended to provide a prime-order group. Likewise, the decaf448 group can be implemented using edwards448.}
 }
 
+
+@techreport{bernstein-netstrings-02,
+	number =	{draft-bernstein-netstrings-02},
+	type =		{Internet-Draft},
+	institution =	{Internet Engineering Task Force},
+	publisher =	{Internet Engineering Task Force},
+	note =		{Work in Progress},
+	url =		{https://datatracker.ietf.org/doc/html/draft-bernstein-netstrings-02},
+        author =	{D. J. Bernstein},
+	title =		{{Netstrings}},
+	pagetotal =	2,
+	year =		1998,
+	month =		aug,
+	day =		14,
+	abstract =	{A netstring is a self-delimiting encoding of a string. Netstrings are very easy to generate and to parse. Any string may be encoded as a netstring; there are no restrictions on length or on allowed bytes. Another virtue of a netstring is that it declares the string size up front. Thus an application can check in advance whether it has enough space to store the entire string. Netstrings may be used as a basic building block for reliable network protocols. Most high-level protocols, in effect, transmit a sequence of strings; those strings may be encoded as netstrings and then concatenated into a sequence of characters, which in turn may be transmitted over a reliable stream protocol such as TCP.},
+}
+
+
 @misc{zkp,
   title={zkp: a toolkit for Schnorr proofs},
   author={Henry de Valence},
