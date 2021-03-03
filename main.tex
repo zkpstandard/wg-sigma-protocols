@@ -60,8 +60,8 @@
 %
 \begin{abstract}
   Over the last years, zero-knowledge proofs of knowledge based on $\Sigma$-protocols have found numerous applications.
-  However, up to date there is still a lack of standardization of such protocols, potentially hindering even broader deployment, and increasing the risk of insecure implementations. 
-  This document proposes a standardization effort for non-interactive $\Sigma$-protocols in prime order groups, allowing for AND and OR composition, either in compact (challenge, response) or batchable form (commitment, response). 
+  However, up to date there is still a lack of standardization of such protocols, potentially hindering even broader deployment, and increasing the risk of insecure implementations.
+  This document proposes a standardization effort for non-interactive $\Sigma$-protocols in prime order groups, allowing for AND and OR composition, either in compact (challenge, response) or batchable form (commitment, response).
   The document provides the necessary formal background, specifies the protocols in full details, provides examples, suggests concrete instantiations (e.g., regarding the selection of elliptic curves or hash functions), and provides guidelines to ease the secure and compatible implementation of $\Sigma$-protocols.
 
 \keywords{Zero-knowledge proofs of knowledge  \and $\Sigma$-protocols.}
@@ -280,8 +280,7 @@ We omit a formal definition here, and refer, e.g., to Unruh~\cite{AC:Unruh17}.
 \section{Constructions for $\Sigma$-Protocols}
 
 This section is structured in two main parts: in \cref{sec:basicsigma}, we study the generic construction of $\Sigma$-protocols in prime-order groups. In \cref{sec:composition}, we study AND and OR-composition of the basic protocol.
-
-For in-depth discussions of such protocols, we refer, e.g., to~\cite{bangerter05,AFRICACRYPT:Maurer09,DBLP:journals/dcc/Maurer15}.
+For in-depth discussions of such protocols we refer to~\cite{bangerter05,AFRICACRYPT:Maurer09,DBLP:journals/dcc/Maurer15}.
 \subsection{Basic $\Sigma$-Protocols in Prime-Order Groups}\label{sec:basicsigma}
 A basic $\Sigma$-protocol for the relation:
 \[
@@ -667,7 +666,9 @@ All protocols described so far require three messages being exchanged between th
 However, communication rounds are often considered expensive from an efficiency point of view, and for many applications interactivity is not desirable.
 
 \begin{remark}
-The interactive version of $\Sigma$-protocols presented in this paper is unfit for practical applications. For those applications where latency is not a problem, we direct the reader towards~\cref{XXX} for general techniques. In this submission, we focus on the non-interactive transform.
+The interactive version of $\Sigma$-protocols presented in this paper is unfit for practical applications.
+%git For those applications where latency is not a problem, we direct the reader towards~\cref{XXX} for general techniques.
+ In this submission, we focus on the non-interactive transform.
 \end{remark}
 
 
@@ -845,6 +846,8 @@ For full details and proofs, we refer to the original literature.
 
   \item[Proof of Knowledge.]
     All protocols presented in \cref{sec:basicsigma,sec:composition} are proofs of knowledge, see Damg\r{a}rd~\cite{damgard04}.
+    The non-interactive protocol (cf.\ \cref{sec:fs}) is secure against unbounded malicious provers, provided that they make a polynomial number of queries to the random oracle~\cite{JC:PoiSte00}.
+    {Existence of a straight-line extractor for non-interactive $\Sigma$-protocols was proposed by Fuchsbauer et al.~\cite{C:FucKilLos18}, but under the (stronger) setting of the algebraic group model.}
   \item[Concurrent Zero-Knowledge.]
     The protocol in \cref{sec:concurrent} is concurrently zero-knowledge against arbitrary verifiers if the used commitment scheme is a trapdoor commitment scheme, cf.~\cite{EC:Damgard00}.
 %
@@ -863,7 +866,7 @@ For full details and proofs, we refer to the original literature.
     This security guarantee also holds against quantum attackers.
 
     For a proof we refer to Pointcheval and Stern~\cite{JC:PoiSte00} and Unruh~\cite{AC:Unruh17}.
-    {Existence of a straight-line extractor for $\Sigma$-protocols was proposed by Fuchsbauer et al.~\cite{C:FucKilLos18}, but under the (stronger) setting of the algebraic group model.}
+
 
   \item[Simulation soundness.]
     For all protocols presented in \cref{sec:basicsigma,sec:composition}, the Fiat-Shamir transform is  weakly simulation-sound.
@@ -872,9 +875,8 @@ For full details and proofs, we refer to the original literature.
 
     For a proof we refer to Unruh~\cite{AC:Unruh17} and Faust et al.~\cite{INDOCRYPT:FKMV12}.
   \item[Simulation extractability.]
-    For all protocols presented in \cref{sec:basicsigma,sec:composition}, the Fiat-Shamir transform is  simulation-sound extractable.
-
-    For a proof we refer to Bernhard et al.~\cite{AC:BerPerWar12}.
+    For all protocols presented in \cref{sec:basicsigma,sec:composition}, the non-interactive Fiat-Shamir transform is simulation %-sound
+    extractable~\cite[Thm. 1]{AC:BerPerWar12}.
 \end{description}
 
 \section{Instantiation}
@@ -910,7 +912,7 @@ In this section, we consider the concrete security of $\Sigma$-protocols and ill
 In \cref{table:implementations}, we report the implementations that we are currently aware of.
 This table is greatly inspired from the remarkable bibliographic work of Lueks et al.~\cite{zksk}.
 \paragraph{Choice of a group.} We advise for the use of prime-order elliptic curves of size either 256 or 512 bits, depending on the desired security of the upper layers in the protocol\footnote{For instance, proving a DH relation with one fixed group element such as a public key, might expose the protocol to cryptanalytic attacks such as Brown-Gallant~\cite{EPRINT:BroGal04} and Cheon’s attack~\cite{EC:Cheon06}, and some implementations might opt for larger curve sizes. We consider these attacks out of scope for this standardization effort, and believe this analysis should be deferred to the concrete security study of the larger protocol.}.
-Concretely, we see fit NIST's \verb|p-521| and \verb|p-256|~\cite{fips2}; SECG's \verb|secp256k1|~\cite{SECG}, or standardized prime-order group abstractions over non prime-order groups, such as Decaf or Ristretto~\cite{C:Hamburg15,cfrg-ristretto-decaf}\footnote{We are aware of the threats reported in
+Concretely, we see fit NIST's \verb|p-521| and \verb|p-256|~\cite{fips2}; SECG's \verb|secp256k1|~\cite{SECG}, or prime-order group abstractions over non prime-order groups, such as as Decaf~\cite{C:Hamburg15} and Ristretto~\cite{cfrg-ristretto-decaf}\footnote{We are aware of the threats reported in
 \url{https://safecurves.cr.yp.to/}.
 It's however not clear what should be the alternatives, and if dropping their support would hinder adoption.
 }.
