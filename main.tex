@@ -676,8 +676,7 @@ We describe two ways for achieving non-interactivity. Both variants require iden
 The first allows for efficient batching, but requires point validation and (depending on the hash function, or the elliptic curve chosen) might lead to
 slightly larger proof sizes. The second requires no point validation and only has the hash value.
 We call the first variant \emph{batchable}, and the latter \emph{short}.
-
-The constructions are based on the seminal work of Fiat and Shamir~\cite{C:FiaSha86} and subsequent work, e.g., by Bernhard et al.~\cite{AC:BerPerWar12}.
+Both constructions are based on the seminal work of Fiat and Shamir~\cite{C:FiaSha86} and subsequent work, e.g., by Bernhard et al.~\cite{AC:BerPerWar12}.
 The underlying idea of the so-called Fiat-Shamir transform is to simulate the verifier's random challenge by means of a random oracle, depending on the first message computed by the prover.
 More precisely, the challenge is computed as
 $c\defeq\hash(\vec \statement,\vec \commitment, \ctx, \stag)$,
@@ -869,7 +868,7 @@ For full details and proofs, we refer to the original literature.
 
 
   \item[Simulation soundness.]
-    For all protocols presented in \cref{sec:basicsigma,sec:composition}, the Fiat-Shamir transform is  weakly simulation-sound.
+    In all protocols presented in \cref{sec:basicsigma,sec:composition}, the Fiat-Shamir transform is  weakly simulation-sound.
     If the protocol additionally has unique responses, then the Fiat-Shamir transform is  strongly simulation-sound.
     These security guarantees also holds against quantum attackers.
 
