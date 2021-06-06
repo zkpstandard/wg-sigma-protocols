@@ -1,4 +1,4 @@
-\documentclass[runningheads,11pt]{llncs}
+\documentclass[runningheads,11pt]{article}
 
 \newif\ifanonymous
 \anonymousfalse
@@ -37,35 +37,21 @@
 
 \input{macros}
 
+\newtheorem{definition}{Definition}
+\newtheorem{theorem}{Theorem}
+\newtheorem{remark}{Remark}
 
 \begin{document}
 
 \title{Proposal: $\Sigma$-protocols}
 %
-\titlerunning{Proposal: $\Sigma$-protocols}
 
-\ifanonymous
-\author{}
-\institute{}
-\else
-\author{Stephan Krenn\inst{1} \and
-        Michele Orr\`u\inst{2}}
-\authorrunning{S. Krenn and M. Orr\`u}
-\institute{AIT Austrian Institute of Technology, Vienna, Austria \and
-           University of California, Berkeley, United States}
-
-\fi
+\author{Stephan Krenn \and
+        Michele Orr\`u}
 %
 \maketitle              % typeset the header of the contribution
 %
-\begin{abstract}
-  Over the last years, zero-knowledge proofs of knowledge based on $\Sigma$-protocols have found numerous applications.
-  However, up to date there is still a lack of standardization of such protocols, potentially hindering even broader deployment, and increasing the risk of insecure implementations.
-  This document proposes a standardization effort for non-interactive $\Sigma$-protocols in prime order groups, allowing for AND and OR composition, either in compact (challenge, response) or batchable form (commitment, response).
-  The document provides the necessary formal background, specifies the protocols in full details, provides examples, suggests concrete instantiations (e.g., regarding the selection of elliptic curves or hash functions), and provides guidelines to ease the secure and compatible implementation of $\Sigma$-protocols.
-
-\keywords{Zero-knowledge proofs of knowledge  \and $\Sigma$-protocols.}
-\end{abstract}
+\tableofcontents
 
 \section{Introduction}
 
@@ -106,42 +92,6 @@ We make a first attempt at the standardization of $\Sigma$-protocols by proposin
 All these protocols can be implemented using the API that we propose in \cref{sec:composition}.
 A request for standardization has also been posted on the \href{https://community.zkproof.org/t/standardizing-sigma-protocols/471/}{zk-proof community} and received a fair amount of interest.
 
-% \subsection{Related Work}
-
-\section{Background and Motivation}
-\label{sec:motivation}
-So far, there has been little literature meant to help cryptography engineers implement correctly $\Sigma$-protocols for arbitrary statements about discrete logs.
-Despite Schnorr signatures and zero-knowledge proofs have already been standardized (respectively in \cite{rfc8032} and \cite{rfc8235}), there is still no formal, established way to implement  $\Sigma$-protocols and their composition.
- Additionally, as academic papers focus on proving the security of  $\Sigma$-protocols in generic cyclic groups, the implementation details are often times overlooked, and, as a result, a lot of insecure implementations have been published in the past. To name a few, well-known pitfalls that have led to insecure implementations:
-\begin{itemize}
-  \item \textbf{Implementation over non-prime order groups led to small subgroup attacks}. The cyclic group where proofs are being implemented must be carefully selected. Implementing $\Sigma$-protocol over Weierstrass curves is appealing for its performances and straight-line scalar multiplication formul\ae.
-   However, the presence of a small cofactor could be fatal for security.
-In 2017, Monero~\cite{monero-fail} disclosed a vulnerability in Cryptonote-based e-currencies that would allow double-spending
-due to the use of \verb|curve25519|~\cite{PKC:Bernstein06} in place of a prime-order curve.
-%\href{https://tools.ietf.org/html/rfc2785#ref-LAW}{RFC2785}, that already provides solutions for avoiding small subgroup attacks)
-  \item \textbf{Leakage, partial leakage, or reuse of the commitment is fatal.}
-  The first message in a  $\Sigma$-protocol, sometimes called \emph{nonce} or \emph{commitment}, must be uniformly distributed in order to preserve zero-knowledge. Leakage of even just of a few bits of the nonce could allow for the complete recovery of the witness~\cite{lattice-attack,bleichenbacher,CCS:ANTTY20}.
-  A blatant instance of this mistake was uncovered in 2010, by the hacker group \texttt{fail0verflow} (for EC-DSA). They showed how SONY was reusing the same nonce for digitally signing PlayStation 3 games\footnote{\url{https://media.ccc.de/v/27c3-4087-en-console_hacking_2010}}.  The member could exploit this to calculate the private key, and create valid signatures.
-
-  \item \textbf{A weak implementation of Fiat--Shamir heuristic compromises adaptive security.} The second message in a  $\Sigma$-protocol, sometimes called \emph{challenge}, if computed non-interactively must include not only the commitment, but the full statement and the group description.
-
-  If the random oracle is invoked solely on the commitment (c.f.\ weak Fiat-Shamir transformation~\cite[Def.\ 2]{AC:BerPerWar12}), then it is possible, given a proof $\pi$, to produce another proof $\pi'$ for a different statement without knowing its witness.
-  For instance, if the group generator $G$ is not included in the hash input, then it is possible to prove statements under a different generator $\alpha G$, for any $\alpha \in \ZZ_p$.
-  Similarly, if $X \in \GG$, part of the statement, is not included in the query to the random oracle, it is possible to compute proofs for $\beta X$, for any $\beta \in \ZZ_p$.
-  Mistakes of this class were uncovered by Bernhard et al.~\cite{AC:BerPerWar12}, by Haines et al.~\cite{SP:HLPT20}, and by Cortier et al.~\cite{cortier2020}.
-  They all showed how some voting systems, respectively Helios,  Scytl-SwissPost, and Belenios, incorrectly
-  implemented the Fiat--Shamir heuristic, allowing for tampering of votes.
-
-\end{itemize}
-We stress that is not straightforward to implement $\Sigma$-protocols given the currently available engineering literature.
-%Despite Schnorr proofs have been standardized as zero-knowledge proofs (c.f.\ \href{https://tools.ietf.org/html/rfc8235}{RFC8235}) and signatures (c.f.\ ed25519 in \href{https://tools.ietf.org/html/rfc8032}{RFC8032}),
-For instance,
-the current standardized \verb|ed25519| cannot be immediately adapted to a zero-knowledge proof in a secure way,
-because of its malleability~\cite[p. 7]{JCEng:BDLSY12},  and the different behavior on the batched and compressed
-form\footnote{\url{https://hdevalence.ca/blog/2020-10-04-its-25519am}}.
-
-Hence, we hereby propose the creation of a working group that includes both recent cryptanalytic insights as well as the
-(partial) solutions described in other known standardization documents.
 \section{Notation and Terminology}
 \label{sec:notation}
 
@@ -163,14 +113,11 @@ For the purpose of this document, the following notation will be used:
     $\NN,\ZZ$ & non-negative natural numbers and integers, respectively
 \end{tabular}
 
-\subsection{Formal Definitions}
-  In the following we provide the formal definitions required for the remainder of this document.
 
 \begin{definition}
   For two groups $\GG_1,\GG_2$, a function $\varphi:\GG_1\to\GG_2:x\mapsto\varphi(x)$ is a \emph{(group) homomorphism}, if and only if for all $a,b\in\GG_1$ it holds that $\varphi(a+b)=\varphi(a)+\varphi(b)$.
 \end{definition}
 
-\subsubsection{$\Sigma$-Protocols}~\\
 
 In the following, we formally describe the class of $\Sigma$-protocols, which covers all protocols considered in the remainder of this document.
  For an in-depth discussion of the underlying theory we refer to Cramer~\cite{cramer97}.
@@ -228,7 +175,7 @@ A $\Sigma$-protocol is said to have \emph{perfectly unique responses} if it is i
 In case that it is only computationally infeasible (also for a quantum attacker) to find two responses for given $\statement, \commitment,\challenge$, the protocol is said to have \emph{(computationally) unique responses}.
 
 
-\subsubsection{Proof Systems and Proofs of Knowledge}~\\
+\subsubsection{Proof Systems and Proofs of Knowledge}
 
 The concept of interactive proofs of knowledge was first mentioned by Goldreich et al.~\cite{STOC:GolMicRac85}, and then refined by Feige et al.~\cite{STOC:FeiFiaSha87}.
 The definitions in the following are due to Bellare and Goldreich~\cite{C:BelGol92}.
@@ -356,179 +303,6 @@ Proving such a relation can easily by achieved by modifying the above protocol a
 \end{itemize}
 
 
-\subsubsection{Examples}
-
-\paragraph{Example 1 (DLOG).}
-Let $\GG$ be a group over an elliptic curve with prime order $p$.
-Proving knowledge of the discrete logarithm $w$ of a point $Y$ in base $G$ means proving knowledge of $w\in\ZZ_p$ such that $Y=wG$.
-For a description of this proof goal in the general case of residue classes, we also refer to~\cite[1.4.1]{zkproof-reference}.
-
-Using the above notation, we have $\varphi:\ZZ_p^2\to\GG:x\mapsto xG$.
-The protocol flow is then as depicted in~\cref{fig:dlog}.
-    \begin{protocol}{Proving knowledge of a discrete logarithm.\\[-2.25em]}{fig:dlog}{bpt}
-      \begin{tabular}{@{}l@{\hspace{2em}}c@{\hspace{-3em}}r@{}}
-        $\prover\left(\witness,\statement,G\right)$ & & $\verifier\left(\statement,G\right)$  \\
-        \hline  \\
-      % -----------------------------P1-------------------------------
-        $ r\sample\ZZ_p$ & &\\
-        $ T \defeq rG$ & & \\
-        & $\sendr{T}{100}$ \\[2 ex]
-      % -----------------------------CHALLENGE-------------------------------
-        & & $c \sample \ZZ_p$ \\
-        & $\sendl{c}{100}$ & \\[2 ex]
-      % -----------------------------P2-------------------------------
-        $ s \defeq r + cw$\\
-        & $\sendr{s}{100}$ \\[2 ex]
-      % -----------------------------V-------------------------------
-        & & Return $\accept$ iff \\
-        & & $T + cY = sG$ \\
-      \end{tabular}
-    \end{protocol}
-
-For a given challenge $c\in\ZZ_p$, the simulator chooses $s\sample\ZZ_p$, and sets $T\gets sG-cY$.
-It then outputs the simulated transcript $(\commitment,\challenge,s)$.
-
-
-\paragraph{Example 2 (DLEQ).}
-Let $\GG$ be a group over an elliptic curve with prime order $p$.
-Proving equality of the known discrete logarithm $w$ of $\statement_1$ in base $G$ and $\statement_2$ in base $H$ means proving knowledge of $(w_1,w_2)\in\ZZ_p$ such that $\statement_1=w_1G$ and $\statement_2=w_2H$, and $w_1=w_2$.
-
-Using the above notation, we have $\varphi:\ZZ_p\to\GG^2:(x_1,x_2)\mapsto (x_1G,x_2H)$.
-The linear system of equations $A(w_1,w_2)=b$ is given by $w_1-w_2=0$.
-The protocol flow is then as depicted in~\cref{fig:dleq}.
-    \begin{protocol}{Proving knowledge of equality of two discrete logarithms.\\[-2.25em]}{fig:dleq}{b}
-      \begin{tabular}{@{}l@{\hspace{-4em}}c@{\hspace{-3em}}r@{}}
-        $\prover\left( (w_1,w_2),(\statement_1,\statement_2),(G,H)\right)$ & & $\verifier\left((\statement_1,\statement_2),(G,H)\right)$  \\
-        \hline  \\
-      % -----------------------------P1-------------------------------
-        $ r_1,r_2\sample\ZZ_p$ such that $r_1-r_2=0$ & &\\
-        $ \commitment_1 \defeq r_1G$ & & \\
-        $ \commitment_2 \defeq r_2H$ & & \\
-        & $\sendr{\commitment_1,\commitment_2}{100}$ \\[2 ex]
-      % -----------------------------CHALLENGE-------------------------------
-        & & $c \sample \ZZ_p$ \\
-        & $\sendl{c}{100}$ & \\[2 ex]
-      % -----------------------------P2-------------------------------
-        $ s_1 \defeq r_1 + cw_1$\\
-        $ s_2 \defeq r_2 + cw_2$\\
-        & $\sendr{s_1,s_2}{100}$ \\[2 ex]
-      % -----------------------------V-------------------------------
-        & & Return $\accept$ iff \\
-        & & $\commitment_1 + c\statement_1 = s_1G$ \\
-        & & $\commitment_2 + c\statement_2 = s_2H$ \\
-        & & and $s_1-s_2=0$.
-      \end{tabular}
-    \end{protocol}
-
-For a given challenge $c\in\ZZ_p$, the simulator chooses $s_1,s_2\sample\ZZ_p$ such that $s_1-s_2=0$, and sets $\commitment_1\gets s_1G-c\statement_1$ and $\commitment_2\gets s_2H - c\statement_2$.
-It then outputs the simulated transcript $((\commitment_1,\commitment_2),\challenge,(s_1,s_2))$.
-
-\paragraph{Example 3 (DLEQ; alternative).}
-The same proof goal as in the previous example can also be achieved by considering a slightly different homomorphism, which directly encodes the linear relation, that is $\varphi:\ZZ_p\to\GG^2:x\mapsto (xG,xH)$.
-The protocol flow is then as depicted in~\cref{fig:dleq_2}.
-    \begin{protocol}{Proving knowledge of equality of two discrete logarithms (alternative).\\[-2.25em]}{fig:dleq_2}{t}
-      \begin{tabular}{@{}l@{\hspace{2em}}c@{\hspace{-3em}}r@{}}
-        $\prover \left(\witness,(\statement_1,\statement_2),(G,H) \right)$ & & $\verifier \left((\statement_1,\statement_2),(G,H)\right)$  \\
-        \hline  \\
-      % -----------------------------P1-------------------------------
-        $ r\sample\ZZ_p$ & &\\
-        $ \commitment_1 \defeq rG$ & & \\
-        $ \commitment_2 \defeq rH$ & & \\
-        & $\sendr{\commitment_1,\commitment_2}{100}$ \\[2 ex]
-      % -----------------------------CHALLENGE-------------------------------
-        & & $c \sample \ZZ_p$ \\
-        & $\sendl{c}{100}$ & \\[2 ex]
-      % -----------------------------P2-------------------------------
-      $s \defeq r + cw $& & \\
-      & $\sendr{s}{100}$\\[2ex]
-      % -----------------------------V-------------------------------
-        & & Return $\accept$ iff \\
-        & & $\commitment_1 + c\statement_1 = sG$ \\
-        & & and $\commitment_2 + c\statement_2 = sH$. \\
-      \end{tabular}
-    \end{protocol}
-
-For a given challenge $c\in\ZZ_p$, the simulator chooses $s\sample\ZZ_p$, and sets $\commitment_1\gets sG-c\statement_1$ and $\commitment_2\gets sH - c\statement_2$.
-It then outputs the simulated transcript $((\commitment_1,\commitment_2),\challenge,s)$.
-
-
-\begin{remark}
-  The two protocols illustrated prove the same statement, but achieve this via different approaches.
-  The first protocol uses the more general framework of liner relations among witnesses introduced above.
-  Alternatively, as shown in the second protocol, the linear relation can also be realized by  directly incorporating the linear relation into the proof goal, thereby achieving a slightly shorter proof size (as the prover's last message consists of one element of $\ZZ_p$ less).
-
-  However, when proving inhomogeneous linear relations, incorporating the relation into the homomorphism also requires some additional computations in the target group, which in certain cases might compensate the advantage of a smaller proof size.
-\end{remark}
-
-\paragraph{Example 4 (REP).}
-Let $\GG$ be a group over an elliptic curve of prime order $p$.
-Proving knowledge of a valid opening of a Pedersen commitment means proving knowledge of $w_1,w_2\in\ZZ_p$ such that $Y=w_1G + w_2H$.
-
-Using the above notation, we have $\varphi:\ZZ_p^2\to\GG:(x_1,x_2)\mapsto x_1G + x_2H$.
-The protocol flow is then as depicted in~\cref{fig:rep}.
-    \begin{protocol}{Proving knowledge of representation.\\[-2.25em]}{fig:rep}{hbpt}
-      \begin{tabular}{@{}l@{\hspace{2em}}c@{\hspace{-3em}}r@{}}
-        $\prover \left( (w_1,w_2),Y,(G,H)\right)$ & & $\verifier \left(Y,(G,H)\right)$  \\
-        \hline  \\
-      % -----------------------------P1-------------------------------
-        $ r_1\sample\ZZ_p$ & &\\
-        $ r_2\sample\ZZ_p$ & &\\
-        $ T \defeq r_1G + r_2H$ & & \\
-        & $\sendr{T}{100}$ \\[2 ex]
-      % -----------------------------CHALLENGE-------------------------------
-        & & $c \sample \ZZ_p$ \\
-        & $\sendl{c}{100}$ & \\[2 ex]
-      % -----------------------------P2-------------------------------
-        $ s_1 \defeq r_1 + cw_1$\\
-        $ s_2 \defeq r_2 + cw_2$\\
-        & $\sendr{s_1,s_2}{100}$ \\[2 ex]
-      % -----------------------------V-------------------------------
-        & & Return $\accept$ iff \\
-        & & $T + cY = s_1G + s_2H$ \\
-      \end{tabular}
-    \end{protocol}
-
-For a given challenge $c\in\ZZ_p$, the simulator chooses $s_1,s_2\sample\ZZ_p$, and sets $T\defeq s_1G + s_2H -cY$.
-It then outputs the simulated transcript $(\commitment,\challenge,(s_1,s_2))$.
-
-\paragraph{Example 5 (DH).}
-Let $\GG$ be a group over an elliptic curve with prime order $p$.
-Proving knowledge of the exponents of a valid Diffie-Hellman triple means proving knowledge of $w_1,w_2\in\ZZ_p$ such that $\statement_1=w_1G$, $\statement_2=w_2G$, and $\statement_3=w_1 w_2 G$.
-Yet, the mapping $\ZZ_p^2\to\GG^3:(x_1,x_2)\mapsto (x_1G,x_2G,x_1x_2G)$ is not a homomorphism, and consequently the basic protocol presented before cannot be deployed directly.
-However, the required multiplicative relation can be proven by observing that the proof goal is equivalent to $\statement_1=w_1G$, $\statement_2=w_2G$, and $\statement_3=w_2\statement_1$, leading the homomorphism $\varphi:\ZZ_p^2\to\GG^3:(x_1,x_2)\mapsto(x_1G,x_2G,x_2\statement_1)$.
-
-The protocol flow is then as depicted in~\cref{fig:dh}.
-    \begin{protocol}{Proving knowledge of representation.\\[-2.25em]}{fig:dh}{t}
-      \begin{tabular}{@{}l@{\hspace{-3em}}c@{\hspace{-2em}}r@{}}
-        $\prover\left( (w_1,w_2),(\statement_1,\statement_2,\statement_3),G)\right)$ & & $\verifier\left((\statement_1,\statement_2,\statement_3),G \right)$  \\
-        \hline  \\
-      % -----------------------------P1-------------------------------
-        $ r_1\sample\ZZ_p$ & &\\
-        $ r_2\sample\ZZ_p$ & &\\
-        $ \commitment_1 \defeq r_1G$ & & \\
-        $ \commitment_2 \defeq r_2G$ & & \\
-        $ \commitment_3 \defeq r_2\statement_1$ & & \\
-        & $\sendr{\commitment_1,\commitment_2,\commitment_3}{100}$ \\[2 ex]
-      % -----------------------------CHALLENGE-------------------------------
-        & & $c \sample \ZZ_p$ \\
-        & $\sendl{c}{100}$ & \\[2 ex]
-      % -----------------------------P2-------------------------------
-        $ s_1 \defeq r_1 + cw_1$\\
-        $ s_2 \defeq r_2 + cw_2$\\
-        & $\sendr{s_1,s_2}{100}$ \\[2 ex]
-      % -----------------------------V-------------------------------
-        & & Return $\accept$ iff \\
-        & & $\commitment_1 + c\statement_1 = s_1G$ \\
-        & & $\commitment_2 + c\statement_2 = s_2G$ \\
-        & & and $\commitment_3 + c\statement_3 = s_2\statement_1$ \\
-      \end{tabular}
-    \end{protocol}
-
-For a given challenge $c\in\ZZ_p$, the simulator chooses $s_1,s_2\sample\ZZ_p$, and sets $\commitment_1\defeq s_1G -c\statement_1$, $\commitment_2\defeq s_2G-c\statement_2$, and $\commitment_3\defeq s_2\statement_1-c\statement_3$.
-It then outputs the simulated transcript $((\commitment_1,\commitment_2,\commitment_3),\challenge,(s_1,s_2))$.
-
-As shown in this example, and in contrast to linear relations, multiplicative relations among witnesses typically require a reformulation of the proof goal in order to be compatible with the generic protocol presented above.
-We refer, e.g., to Krenn~\cite{krenn12} for generic techniques.
 
 \subsection{Composition of $\Sigma$-Protocols}
 \label{sec:composition}
@@ -544,7 +318,7 @@ We refer, e.g., to Krenn~\cite{krenn12} for generic techniques.
   Furthermore, for the ease of presentation, we assume that all protocols to be composed are based on groups of the same prime order $p$.
   If this is not the case, the constructions can easily be adapted by setting the challenge set to the smaller of the two challenge sets.
 
-\subsubsection{AND Composition.}
+\subsubsection{AND Composition}
   In the following we explain how to construct a $\Sigma$-protocol proving knowledge of multiple independent witnesses.
   That is, the algorithms specified below constitute a $\Sigma$-protocol for the following relation:
 \[
@@ -599,7 +373,7 @@ We refer, e.g., to Krenn~\cite{krenn12} for generic techniques.
 \end{enumerate}
 
 
-\subsubsection{OR Composition.}
+\subsubsection{OR Composition}
   In the following we explain how to construct a $\Sigma$-protocol proving knowledge of one out of a set of witnesses.
   That is, the algorithms specified below constitute a $\Sigma$-protocol for the following relation:
 \[
@@ -660,7 +434,7 @@ We refer, e.g., to Krenn~\cite{krenn12} for generic techniques.
     \end{enumerate}
 \end{enumerate}
 
-\subsection{Achieving Non-Interactivity -- The Fiat-Shamir Transform}\label{sec:fs}
+\subsection{The Fiat-Shamir Transform}\label{sec:fs}
 % \marynote{Considering you are stressing the importance of hashing the instance, I would send the instance in the first message of the interactive versions as well.}
 All protocols described so far require three messages being exchanged between the prover and the verifier.
 However, communication rounds are often considered expensive from an efficiency point of view, and for many applications interactivity is not desirable.
@@ -766,7 +540,7 @@ The random vector $\vec a$ can be \emph{deterministically} generated by fixing $
 
 
 
-\subsection{Achieving Concurrent Zero-Knowledge}\label{sec:concurrent}
+\subsection{Concurrent Zero-Knowledge}\label{sec:concurrent}
 The basic protocols presented above cannot directly be used for practical applications, as the zero-knowledge property does not hold against malicious verifiers.
 While for most applications the Fiat-Shamir heuristic is the preferred way to also address this challenge, there might be cases where interactive protocols are still preferable, e.g., for deniability reasons.
 The following construction, due to Damg\r{a}rd~\cite{EC:Damgard00}, allows one to turn any $\Sigma$-protocol into a concurrently zero-knowledge version also against malicious adversaries.
@@ -878,38 +652,191 @@ For full details and proofs, we refer to the original literature.
     extractable~\cite[Thm. 1]{AC:BerPerWar12}.
 \end{description}
 
-\section{Instantiation}
+\section{$\Sigma$-protocols in prime order groups}
 \label{sec:instantiation}
 
-\begin{table}[t]
-  \caption{Summary of open-source projects that implement $\Sigma$-protocols, along with features supported.
-  INT stands for \emph{interactive}; FS stands for \emph{Fiat-Shamir}.
-  Most of this table's data comes from the work of Lueks et al.~\cite{zksk}.
-  \label{table:implementations}}
-  \centering
-  \setlength{\tabcolsep}{4pt}
-  \begin{adjustbox}{max width=\textwidth}
-  \begin{tabular}{lcccccc}
-  \toprule
-  Project & Language & AND-composition & OR-composition & INT & FS \\
-  \hline
-  \verb|Cashlib|~\cite{USENIX:MEKHL10} & C++ & \cmark & \xmark & \xmark & \cmark \\
-  \verb|Emmy|~\cite{emmy} & Go &  \xmark & \xmark & \cmark & \xmark \\
-  %\verb|Helios| \cite{USENIX:Adida08} & \\
-  \verb|Kyber|~\cite{kyber} & Go &  \cmark & \cmark & \cmark & \cmark \\
-  \verb|SCAPI| \cite{scapi} &  C++ & \cmark & \cmark & \cmark & \cmark\\
-  \verb|YAZKC|~\cite{ESORICS:ABBKSS10,CCS:ABBBKZ12} & C & \cmark & \cmark& \cmark & \cmark \\
-  \verb|zkp|~\cite{zkp} & Rust & \cmark & \xmark & \xmark & \cmark \\
-  \verb|zksk|~\cite{zksk} & Python & \cmark & \cmark & \cmark & \cmark\\
-  \bottomrule
-  \end{tabular}
-\end{adjustbox}
-\end{table}
-
-\marynote{Would be very interested to know which of these if any have been formally audited and by whom. Also what groups are supported.}
 In this section, we consider the concrete security of $\Sigma$-protocols and illustrate the main points that should be considered when implementing them.
-In \cref{table:implementations}, we report the implementations that we are currently aware of.
 This table is greatly inspired from the remarkable bibliographic work of Lueks et al.~\cite{zksk}.
+
+
+\subsubsection{Examples}
+
+\paragraph{Example 1 (DLOG).}
+Let $\GG$ be a group over an elliptic curve with prime order $p$.
+Proving knowledge of the discrete logarithm $w$ of a point $Y$ in base $G$ means proving knowledge of $w\in\ZZ_p$ such that $Y=wG$.
+For a description of this proof goal in the general case of residue classes, we also refer to~\cite[1.4.1]{zkproof-reference}.
+
+Using the above notation, we have $\varphi:\ZZ_p^2\to\GG:x\mapsto xG$.
+The protocol flow is then as depicted in~\cref{fig:dlog}.
+    \begin{protocol}{Proving knowledge of a discrete logarithm.\\[-2.25em]}{fig:dlog}{bpt}
+      \begin{tabular}{@{}l@{\hspace{2em}}c@{\hspace{-3em}}r@{}}
+        $\prover\left(\witness,\statement,G\right)$ & & $\verifier\left(\statement,G\right)$  \\
+        \hline  \\
+      % -----------------------------P1-------------------------------
+        $ r\sample\ZZ_p$ & &\\
+        $ T \defeq rG$ & & \\
+        & $\sendr{T}{100}$ \\[2 ex]
+      % -----------------------------CHALLENGE-------------------------------
+        & & $c \sample \ZZ_p$ \\
+        & $\sendl{c}{100}$ & \\[2 ex]
+      % -----------------------------P2-------------------------------
+        $ s \defeq r + cw$\\
+        & $\sendr{s}{100}$ \\[2 ex]
+      % -----------------------------V-------------------------------
+        & & Return $\accept$ iff \\
+        & & $T + cY = sG$ \\
+      \end{tabular}
+    \end{protocol}
+
+For a given challenge $c\in\ZZ_p$, the simulator chooses $s\sample\ZZ_p$, and sets $T\gets sG-cY$.
+It then outputs the simulated transcript $(\commitment,\challenge,s)$.
+
+
+\paragraph{Example 2 (DLEQ).}
+Let $\GG$ be a group over an elliptic curve with prime order $p$.
+Proving equality of the known discrete logarithm $w$ of $\statement_1$ in base $G$ and $\statement_2$ in base $H$ means proving knowledge of $(w_1,w_2)\in\ZZ_p$ such that $\statement_1=w_1G$ and $\statement_2=w_2H$, and $w_1=w_2$.
+
+Using the above notation, we have $\varphi:\ZZ_p\to\GG^2:(x_1,x_2)\mapsto (x_1G,x_2H)$.
+The linear system of equations $A(w_1,w_2)=b$ is given by $w_1-w_2=0$.
+The protocol flow is then as depicted in~\cref{fig:dleq}.
+    \begin{protocol}{Proving knowledge of equality of two discrete logarithms.\\[-2.25em]}{fig:dleq}{b}
+      \begin{tabular}{@{}l@{\hspace{-4em}}c@{\hspace{-3em}}r@{}}
+        $\prover\left( (w_1,w_2),(\statement_1,\statement_2),(G,H)\right)$ & & $\verifier\left((\statement_1,\statement_2),(G,H)\right)$  \\
+        \hline  \\
+      % -----------------------------P1-------------------------------
+        $ r_1,r_2\sample\ZZ_p$ such that $r_1-r_2=0$ & &\\
+        $ \commitment_1 \defeq r_1G$ & & \\
+        $ \commitment_2 \defeq r_2H$ & & \\
+        & $\sendr{\commitment_1,\commitment_2}{100}$ \\[2 ex]
+      % -----------------------------CHALLENGE-------------------------------
+        & & $c \sample \ZZ_p$ \\
+        & $\sendl{c}{100}$ & \\[2 ex]
+      % -----------------------------P2-------------------------------
+        $ s_1 \defeq r_1 + cw_1$\\
+        $ s_2 \defeq r_2 + cw_2$\\
+        & $\sendr{s_1,s_2}{100}$ \\[2 ex]
+      % -----------------------------V-------------------------------
+        & & Return $\accept$ iff \\
+        & & $\commitment_1 + c\statement_1 = s_1G$ \\
+        & & $\commitment_2 + c\statement_2 = s_2H$ \\
+        & & and $s_1-s_2=0$.
+      \end{tabular}
+    \end{protocol}
+
+For a given challenge $c\in\ZZ_p$, the simulator chooses $s_1,s_2\sample\ZZ_p$ such that $s_1-s_2=0$, and sets $\commitment_1\gets s_1G-c\statement_1$ and $\commitment_2\gets s_2H - c\statement_2$.
+It then outputs the simulated transcript $((\commitment_1,\commitment_2),\challenge,(s_1,s_2))$.
+
+\paragraph{Example 3 (DLEQ; alternative).}
+The same proof goal as in the previous example can also be achieved by considering a slightly different homomorphism, which directly encodes the linear relation, that is $\varphi:\ZZ_p\to\GG^2:x\mapsto (xG,xH)$.
+The protocol flow is then as depicted in~\cref{fig:dleq_2}.
+    \begin{protocol}{Proving knowledge of equality of two discrete logarithms (alternative).\\[-2.25em]}{fig:dleq_2}{t}
+      \begin{tabular}{@{}l@{\hspace{2em}}c@{\hspace{-3em}}r@{}}
+        $\prover \left(\witness,(\statement_1,\statement_2),(G,H) \right)$ & & $\verifier \left((\statement_1,\statement_2),(G,H)\right)$  \\
+        \hline  \\
+      % -----------------------------P1-------------------------------
+        $ r\sample\ZZ_p$ & &\\
+        $ \commitment_1 \defeq rG$ & & \\
+        $ \commitment_2 \defeq rH$ & & \\
+        & $\sendr{\commitment_1,\commitment_2}{100}$ \\[2 ex]
+      % -----------------------------CHALLENGE-------------------------------
+        & & $c \sample \ZZ_p$ \\
+        & $\sendl{c}{100}$ & \\[2 ex]
+      % -----------------------------P2-------------------------------
+      $s \defeq r + cw $& & \\
+      & $\sendr{s}{100}$\\[2ex]
+      % -----------------------------V-------------------------------
+        & & Return $\accept$ iff \\
+        & & $\commitment_1 + c\statement_1 = sG$ \\
+        & & and $\commitment_2 + c\statement_2 = sH$. \\
+      \end{tabular}
+    \end{protocol}
+
+For a given challenge $c\in\ZZ_p$, the simulator chooses $s\sample\ZZ_p$, and sets $\commitment_1\gets sG-c\statement_1$ and $\commitment_2\gets sH - c\statement_2$.
+It then outputs the simulated transcript $((\commitment_1,\commitment_2),\challenge,s)$.
+
+
+\begin{remark}
+  The two protocols illustrated prove the same statement, but achieve this via different approaches.
+  The first protocol uses the more general framework of liner relations among witnesses introduced above.
+  Alternatively, as shown in the second protocol, the linear relation can also be realized by  directly incorporating the linear relation into the proof goal, thereby achieving a slightly shorter proof size (as the prover's last message consists of one element of $\ZZ_p$ less).
+
+  However, when proving inhomogeneous linear relations, incorporating the relation into the homomorphism also requires some additional computations in the target group, which in certain cases might compensate the advantage of a smaller proof size.
+\end{remark}
+
+
+\paragraph{Example 4 (REP).}
+Let $\GG$ be a group over an elliptic curve of prime order $p$.
+Proving knowledge of a valid opening of a Pedersen commitment means proving knowledge of $w_1,w_2\in\ZZ_p$ such that $Y=w_1G + w_2H$.
+
+Using the above notation, we have $\varphi:\ZZ_p^2\to\GG:(x_1,x_2)\mapsto x_1G + x_2H$.
+The protocol flow is then as depicted in~\cref{fig:rep}.
+    \begin{protocol}{Proving knowledge of representation.\\[-2.25em]}{fig:rep}{hbpt}
+      \begin{tabular}{@{}l@{\hspace{2em}}c@{\hspace{-3em}}r@{}}
+        $\prover \left( (w_1,w_2),Y,(G,H)\right)$ & & $\verifier \left(Y,(G,H)\right)$  \\
+        \hline  \\
+      % -----------------------------P1-------------------------------
+        $ r_1\sample\ZZ_p$ & &\\
+        $ r_2\sample\ZZ_p$ & &\\
+        $ T \defeq r_1G + r_2H$ & & \\
+        & $\sendr{T}{100}$ \\[2 ex]
+      % -----------------------------CHALLENGE-------------------------------
+        & & $c \sample \ZZ_p$ \\
+        & $\sendl{c}{100}$ & \\[2 ex]
+      % -----------------------------P2-------------------------------
+        $ s_1 \defeq r_1 + cw_1$\\
+        $ s_2 \defeq r_2 + cw_2$\\
+        & $\sendr{s_1,s_2}{100}$ \\[2 ex]
+      % -----------------------------V-------------------------------
+        & & Return $\accept$ iff \\
+        & & $T + cY = s_1G + s_2H$ \\
+      \end{tabular}
+    \end{protocol}
+
+For a given challenge $c\in\ZZ_p$, the simulator chooses $s_1,s_2\sample\ZZ_p$, and sets $T\defeq s_1G + s_2H -cY$.
+It then outputs the simulated transcript $(\commitment,\challenge,(s_1,s_2))$.
+
+\paragraph{Example 5 (DH).}
+Let $\GG$ be a group over an elliptic curve with prime order $p$.
+Proving knowledge of the exponents of a valid Diffie-Hellman triple means proving knowledge of $w_1,w_2\in\ZZ_p$ such that $\statement_1=w_1G$, $\statement_2=w_2G$, and $\statement_3=w_1 w_2 G$.
+Yet, the mapping $\ZZ_p^2\to\GG^3:(x_1,x_2)\mapsto (x_1G,x_2G,x_1x_2G)$ is not a homomorphism, and consequently the basic protocol presented before cannot be deployed directly.
+However, the required multiplicative relation can be proven by observing that the proof goal is equivalent to $\statement_1=w_1G$, $\statement_2=w_2G$, and $\statement_3=w_2\statement_1$, leading the homomorphism $\varphi:\ZZ_p^2\to\GG^3:(x_1,x_2)\mapsto(x_1G,x_2G,x_2\statement_1)$.
+
+The protocol flow is then as depicted in~\cref{fig:dh}.
+    \begin{protocol}{Proving knowledge of representation.\\[-2.25em]}{fig:dh}{t}
+      \begin{tabular}{@{}l@{\hspace{-3em}}c@{\hspace{-2em}}r@{}}
+        $\prover\left( (w_1,w_2),(\statement_1,\statement_2,\statement_3),G)\right)$ & & $\verifier\left((\statement_1,\statement_2,\statement_3),G \right)$  \\
+        \hline  \\
+      % -----------------------------P1-------------------------------
+        $ r_1\sample\ZZ_p$ & &\\
+        $ r_2\sample\ZZ_p$ & &\\
+        $ \commitment_1 \defeq r_1G$ & & \\
+        $ \commitment_2 \defeq r_2G$ & & \\
+        $ \commitment_3 \defeq r_2\statement_1$ & & \\
+        & $\sendr{\commitment_1,\commitment_2,\commitment_3}{100}$ \\[2 ex]
+      % -----------------------------CHALLENGE-------------------------------
+        & & $c \sample \ZZ_p$ \\
+        & $\sendl{c}{100}$ & \\[2 ex]
+      % -----------------------------P2-------------------------------
+        $ s_1 \defeq r_1 + cw_1$\\
+        $ s_2 \defeq r_2 + cw_2$\\
+        & $\sendr{s_1,s_2}{100}$ \\[2 ex]
+      % -----------------------------V-------------------------------
+        & & Return $\accept$ iff \\
+        & & $\commitment_1 + c\statement_1 = s_1G$ \\
+        & & $\commitment_2 + c\statement_2 = s_2G$ \\
+        & & and $\commitment_3 + c\statement_3 = s_2\statement_1$ \\
+      \end{tabular}
+    \end{protocol}
+
+For a given challenge $c\in\ZZ_p$, the simulator chooses $s_1,s_2\sample\ZZ_p$, and sets $\commitment_1\defeq s_1G -c\statement_1$, $\commitment_2\defeq s_2G-c\statement_2$, and $\commitment_3\defeq s_2\statement_1-c\statement_3$.
+It then outputs the simulated transcript $((\commitment_1,\commitment_2,\commitment_3),\challenge,(s_1,s_2))$.
+
+As shown in this example, and in contrast to linear relations, multiplicative relations among witnesses typically require a reformulation of the proof goal in order to be compatible with the generic protocol presented above.
+We refer, e.g., to Krenn~\cite{krenn12} for generic techniques.
+
+
+
+
 \paragraph{Choice of a group.} We advise for the use of prime-order elliptic curves of size either 256 or 512 bits, depending on the desired security of the upper layers in the protocol\footnote{For instance, proving a DH relation with one fixed group element such as a public key, might expose the protocol to cryptanalytic attacks such as Brown-Gallant~\cite{EPRINT:BroGal04} and Cheon’s attack~\cite{EC:Cheon06}, and some implementations might opt for larger curve sizes. We consider these attacks out of scope for this standardization effort, and believe this analysis should be deferred to the concrete security study of the larger protocol.}.
 Concretely, we see fit NIST's \verb|p-521| and \verb|p-256|~\cite{fips2}; SECG's \verb|secp256k1|~\cite{SECG}, or prime-order group abstractions over non prime-order groups, such as as Decaf~\cite{C:Hamburg15} and Ristretto~\cite{cfrg-ristretto-decaf}\footnote{We are aware of the threats reported in
 \url{https://safecurves.cr.yp.to/}.
@@ -989,63 +916,10 @@ Otherwise, the verifier outputs $\pctrue$. Optionally, the implementation can ch
 
 
 
-
-
-\section{Looking Ahead}
-To keep this proposal short and open the discussion to a wider community, we purposely left open some topics that could
-be interesting for more tight use cases.
-
-\paragraph{Delayed input.}
-Despite throughout this work we have assumed that the prover receives as input
-instance and witness already when computing the first message, in some $\Sigma$-protocols (c.f. \cref{fig:dlog,fig:dleq,fig:dleq_2})  knowledge of instance and witness is required only in the last round. Therefore,
- the first two messages can be pre-processed obtaining better practical efficiency.
-% especially when $\Sigma$-protocols are used inside larger protocols.
- Obviously, this feature relevant only for interactive protocols, which
- %is not very relevant when $\Sigma$-protocols become non-interactive in the random oracle model. However, there are
- might include scenarios requiring deniability or of unconditional soundness.
-
-Unfortunately, the OR composition discussed in \cref{sec:or-comp} affects the possible
-delayed-input property of the underlying $\Sigma$-protocols. Consider for instance
-the simple OR composition allowing to prove knowledge of at least one out of
-two discrete logarithms. Even though the underlying two $\Sigma$-protocols
-satisfy the delayed-property, the compound $\Sigma$-protocol obtained through~\cite{C:CraDamSch94}
-forces knowledge of the instances already before computing the first message.
-Alternative information-theoretic OR compositions have been proposed in~\cite{TCC:CPSSV16},
-for practical classes of $\Sigma$-protocols requiring that only one out of two
-instances is known when the protocol starts and obtaining a compound delayed-input
-$\Sigma$-protocol. Relying on computational (i.e., DDH) assumptions, in~\cite{EC:CPSSV16} it is shown how to generically (i.e., not just two and no further restrictions) compose delayed-input $\Sigma$-protocols obtaining a compound delayed-input $\Sigma$-protocol.
-
-\paragraph{Designated verifier proofs.}
-A designated-verifier zero-knowledge proof of knowledge allows the prover to determine an intended receiver for the proof in a way that guarantees that only the specified receiver can actually obtain any conviction about the validity of the prover's claim.
-This is important, e.g., in cases where deniability of the communication is important for privacy reasons, and the prover needs to be ensured that the verifier cannot credibly forward the proof to any third party, as he could have simulated proofs with the same distribution himself.
-Designated-verifier proofs have been studied profoundly in the academic literature~\cite{EC:JakSakImp96,EC:ChaCou18}.
-The most widely known approach is due to Jakobsson et al.~\cite{EC:JakSakImp96}, which achieves the required functionality basically by proving that ``one either knows the secret key, or one is the designated verifier''.
-In a nutshell, the idea is that the designated verifier provides the prover with a public key $\statement_{pk}$, and the verifier then proves that he knows a witness $\witness$ for the claimed statement $\statement$ for the given relation $\relation$, or the secret key $\witness_{pk}$ corresponding to $\statement_{pk}$, using the composition techniques from \cref{sec:composition}.
-
-More formally, let $\relation'$ be such that $(\statement_{pk},\witness_{pk})\in\relation'$ if and only if $\witness_{pk}$ is a secret key corresponding to $\statement_{pk}$, e.g., $\relation'=\{(\statement_{pk},\witness_{sk}):\statement=\witness G\}$.
-Then, the prover computes a proof for the following relation:
-$$
-  \relation^{DS} = \{(\statement,\statement_{pk}),(\witness,\witness_{pk}) : (\statement,\witness)\in\relation\lor (\statement_{pk},\witness_{pk})\in\relation'\}\,.
-$$
-It can now be seen that the prover is now unable to forward the proof to a third party, as he could have generated the proof himself using the secret key.
-It it worth noting that it is of crucial importance that the prover's public key comes together with a proof that the prover indeed knows the secret key:
-otherwise, by provable sampling the public key at random (e.g., as the hash value of some public string), the prover could credibly claim that he does not know the corresponding key, and thus could not have generated the transcript himself.
-
-
-
-\paragraph{Shared proof computation.} Splitting the witness across multiple devices is very appealing from an applied security perspective.
-Recently, we saw a number of protocols based on the same template of of \cref{fig:generic} ~\cite{EPRINT:KomGol20,EPRINT:NicRufSeu20}, especially targeting applications in signatures for cryptocurrencies.
-Nothing prevents those same techniques to be adopted in the (more general) topic of $\Sigma$-protocols, and we believe the community should have a discussion if interactive proof generation should be supported.
-\paragraph{R1CS compatibility.} It is not clear whether it would be beneficial for an API of $\Sigma$-protocols to be aligned with the current zk-proof effort of having a uniform
-language for expressing relations (c.f.\ the community reference~\cite[section 3]{zkproof-reference}, and Drevon's proposal~\cite{jr1cs}).
-Generally, statements about discrete logarithms are dealt with so-called Camenisch--Stadler notation, and we believe community should come to agree on the acceptable trade-offs for expressing the relation in R1CS language.
-
-\ifanonymous\else
-\section*{Acknowledgments}
-The authors thank Jan Bobolz, Mary Maller, and Ivan Visconti for their precious reviews and comments during the early stage of this work.
-This work has partially been funded by the European Union's Horizon 2020 framework programme under grant agreement no. 830929 (CyberSec4Europe).
-\fi
 \bibliographystyle{alpha}
 \bibliography{cryptobib/abbrev3,cryptobib/crypto,additional}
 %
+
+\appendix
+\section{Formal definitions and security claims}
 \end{document}
