@@ -228,60 +228,8 @@ We omit a formal definition here, and refer, e.g., to Unruh~\cite{AC:Unruh17}.
 
 This section is structured in two main parts: in \cref{sec:basicsigma}, we study the generic construction of $\Sigma$-protocols in prime-order groups. In \cref{sec:composition}, we study AND and OR-composition of the basic protocol.
 For in-depth discussions of such protocols we refer to~\cite{bangerter05,AFRICACRYPT:Maurer09,DBLP:journals/dcc/Maurer15}.
-\subsection{Basic $\Sigma$-Protocols in Prime-Order Groups}\label{sec:basicsigma}
-A basic $\Sigma$-protocol for the relation:
-\[
-  \relation=\set{((\statement_1,\dots,\statement_m),(w_1,\dots,w_n)) : (\statement_1,\dots,\statement_m)=\varphi(w_1,\dots,w_n)}
-\]
- for a group homomorphism $\varphi:\ZZ_p^n\to\GG^m$ is given by the following algorithms:
 
-\begin{enumerate}
-  \item\label{item:basic:p1}
-    The prover's first algorithm $\prover_1(\vec \witness,\vec \statement)$ consists of the following steps:
-    \begin{enumerate}
-      \item\label{item:basic:p1:randomness}
-        It chooses random elements $r_1,\dots,r_n\sample\ZZ_p$.
-      \item
-        It then computes $(\commitment_1,\dots,\commitment_m)\gets\varphi(r_1,\dots,r_n)$.
-      \item
-	The algorithm sets $\st\defeq (r_1,\dots,r_n)$ and $\vec \commitment\defeq(\commitment_1,\dots,\commitment_m)$.
-      \item
-        It finally outputs $(\vec \commitment,\st)$.
-    \end{enumerate}
-  \item\label{item:basic:p2}
-    The prover's second algorithm $\prover_2(\vec \witness,\vec Y ,\challenge,\st)$ proceeds as follows:
-    \begin{enumerate}
-      \item
-        It checks that $c\in\ZZ_p$ and aborts if this is not the case.
-      \item
-	It then parses $(r_1,\dots,r_n)\defeq \st$ and $(w_1,\dots,w_n)\defeq \vec \witness$.
-      \item
-        It computes its response as $s_i\defeq r_i+cw_i$ for $i=1,\dots,n$.
-    \end{enumerate}
-  \item\label{item:basic:v}
-    The verifier's algorithm $\verifier(\vec \statement,\vec \commitment,\challenge,\vec \response)$ proceeds as follows:
-    \begin{enumerate}
-      \item It parses $(\response_1, \dots, \response_n) \defeq \vec \response$, $(\commitment_1, \dots, \commitment_m) \defeq \vec \commitment$, and $(\statement_1, \dots, \statement_m) = \vec \statement$.
-      \item\label{item:basic:v:checks}
-        It checks that $\response_i\in\ZZ_p$ for $i=1,\dots,n$ and $\commitment_j\in\GG$ for $j=1,\dots,m$, and outputs $0$ if this is not the case.
-      \item
-	It checks whether $(\commitment_1 + c\statement_1,\dots,\commitment_m + c\statement_m) = \varphi(s_1,\dots,s_n)$, and outputs $\accept$ if this is the case; otherwise, $\verifier$ outputs $\reject$.
-    \end{enumerate}
-  \item\label{item:basic:sim}
-    The required simulator $\simulator(\vec \statement,c)$ for a basic $\Sigma$-protocol works as follows:
-    \begin{enumerate}
-      \item
-        It parses $(\statement_1,\dots,\statement_m)\defeq \vec \statement$.
-      \item\label{item:basic:sim:s}
-        It chooses $\response_1,\dots,\response_n\sample\ZZ_p$.
-      \item
-        It sets $(\commitment_1,\dots,\commitment_m) \defeq \varphi(s_1,\dots,s_n) - c(\statement_1,\dots,\statement_m)$.
-      \item
-        Finally, the algorithm outputs the simulated transcript by setting $(\vec \commitment,\challenge,\vec \response)\defeq((\commitment_1,\dots,\commitment_m),\challenge,(\response_1,\dots,\response_n))$.
-    \end{enumerate}
-\end{enumerate}
-
-\subsubsection{Proving linear relations among witnesses.}
+\subsection{Proving linear relations among witnesses.}
 
   While the above protocol allows one to efficiently prove knowledge of a pre-image under a homomorphism, many protocols found in the literature require one to prove relations among witnesses.
   Specifically, they require to prove relations like the following:
@@ -446,11 +394,6 @@ The interactive version of $\Sigma$-protocols presented in this paper is unfit f
 \end{remark}
 
 
-We describe two ways for achieving non-interactivity. Both variants require identical computations on the prover's side.
-The first allows for efficient batching, but requires point validation and (depending on the hash function, or the elliptic curve chosen) might lead to
-slightly larger proof sizes. The second requires no point validation and only has the hash value.
-We call the first variant \emph{batchable}, and the latter \emph{short}.
-Both constructions are based on the seminal work of Fiat and Shamir~\cite{C:FiaSha86} and subsequent work, e.g., by Bernhard et al.~\cite{AC:BerPerWar12}.
 The underlying idea of the so-called Fiat-Shamir transform is to simulate the verifier's random challenge by means of a random oracle, depending on the first message computed by the prover.
 More precisely, the challenge is computed as
 $c\defeq\hash(\vec \statement,\vec \commitment, \ctx, \stag)$,
@@ -466,76 +409,6 @@ the context string $\ctx$ is a tuple $\ctx = (\domsepctx, \curvectx, \generators
 \end{itemize}
 The tag $\stag$ contains an arbitrary string, possibly empty, that the prover can attach to the proof. This can allow to construct e.g. signatures and ring signatures.
 We discuss more in details the content the hash in \cref{sec:instantiation}.
-
-\subsubsection{Batchable form}
-
-
-\begin{enumerate}
-  \item
-    The prover's algorithm $\batchprover(\vec \witness, \vec \statement,\ctx, \stag)$ works as follows:
-    \begin{enumerate}
-      \item
-        The algorithm first computes $(\vec \commitment,\st)\gets\prover_1(\vec \witness, \vec \statement)$.
-      \item
-        It computes the challenge by setting $c\defeq\hash(\vec \commitment, \vec \statement,\ctx, \stag)$.
-      \item
-        The algorithm defines $\vec \response\gets\prover_2(\vec \witness, \vec \statement,\challenge,\st)$.
-      \item
-        The algorithm outputs $(\vec \commitment, \vec \response)$.
-    \end{enumerate}
-  \item
-    The verifier's algorithm $\batchverifier(\vec \statement, \ctx, \stag, (\vec \commitment,\vec s))$ works as follows:
-    \begin{enumerate}
-      \item
-        It recomputes the challenge as $c\gets\hash(\vec \statement, \vec \commitment, \ctx, \stag)$.
-      \item
-        It outputs whatever $\verifier(\vec \statement,\vec \commitment,\challenge,\vec \response)$ outputs.
-    \end{enumerate}
-\end{enumerate}
-
-
-\paragraph{Verification equation.}
-The batchable form can take advantage of the following fact.
-Given the single verification equations of the form:
-\[
-   \commitment_i + c_i Y_i = \sum_j s_{i, j} G_j
-\]
-for $i=0, \dots,\ell-1$,
-%(So, $T \in \GG^\ell$, $c \in \ZZ_p^\ell$ and $s \in \ZZ_p^{\ell \times m}$ and $\mat G \in \GG^{m \times \ell}$.)
-the verifier can sample a random vector of coefficients $a \in \ZZ_p^\ell$ instead test that:
-\[
-  \left(\sum_{i=0}^{\ell-1} a_i \commitment_i\right) + \left(\sum_{i=0}^{\ell-1} a_i \cdot  c_i \statement_i \right) = \left(\sum_{i=0}^{\ell-1} a_i \cdot \response_i G_i\right).
-\]
-If the matrix $G_{i, j}$ of generators has identical rows, by linearity the right-hand side can be computed as a single scalar product.
-If the statements $\statement_i$'s have identical rows, by linearity the second term in the equation can be computed as a single scalar product.
-The random vector $\vec a$ can be \emph{deterministically} generated by fixing $a_0 \defeq 1$ and setting $(a_1, \dots, a_{\ell-1}) \defeq \prg(\vec Y, \vec T,  \challenge, \vec s)$~\cite{bip-schnorr}.
-
-\subsubsection{Short form}
-\begin{enumerate}
-  \item
-    The prover's algorithm $\shortprover(\vec \witness, \vec \statement,\ctx, \stag)$ works as follows:
-    \begin{enumerate}
-      \item
-        The algorithm first computes $(\vec \commitment,\st)\gets\prover_1(\vec \witness, \vec \statement)$.
-      \item
-        It computes the challenge by setting $c\defeq\hash(\vec \commitment, \vec \statement,\ctx, \stag)$.
-      \item
-        The algorithm defines $\vec \response\gets\prover_2(\vec \witness,\vec \statement, \challenge,\st)$.
-      \item
-        The algorithm outputs $(\challenge,\vec \response)$.
-    \end{enumerate}
-  \item
-    The verifier's algorithm $\shortverifier(\vec \statement, \ctx, \stag, (\challenge, \vec \response))$ works as follows:
-    \begin{enumerate}
-      \item\label{item:fslong:v:recomputet}
-        The algorithm recomputes the first message $\vec \commitment$ by running the appropriate steps of the simulator $\simulator$.
-
-         More precisely, we stress that, on input a challenge $\challenge$, all simulators introduced so far first draw a response $\response$, and then compute the commitment $\commitment$ from $\challenge$ and $\response$.
-        Instead of sampling $\response$, the algorithm now uses its input value to recompute $\commitment$ according to the remaining steps of the simulator.
-        \item
-        The algorithm checks that $c=\hash(\vec \commitment, \vec \statement, \ctx, \tau)$ and rejects if this is not the case.
-    \end{enumerate}
-\end{enumerate}
 
 
 
@@ -659,6 +532,141 @@ In this section, we consider the concrete security of $\Sigma$-protocols and ill
 This table is greatly inspired from the remarkable bibliographic work of Lueks et al.~\cite{zksk}.
 
 
+\subsection{Fiat-Shamir}
+We describe two ways for achieving non-interactivity. Both variants require identical computations on the prover's side.
+The first allows for efficient batching, but requires point validation and (depending on the hash function, or the elliptic curve chosen) might lead to
+slightly larger proof sizes. The second requires no point validation and only has the hash value.
+We call the first variant \emph{batchable}, and the latter \emph{short}.
+Both constructions are based on the seminal work of Fiat and Shamir~\cite{C:FiaSha86} and subsequent work, e.g., by Bernhard et al.~\cite{AC:BerPerWar12}.
+
+
+
+\subsubsection{Batchable form}
+
+
+\begin{enumerate}
+  \item
+    The prover's algorithm $\batchprover(\vec \witness, \vec \statement,\ctx, \stag)$ works as follows:
+    \begin{enumerate}
+      \item
+        The algorithm first computes $(\vec \commitment,\st)\gets\prover_1(\vec \witness, \vec \statement)$.
+      \item
+        It computes the challenge by setting $c\defeq\hash(\vec \commitment, \vec \statement,\ctx, \stag)$.
+      \item
+        The algorithm defines $\vec \response\gets\prover_2(\vec \witness, \vec \statement,\challenge,\st)$.
+      \item
+        The algorithm outputs $(\vec \commitment, \vec \response)$.
+    \end{enumerate}
+  \item
+    The verifier's algorithm $\batchverifier(\vec \statement, \ctx, \stag, (\vec \commitment,\vec s))$ works as follows:
+    \begin{enumerate}
+      \item
+        It recomputes the challenge as $c\gets\hash(\vec \statement, \vec \commitment, \ctx, \stag)$.
+      \item
+        It outputs whatever $\verifier(\vec \statement,\vec \commitment,\challenge,\vec \response)$ outputs.
+    \end{enumerate}
+\end{enumerate}
+
+
+\paragraph{Verification equation.}
+The batchable form can take advantage of the following fact.
+Given the single verification equations of the form:
+\[
+   \commitment_i + c_i Y_i = \sum_j s_{i, j} G_j
+\]
+for $i=0, \dots,\ell-1$,
+%(So, $T \in \GG^\ell$, $c \in \ZZ_p^\ell$ and $s \in \ZZ_p^{\ell \times m}$ and $\mat G \in \GG^{m \times \ell}$.)
+the verifier can sample a random vector of coefficients $a \in \ZZ_p^\ell$ instead test that:
+\[
+  \left(\sum_{i=0}^{\ell-1} a_i \commitment_i\right) + \left(\sum_{i=0}^{\ell-1} a_i \cdot  c_i \statement_i \right) = \left(\sum_{i=0}^{\ell-1} a_i \cdot \response_i G_i\right).
+\]
+If the matrix $G_{i, j}$ of generators has identical rows, by linearity the right-hand side can be computed as a single scalar product.
+If the statements $\statement_i$'s have identical rows, by linearity the second term in the equation can be computed as a single scalar product.
+The random vector $\vec a$ can be \emph{deterministically} generated by fixing $a_0 \defeq 1$ and setting $(a_1, \dots, a_{\ell-1}) \defeq \prg(\vec Y, \vec T,  \challenge, \vec s)$~\cite{bip-schnorr}.
+
+\subsubsection{Short form}
+\begin{enumerate}
+  \item
+    The prover's algorithm $\shortprover(\vec \witness, \vec \statement,\ctx, \stag)$ works as follows:
+    \begin{enumerate}
+      \item
+        The algorithm first computes $(\vec \commitment,\st)\gets\prover_1(\vec \witness, \vec \statement)$.
+      \item
+        It computes the challenge by setting $c\defeq\hash(\vec \commitment, \vec \statement,\ctx, \stag)$.
+      \item
+        The algorithm defines $\vec \response\gets\prover_2(\vec \witness,\vec \statement, \challenge,\st)$.
+      \item
+        The algorithm outputs $(\challenge,\vec \response)$.
+    \end{enumerate}
+  \item
+    The verifier's algorithm $\shortverifier(\vec \statement, \ctx, \stag, (\challenge, \vec \response))$ works as follows:
+    \begin{enumerate}
+      \item\label{item:fslong:v:recomputet}
+        The algorithm recomputes the first message $\vec \commitment$ by running the appropriate steps of the simulator $\simulator$.
+
+         More precisely, we stress that, on input a challenge $\challenge$, all simulators introduced so far first draw a response $\response$, and then compute the commitment $\commitment$ from $\challenge$ and $\response$.
+        Instead of sampling $\response$, the algorithm now uses its input value to recompute $\commitment$ according to the remaining steps of the simulator.
+        \item
+        The algorithm checks that $c=\hash(\vec \commitment, \vec \statement, \ctx, \tau)$ and rejects if this is not the case.
+    \end{enumerate}
+\end{enumerate}
+
+
+
+\subsection{Basic $\Sigma$-Protocols in Prime-Order Groups}\label{sec:basicsigma}
+A basic $\Sigma$-protocol for the relation:
+\[
+  \relation=\set{((\statement_1,\dots,\statement_m),(w_1,\dots,w_n)) : (\statement_1,\dots,\statement_m)=\varphi(w_1,\dots,w_n)}
+\]
+ for a group homomorphism $\varphi:\ZZ_p^n\to\GG^m$ is given by the following algorithms:
+
+\begin{enumerate}
+  \item\label{item:basic:p1}
+    The prover's first algorithm $\prover_1(\vec \witness,\vec \statement)$ consists of the following steps:
+    \begin{enumerate}
+      \item\label{item:basic:p1:randomness}
+        It chooses random elements $r_1,\dots,r_n\sample\ZZ_p$.
+      \item
+        It then computes $(\commitment_1,\dots,\commitment_m)\gets\varphi(r_1,\dots,r_n)$.
+      \item
+	The algorithm sets $\st\defeq (r_1,\dots,r_n)$ and $\vec \commitment\defeq(\commitment_1,\dots,\commitment_m)$.
+      \item
+        It finally outputs $(\vec \commitment,\st)$.
+    \end{enumerate}
+  \item\label{item:basic:p2}
+    The prover's second algorithm $\prover_2(\vec \witness,\vec Y ,\challenge,\st)$ proceeds as follows:
+    \begin{enumerate}
+      \item
+        It checks that $c\in\ZZ_p$ and aborts if this is not the case.
+      \item
+	It then parses $(r_1,\dots,r_n)\defeq \st$ and $(w_1,\dots,w_n)\defeq \vec \witness$.
+      \item
+        It computes its response as $s_i\defeq r_i+cw_i$ for $i=1,\dots,n$.
+    \end{enumerate}
+  \item\label{item:basic:v}
+    The verifier's algorithm $\verifier(\vec \statement,\vec \commitment,\challenge,\vec \response)$ proceeds as follows:
+    \begin{enumerate}
+      \item It parses $(\response_1, \dots, \response_n) \defeq \vec \response$, $(\commitment_1, \dots, \commitment_m) \defeq \vec \commitment$, and $(\statement_1, \dots, \statement_m) = \vec \statement$.
+      \item\label{item:basic:v:checks}
+        It checks that $\response_i\in\ZZ_p$ for $i=1,\dots,n$ and $\commitment_j\in\GG$ for $j=1,\dots,m$, and outputs $0$ if this is not the case.
+      \item
+	It checks whether $(\commitment_1 + c\statement_1,\dots,\commitment_m + c\statement_m) = \varphi(s_1,\dots,s_n)$, and outputs $\accept$ if this is the case; otherwise, $\verifier$ outputs $\reject$.
+    \end{enumerate}
+  \item\label{item:basic:sim}
+    The required simulator $\simulator(\vec \statement,c)$ for a basic $\Sigma$-protocol works as follows:
+    \begin{enumerate}
+      \item
+        It parses $(\statement_1,\dots,\statement_m)\defeq \vec \statement$.
+      \item\label{item:basic:sim:s}
+        It chooses $\response_1,\dots,\response_n\sample\ZZ_p$.
+      \item
+        It sets $(\commitment_1,\dots,\commitment_m) \defeq \varphi(s_1,\dots,s_n) - c(\statement_1,\dots,\statement_m)$.
+      \item
+        Finally, the algorithm outputs the simulated transcript by setting $(\vec \commitment,\challenge,\vec \response)\defeq((\commitment_1,\dots,\commitment_m),\challenge,(\response_1,\dots,\response_n))$.
+    \end{enumerate}
+\end{enumerate}
+
+
 \subsubsection{Examples}
 
 \paragraph{Example 1 (DLOG).}
@@ -753,6 +761,9 @@ The protocol flow is then as depicted in~\cref{fig:dleq_2}.
 
 For a given challenge $c\in\ZZ_p$, the simulator chooses $s\sample\ZZ_p$, and sets $\commitment_1\gets sG-c\statement_1$ and $\commitment_2\gets sH - c\statement_2$.
 It then outputs the simulated transcript $((\commitment_1,\commitment_2),\challenge,s)$.
+
+
+
 
 
 \begin{remark}
