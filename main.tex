@@ -6,7 +6,7 @@
 \usepackage{adjustbox}
 \usepackage{amsmath}
 \usepackage{amssymb}
-
+\usepackage{authblk}
 \usepackage[advantage,
             adversary,
             asymptotics,
@@ -41,13 +41,16 @@
 \newtheorem{theorem}{Theorem}
 \newtheorem{remark}{Remark}
 
-\begin{document}
 
 \title{Proposal: $\Sigma$-protocols}
 %
 
-\author{Stephan Krenn \and
-        Michele Orr\`u}
+% \affil[1]{AIT}
+\author{Michele Orru \thanks{michele.orru@berkeley.edu} \and Stephan Krenn
+\thanks{stephan.krenn@ait.ac.at}
+}
+% \afflil[2]{UC Berkeley}
+\begin{document}
 %
 \maketitle              % typeset the header of the contribution
 %
@@ -175,7 +178,7 @@ A $\Sigma$-protocol is said to have \emph{perfectly unique responses} if it is i
 In case that it is only computationally infeasible (also for a quantum attacker) to find two responses for given $\statement, \commitment,\challenge$, the protocol is said to have \emph{(computationally) unique responses}.
 
 
-\subsubsection{Proof Systems and Proofs of Knowledge}
+\subsection{Proof systems and proofs of knowledge}
 
 The concept of interactive proofs of knowledge was first mentioned by Goldreich et al.~\cite{STOC:GolMicRac85}, and then refined by Feige et al.~\cite{STOC:FeiFiaSha87}.
 The definitions in the following are due to Bellare and Goldreich~\cite{C:BelGol92}.
@@ -936,4 +939,5 @@ Otherwise, the verifier outputs $\pctrue$. Optionally, the implementation can ch
 
 \appendix
 \section{Formal definitions and security claims}
+\section{List of implementations up to date}
 \end{document}
