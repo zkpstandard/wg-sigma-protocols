@@ -10,5 +10,6 @@
 *.fls
 *.dvi
 *.synctex(busy)
+*.toc
 
 .vscode
