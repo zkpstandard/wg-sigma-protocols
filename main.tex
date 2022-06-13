@@ -64,34 +64,6 @@ $\Sigma$-protocols played an essential component in the building of a number of 
 constructions,
 such as anonymous credentials~\cite{CCS:ChaMeiZav14}, password-authenticated key exchange~\cite{jpake}, signatures~\cite{C:Schnorr89},
 ring signatures~\cite{borromeansig}, blind signatures~\cite{CCS:PoiSte97}, multi signatures~\cite{CCS:NRSW20}, threshold signatures~\cite{EPRINT:KomGol20} and more.
-Lueks et al.~\cite{zksk}, reported that solely in the years 2018-2019 editions of PETS, ACM CCS, WPES, NDSS,
-7 publications use  $\Sigma$-protocols.
-Yet, there is no standardized way of implementing them and as a result a lot of implementations have shared common pitfalls (cf.\ \cref{sec:motivation}).
-
-We make a first attempt at the standardization of $\Sigma$-protocols by proposing a framework for proving statements about discrete logarithms and related relations in prime-order groups, targeting specifically groups in elliptic curves. To the best of our knowledge, currently deployed and implemented $\Sigma$-protocols mostly rely on the following sub-set of features:
-
-\begin{itemize}
-  \item \textbf{Discrete logarithm equality, Diffie-Hellman triples.}
-  Proving discrete logarithm equality, DDH triples, or more in general linear relations among secrets is an essential task for some protocols. This is the case of some VOPRFs such as~\cite{AC:JarKiaKra14},
-  which is currently in process of standardization~\cite{cfrg-voprf}, and internally employs $\Sigma$-protocols to prove discrete logarithm equality.
-  DLEQ proofs are also being used by Privacy Pass~\cite{PoPETS:DGSTV18}, a lightweight anonymous credential that has been implemented and deployed at scale by Cloudflare, Brave
-  Browser, and others.
-  There are also other works, published in recent academic conferences, that rely on this type of relations: Cryptography for \#metoo~\cite{PoPETS:KuyKraRab19}; Solidus~\cite{CCS:CZJKJS17}; ClaimChain~\cite{ClaimChain}.
-  \item \textbf{Knowledge of plaintexts, openings of commitments}
-  The so-called AND-composition of dlog relations has been used over a number of protocols,
-  including in Algebraic MACs~\cite{CCS:ChaMeiZav14}.
-  Algebraic MACs are now used in Signal's group chats~\cite{CCS:ChaPerZav20} and deployed to millions of users.
-  \item \textbf{Proving knowledge of one among multiple discrete logarithms.}
-  OR-composition of $\Sigma$-protocols
-  has been used for range proofs~\cite{borromeansig}, and ring signatures: it enables for private transactions in CryptoNote (Monero)~\cite{monero}.
-  OR-composition is also used in other tools such as Mesh~\cite{PoPETS:AlTGon19}.
-  %\item Coconut~\cite{NDSS:SABMD19} with threshold Issuance Selective Disclosure Credentials with Applications to Distributed Ledgers;
-  % \item Anonymous Credentials Light~\cite{CCS:BalLys13}
-\end{itemize}
-
-
-All these protocols can be implemented using the API that we propose in \cref{sec:composition}.
-A request for standardization has also been posted on the \href{https://community.zkproof.org/t/standardizing-sigma-protocols/471/}{zk-proof community} and received a fair amount of interest.
 
 \section{Notation and Terminology}
 \label{sec:notation}
@@ -172,58 +144,18 @@ A $\Sigma$-protocol is said to have \emph{unpredictable commitments} if the prob
   \prob{T'=T'' : T'\gets\prover_1(\witness,\statement), T''\gets\prover_1(\witness,\statement)} \leq \negl\,.
 \]
 
-A $\Sigma$-protocol is said to have \emph{perfectly unique responses} if it is infeasible to find two distinct valid responses for a given first message and fixed challenge, i.e., there exist no values $\statement,\commitment,\challenge,s',s''$ with $s'\ne s''$ such that $\verifier(\statement,\commitment,\challenge,s')=\verifier(\statement,\commitment,\challenge,s'')=\accept$.
-In case that it is only computationally infeasible (also for a quantum attacker) to find two responses for given $\statement, \commitment,\challenge$, the protocol is said to have \emph{(computationally) unique responses}.
 
 
-\subsection{Proof systems and proofs of knowledge}
+\subsection{Terminology}
 
-The concept of interactive proofs of knowledge was first mentioned by Goldreich et al.~\cite{STOC:GolMicRac85}, and then refined by Feige et al.~\cite{STOC:FeiFiaSha87}.
-The definitions in the following are due to Bellare and Goldreich~\cite{C:BelGol92}.
+Zero knowledge means that the protocol does not leak any information about the prover's messages beyond what the attacker may infer form the proof itself or from other sources~\cite[1.6.4]{zkproof-reference}.
 
-Intuitively, a proof system is sound, if it is not possible to make the verifier accept for statements for which no valid witness exists, cf. also~\cite[1.6.2]{zkproof-reference}.
-\begin{definition}\label{def:soundness}
-  Let $\relation$ be a binary relation, $\sigma:\NN\to[0,1]$, and let $\prover$ and $\verifier$ specify a probabilistic interactive protocol, where at least $\verifier$ is polynomial time.
-  The protocol is called \emph{sound} with \emph{soundness error} $\sigma$, if for every $Y\notin\lang(\relation)$,
-  %every $w\in\bin^*$,
-  and every interactive algorithm $\prover^*$, the probability that $\prover^*$ makes $\verifier$ output $\accept$ on common input $Y$ is bounded above by $\sigma(|Y|)$.
-\end{definition}
+Soundness means that it is not possible to make the verifier accept for statements for which no valid witness exists~\cite[1.6.2]{zkproof-reference}.
+If soundness relies on computational assumption, then we call the proof an \emph{argument}.
+If a proof is extractable, that is, the the witness does not only exist but can be efficiently extracted, then the protocol a proof of knowledge~\cite{STOC:GolMicRac85,STOC:FeiFiaSha87,C:BelGol92} and is said to satisfy \emph{knowledge soundness}.
+If the proof of knowledge is non-malleable, that is: if it is still secure against man-in-the middle attacks, then we call the proof \emph{simulation-extractable}.
 
-Informally, an interactive protocol is a proof of knowledge, if every party that is able to make the verifier accept with sufficiently high probability needs to know a valid witness or would be able to compute such a witness, cf. also~\cite[1.6.3]{zkproof-reference}.
-\begin{definition}\label{def:pok}
-  Let $\relation$ be a binary relation, $\kappa:\NN\to[0,1]$ and let $\prover$ and $\verifier$ specify a probabilistic interactive protocol, where at least $\verifier$ is polynomial time.
-  The protocol is then called a \emph{proof of knowledge} for $\relation$ with \emph{knowledge error} $\kappa$, if the following conditions are satisfied:
-  \begin{description}
-    \item[Completeness:]
-      If $(Y,w)\in\relation$, then the verifier (on input $Y$) always outputs $\accept$ in an interaction with the prover (on input $(Y,w)$).
-    \item[Knowledge soundness:]
-      There exists a probabilistic algorithm $\ext$ (the \emph{knowledge extractor}) and a polynomial $\poly$ such that the following holds:
-      for every interactive algorithm $\prover^*$ and every $Y\in\lang(\relation)$, let $\varepsilon(Y,\prover^*)$ be the probability that $\prover^*$ makes $\verifier$ output $\accept$ on common input $Y$.
-      If $\varepsilon(Y,\prover^*)>\kappa(|Y|)$, then $\ext$, having rewindable black-box access to $\prover^*$, outputs $w'$ satisfying $(Y,w')\in\relation$ in an expected number of steps bounded by $\frac{\poly[|Y|]}{\varepsilon(Y,\prover^*)-\kappa(|Y|)}$.
-  \end{description}
-\end{definition}
-
-Informally, a proof system is simulation sound, if no adversary is able to generate wrong proofs, even if it can request arbitrary fake proofs from a simulator.
-The following definition is taken from Unruh~\cite{AC:Unruh17}.
-\begin{definition}[Informal]
-  A non-interactive proof system $(\prover,\verifier)$ is \emph{strongly simulation sound} with respect to a simulator $\simulator$, if and only if for any (potentially quantum) polynomial-time algorithm $\adv$, the following probability is negligible:
-  $$
-    \Pr\left[\verifier^{H'}(\statement,\pi)=\accept\land\statement\notin\lang(\relation)\land(\statement,\pi)\notin\mathsf{S} : (\statement,\pi)\gets\adv^{H,\simulator}(1^\secpar) \right]\,,
-  $$
-  where $\pi$ denotes the proof output by the prover.
-  Here, $H$ is a random oracle that the adversary has access to, and $H'$ is the state of the random oracle after the $\adv$'s output.
-  Furthermore, $\mathsf{S}$ is a list of all input/output pairs of $\adv$'s invocations of $\simulator$.
-
-  Similarly, the proof system is \emph{weakly simulation sound} if the following probability is negligible:
-  $$
-    \Pr\left[\verifier^{H'}(\statement,\pi)=\accept\land\statement\notin\lang(\relation)\land\statement\notin\mathsf{S} : (\statement,\pi)\gets\adv^{H,\simulator}(1^\secpar) \right]\,,
-  $$
-  where $\mathsf{S}$ now only contains the inputs of $\adv$'s invocations of $\simulator$.
-\end{definition}
-
-Finally, simulation extractability models the property that any adversary being able to generate a valid proof for a statement $\statement$ needs to know a valid witness $\witness$ for $\statement$, even if it had seen many simulated proofs before.
-We omit a formal definition here, and refer, e.g., to Unruh~\cite{AC:Unruh17}.
-
+All protocols defined here are simulation-extractable. A simulation-extractable proof is a proof of knowledge. A proof of knowledge is an argument.
 
 \section{Generic $\Sigma$-Protocols}
 
@@ -411,120 +343,12 @@ the context string $\ctx$ is a tuple $\ctx = (\domsepctx, \curvectx, \generators
 The tag $\stag$ contains an arbitrary string, possibly empty, that the prover can attach to the proof. This can allow to construct e.g. signatures and ring signatures.
 We discuss more in details the content the hash in \cref{sec:instantiation}.
 
+\subsection{Serializing the proof}
 
-
-
-\subsection{Concurrent Zero-Knowledge}\label{sec:concurrent}
-The basic protocols presented above cannot directly be used for practical applications, as the zero-knowledge property does not hold against malicious verifiers.
-While for most applications the Fiat-Shamir heuristic is the preferred way to also address this challenge, there might be cases where interactive protocols are still preferable, e.g., for deniability reasons.
-The following construction, due to Damg\r{a}rd~\cite{EC:Damgard00}, allows one to turn any $\Sigma$-protocol into a concurrently zero-knowledge version also against malicious adversaries.
-
-In the following, $({\sf Commit}, {\sf VerCommit})$ is a commitment scheme, where the interfaces are as specified in Benarroch et al.~\cite[Section 4.3]{becafi19}.
-The commitment scheme used in the following is required to be a trapdoor commitment scheme (cf., e.g., Fischlin~\cite{fischlin01} for an in-depth discussion of such schemes), with a natural candidate being the scheme introduced by Pedersen~\cite{C:Pedersen91}.
-\begin{enumerate}
-  \item
-    The verifier's first algorithm $\verifier_1(\vec \statement)$ proceeds as follows:
-    \begin{enumerate}
-      \item
-	It samples $\challenge\sample\ZZ_p$ and computes $(com,o)\defeq{\sf Commit}(ck,\challenge)$.
-      \item
-        It sets $\st_\verifier\defeq(\challenge,o)$.
-      \item
-        It sends $com$ to the prover.
-    \end{enumerate}
-  \item
-    The prover's first algorithm $\prover_1(\vec \witness,\vec \statement,com)$ consists of the following steps:
-    \begin{enumerate}
-      \item
-	The algorithm computes $(\vec \commitment',\st') \defeq \prover_1(\vec \witness,\vec \statement)$.
-      \item
-	It outputs $(\vec \commitment,\st) \defeq (\vec \commitment',(\st',com))$.
-    \end{enumerate}
-  \item
-    The verifier's second algorithm $\verifier_1(\vec \statement,\vec \commitment,\st_\verifier)$ proceeds as follows:
-    \begin{enumerate}
-      \item
-        It parses $\st_\verifier=(\challenge,o)$.
-      \item
-        It sends $(\challenge,o)$ to the prover.
-    \end{enumerate}
-  \item
-    The prover's second algorithm $\prover_2(\vec \witness,\vec \statement,\challenge,o,\st)$ proceeds as follows:
-    \begin{enumerate}
-      \item
-        The algorithm parses $\st=(\st',com)$.
-      \item
-        It checks that ${\sf VerCommit}(com,\challenge,o)=\accept$ and aborts otherwise.
-      \item
-        It outputs $s\defeq\prover_2(\vec \witness, \vec \statement,\challenge,\st')$.
-    \end{enumerate}
-  \item
-    The verifier's final algorithm $\verifier_3(\vec \statement,\vec \commitment,\challenge,\response)$ proceeds as follow:
-    \begin{enumerate}
-      \item
-	The algorithm outputs $\verifier(\vec \statement,\vec \commitment,\challenge,\response)$.
-    \end{enumerate}
-\end{enumerate}
-
-
-
-
-\section{Security Considerations}
-
-In the following, we give a concise overview of the most important security guarantees provided by the constructions presented above.
-For full details and proofs, we refer to the original literature.
-
-\begin{description}
-  \item[$\Sigma$-Protocols.]
-  The protocol presented in \cref{sec:basicsigma} is a $\Sigma$-protocol, if $\GG$ is a cyclic group of prime order $p$, and $\varphi:\ZZ_p^n\to\GG^m$ is a group homomorphism.
-
-  If $\varphi$ is non-trivial (there exists $\vec x\in\ZZ_p^n$ such that $\varphi(\vec x)\ne (1,\dots,1)\in\GG^m$), the protocol has unpredictable commitments.
-  Finally, if $\varphi$ is an injective function, the protocol has unique responses.
-
-  For details we refer, e.g., to~\cite{cramer97}.
-
-  \item[Composition.]
-    The composed protocols presented in \cref{sec:composition} are $\Sigma$-protocols if the individual protocols are $\Sigma$-protocols, see, e.g.,~\cite{C:CraDamSch94}.
-
-  If at least one of the composed protocols has unpredictable commitments, then so have the protocols for $\relation^\land$ and $\relation^\lor$.
-
-  If both protocols have unique responses, then so has the protocol for $\relation^\land$.
-  Note that unique responses are not preserved under OR-compositions.
-
-  \item[Proof of Knowledge.]
-    All protocols presented in \cref{sec:basicsigma,sec:composition} are proofs of knowledge, see Damg\r{a}rd~\cite{damgard04}.
-    The non-interactive protocol (cf.\ \cref{sec:fs}) is secure against unbounded malicious provers, provided that they make a polynomial number of queries to the random oracle~\cite{JC:PoiSte00}.
-    {Existence of a straight-line extractor for non-interactive $\Sigma$-protocols was proposed by Fuchsbauer et al.~\cite{C:FucKilLos18}, but under the (stronger) setting of the algebraic group model.}
-  \item[Concurrent Zero-Knowledge.]
-    The protocol in \cref{sec:concurrent} is concurrently zero-knowledge against arbitrary verifiers if the used commitment scheme is a trapdoor commitment scheme, cf.~\cite{EC:Damgard00}.
-%
-  \item[Completeness.]
-    For all the $\Sigma$-protocols presented above, the Fiat-Shamir transform is complete.
-
-
-    For a proof we refer to Unruh~\cite{AC:Unruh17}, which uses the fact that all presented protocols are complete and have unpredictable commitments;
-    Unruh also gives a surprising counter-example in case that commitments are not unpredictable.
-  \item[Zero-Knowledge.]
-    For all $\Sigma$-protocol presented above, the Fiat-Shamir transform yields a zero-knowledge protocol in the random oracle model.
-
-    For a proof we refer to Faust et al.~\cite{INDOCRYPT:FKMV12} and Unruh~\cite{AC:Unruh17}. These security guarantees also hold against a quantum attacker, and rely on the honest-verifier zero-knowledge property of $\Sigma$-protocols and the fact that the commitments in all our protocols are unpredictable.
-  \item[Soundness.]
-    If a $\Sigma$-protocol has a negligible soundness error, then the Fiat-Shamir transform is sound according to~\cref{def:soundness}.
-    This security guarantee also holds against quantum attackers.
-
-    For a proof we refer to Pointcheval and Stern~\cite{JC:PoiSte00} and Unruh~\cite{AC:Unruh17}.
-
-
-  \item[Simulation soundness.]
-    In all protocols presented in \cref{sec:basicsigma,sec:composition}, the Fiat-Shamir transform is  weakly simulation-sound.
-    If the protocol additionally has unique responses, then the Fiat-Shamir transform is  strongly simulation-sound.
-    These security guarantees also holds against quantum attackers.
-
-    For a proof we refer to Unruh~\cite{AC:Unruh17} and Faust et al.~\cite{INDOCRYPT:FKMV12}.
-  \item[Simulation extractability.]
-    For all protocols presented in \cref{sec:basicsigma,sec:composition}, the non-interactive Fiat-Shamir transform is simulation %-sound
-    extractable~\cite[Thm. 1]{AC:BerPerWar12}.
-\end{description}
+There are two possible output:
+\begin{itemize}
+\item
+\end{itemize}
 
 \section{$\Sigma$-protocols in prime order groups}
 \label{sec:instantiation}
@@ -846,7 +670,7 @@ It then outputs the simulated transcript $((\commitment_1,\commitment_2,\commitm
 As shown in this example, and in contrast to linear relations, multiplicative relations among witnesses typically require a reformulation of the proof goal in order to be compatible with the generic protocol presented above.
 We refer, e.g., to Krenn~\cite{krenn12} for generic techniques.
 
-
+\minote{Add OR prooof for knowledge of one of multiple discrete logs}
 
 
 \paragraph{Choice of a group.} We advise for the use of prime-order elliptic curves of size either 256 or 512 bits, depending on the desired security of the upper layers in the protocol\footnote{For instance, proving a DH relation with one fixed group element such as a public key, might expose the protocol to cryptanalytic attacks such as Brown-Gallant~\cite{EPRINT:BroGal04} and Cheon’s attack~\cite{EC:Cheon06}, and some implementations might opt for larger curve sizes. We consider these attacks out of scope for this standardization effort, and believe this analysis should be deferred to the concrete security study of the larger protocol.}.
