@@ -20,7 +20,7 @@
             sets]{cryptocode}
 \usepackage{enumitem}
 \usepackage{mathtools}
-\usepackage[disable]{todonotes}
+\usepackage{todonotes}
 
 \usepackage[%dvips,
     pdftex,
@@ -179,9 +179,9 @@ In the following, we formally describe the class of $\Sigma$-protocols, which co
     The prover's first algorithm $\prover_1(\vec \witness, \vec\statement)$ consists of the following steps:
     \begin{enumerate}
       \item
-        The algorithm parses $(\witness^0,\witness^1)\defeq \vec \witness$ and $(\statement^0,\statement^1)\defeq \vec \statement$.
+        Parse $(\witness^0,\witness^1)\defeq \vec \witness$ and $(\statement^0,\statement^1)\defeq \vec \statement$.
       \item
-        It computes $(\commitment^0,\st^0)\gets\prover_1^0(\witness^0, \statement^0)$ and $(\commitment^1,\st^1)\gets\prover_1^1(\witness^1, \statement^1)$.
+        Compute $(\commitment^0,\st^0)\gets\prover_1^0(\witness^0, \statement^0)$ and $(\commitment^1,\st^1)\gets\prover_1^1(\witness^1, \statement^1)$.
       \item
 	The algorithm outputs $(\vec \commitment,\st) \defeq ((\commitment^0,  \commitment^1),(\st^0,\st^1))$.
     \end{enumerate}
@@ -189,33 +189,33 @@ In the following, we formally describe the class of $\Sigma$-protocols, which co
     The prover's second algorithm $\prover_2(\vec \witness,\vec \statement,\challenge,\st)$ proceeds as follows:
     \begin{enumerate}
       \item
-        It checks that $c\in\ZZ_p$ and aborts if this is not the case.
+        Check that $c\in\ZZ_p$ and aborts if this is not the case.
       \item
-	It parses $(\st^0,\st^1)\defeq \st$
+	Parse $(\st^0,\st^1)\defeq \st$
       \item
-        It computes $s^0\gets\prover_2^0(\witness^0,\statement^0,\challenge,\st^0)$ and $s^1\gets\prover_2^1(\witness^1,\statement^1,\challenge,\st^1)$.
+        Compute $s^0\gets\prover_2^0(\witness^0,\statement^0,\challenge,\st^0)$ and $s^1\gets\prover_2^1(\witness^1,\statement^1,\challenge,\st^1)$.
       \item
-        It outputs $\vec \response\defeq(s^0,s^1)$.
+        Output $\vec \response\defeq(s^0,s^1)$.
     \end{enumerate}
   \item
     The verifier's algorithm $\verifier(\vec \statement, \vec \commitment,\challenge,\vec \response)$ proceeds as follows:
     \begin{enumerate}
       \item
-        It  parses $(s^0,s^1)\defeq \vec \response$.
+        Parse $(s^0,s^1)\defeq \vec \response$.
       \item
-	The algorithm outputs $\verifier^0(\statement^0, \commitment^0,\challenge, \response^0)\land\verifier^1(\statement^1, \commitment^1,\challenge, \response^1)$.
+	Output $\verifier^0(\statement^0, \commitment^0,\challenge, \response^0)\land\verifier^1(\statement^1, \commitment^1,\challenge, \response^1)$.
     \end{enumerate}
   \item
     The required simulator $\simulator(\vec Y,c)$ works as follows:
     \begin{enumerate}
       \item
-        It parses $(\statement^0,\statement^1)\defeq \vec Y$.
+        Parse $(\statement^0,\statement^1)\defeq \vec Y$.
       \item
-        It chooses $c\sample\ZZ_p$.
+        Choose $c\sample\ZZ_p$.
       \item
-        It computes $(\commitment^0,\challenge,s^0)\gets\simulator^0(\statement^0,c)$ and $(\commitment^1,\challenge,s^1)\gets\simulator^1(\statement^1,c)$.
+        Compute $(\commitment^0,\challenge,s^0)\gets\simulator^0(\statement^0,c)$ and $(\commitment^1,\challenge,s^1)\gets\simulator^1(\statement^1,c)$.
       \item
-        Finally, the algorithm then outputs $(\vec \commitment,\challenge, \vec \response)\defeq((\commitment^0, \commitment^1),\challenge,(s^0,s^1))$.
+        Finally, output $(\vec \commitment,\challenge, \vec \response)\defeq((\commitment^0, \commitment^1),\challenge,(s^0,s^1))$.
     \end{enumerate}
 \end{enumerate}
 
@@ -235,49 +235,48 @@ In the following, we formally describe the class of $\Sigma$-protocols, which co
     The prover's first algorithm $\prover_1(\vec \witness, \vec \statement)$ consists of the following steps:
     \begin{enumerate}
       \item
-        It parses $(\witness^0,\witness^1)\defeq \vec \witness$ and $(\statement^0,\statement^1)\defeq \vec \statement$, where $w^{1-j}=\bot$.
+        Parse $(\witness^0,\witness^1)\defeq \vec \witness$ and $(\statement^0,\statement^1)\defeq \vec \statement$, where $w^{1-j}=\bot$.
       \item
-        It computes $(\commitment^j,\st^j)\gets\prover_1^j(Y^j,w^j)$.
+        Compute $(\commitment^j,\st^j)\gets\prover_1^j(Y^j,w^j)$.
       \item
-        It computes a simulated transcript for the unknown witness by choosing $c^{1-j}\sample\ZZ_p$ and setting $(\commitment^{1-j},c^{1-j},s^{1-j})\gets\simulator^{1-j}(Y^{1-j},c^{1-j})$.
+        Compute a simulated transcript for the unknown witness by choosing $c^{1-j}\sample\ZZ_p$ and setting $(\commitment^{1-j},c^{1-j},s^{1-j})\gets\simulator^{1-j}(Y^{1-j},c^{1-j})$.
       \item
-	The algorithm outputs $(\vec \commitment,\st) \defeq ((\commitment^0,\commitment^1),(\st^j,c^{1-j},s^{1-j}))$.
+	Output $(\vec \commitment,\st) \defeq ((\commitment^0,\commitment^1),(\st^j,c^{1-j},s^{1-j}))$.
     \end{enumerate}
   \item
     The prover's second algorithm $\prover_2(\vec \witness, \vec \statement,\challenge,\st)$ proceeds as follows:
     \begin{enumerate}
       \item
-        It checks that $c\in\ZZ_p$ and aborts if this is not the case.
+        Check that $c\in\ZZ_p$ and aborts if this is not the case.
+      \item Parse $(\st^j,c^{1-j},s^{1-j})\defeq\st$.
       \item
-	It parses $(\st^j,c^{1-j},s^{1-j})\defeq\st$.
+        Compute $c^j\defeq c-c^{1-j}$, and sets $s^j\gets\prover_2^j(w^j,Y^j,c^j,\st^j)$.
       \item
-        It computes $c^j\defeq c-c^{1-j}$, and sets $s^j\gets\prover_2^j(w^j,Y^j,c^j,\st^j)$.
+        Compute $s^0\gets\prover_2^0(\witness^0,\statement^0,\challenge,\st^0)$ and $s^1\gets\prover_2^1(\witness^1,\statement^1,\challenge,\st^1)$.
       \item
-        It computes $s^0\gets\prover_2^0(\witness^0,\statement^0,\challenge,\st^0)$ and $s^1\gets\prover_2^1(\witness^1,\statement^1,\challenge,\st^1)$.
-      \item
-        It outputs $\vec \response\defeq(\response^0,\response^1, c^0)$.
+        Output $\vec \response\defeq(\response^0,\response^1, c^0)$.
     \end{enumerate}
   \item
     The verifier's algorithm $\verifier(\vec \statement, \vec \commitment,\challenge,\vec \response)$ proceeds as follows:
     \begin{enumerate}
       \item
-        It  parses $(\response^0, \response^1, \challenge^0)\defeq \vec \response$.
+        Parse $(\response^0, \response^1, \challenge^0)\defeq \vec \response$.
       \item
-        It sets $c^1\defeq c-c^0$.
+        Set $c^1\defeq c-c^0$.
       \item
-	The algorithm outputs $\verifier^0(\statement^0, \commitment^0,c^0,s^0)\land\verifier^1(\statement^1, \commitment^1,c^1,s^1)$.
+	    Output $\verifier^0(\statement^0, \commitment^0,c^0,s^0)\land\verifier^1(\statement^1, \commitment^1,c^1,s^1)$.
     \end{enumerate}
   \item
     The required simulator $\simulator(\vec Y,c)$ works as follows:
     \begin{enumerate}
       \item
-        It parses $(\statement^0,\statement^1)\defeq \vec \statement$.
+        Parse $(\statement^0,\statement^1)\defeq \vec \statement$.
       \item
-        It chooses a random $c^0$ in $\ZZ_p$ and computes $c^1\defeq c-c^0$.
+        Choose a random $c^0$ in $\ZZ_p$ and computes $c^1\defeq c-c^0$.
       \item
-        It then computes $(\commitment^0,\challenge^0, \response^0)\gets\simulator^0(\commitment^0,\challenge^0)$ and $(\commitment^1,\challenge^1,\response^1)\gets\simulator^1(\statement^1,\challenge^1)$.
+        Compute $(\commitment^0,\challenge^0, \response^0)\gets\simulator^0(\commitment^0,\challenge^0)$ and $(\commitment^1,\challenge^1,\response^1)\gets\simulator^1(\statement^1,\challenge^1)$.
       \item
-        Finally, the algorithm then outputs $(\vec \commitment,\challenge,\vec s)\defeq ((\commitment^0,\commitment^1),\challenge,(s^0,s^1,c^0))$.
+        Output $(\vec \commitment,\challenge,\vec s)\defeq ((\commitment^0,\commitment^1),\challenge,(s^0,s^1,c^0))$.
     \end{enumerate}
 \end{enumerate}
 
@@ -311,6 +310,7 @@ We discuss more in details the content the hash in \cref{sec:instantiation}.
 
 \subsection{Serializing the proof}
 
+\minote{add serialization}
 There are two possible output:
 \begin{itemize}
 \item
@@ -319,8 +319,8 @@ There are two possible output:
 \section{$\Sigma$-protocols in prime order groups}
 \label{sec:instantiation}
 
-In this section, we consider the concrete security of $\Sigma$-protocols and illustrate the main points that should be considered when implementing them.
-This table is greatly inspired from the remarkable bibliographic work of Lueks et al.~\cite{zksk}.
+\minote{
+The $\Sigma$-protocols of this section provide the following guarantees}
 
 \subsection{Proving linear relations among witnesses}
 
