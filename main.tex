@@ -92,6 +92,20 @@ For the purpose of this document, the following notation will be used:
 \end{definition}
 
 
+\subsection{Terminology}
+
+Zero knowledge means that the protocol does not leak any information about the prover's messages beyond what the attacker may infer form the proof itself or from other sources~\cite[1.6.4]{zkproof-reference}.
+
+Soundness means that it is not possible to make the verifier accept for statements for which no valid witness exists~\cite[1.6.2]{zkproof-reference}.
+If soundness relies on computational assumption, then we call the proof an \emph{argument}.
+If a proof is extractable, that is, the the witness does not only exist but can be efficiently extracted, then the protocol a proof of knowledge~\cite{STOC:GolMicRac85,STOC:FeiFiaSha87,C:BelGol92} and is said to satisfy \emph{knowledge soundness}.
+If the proof of knowledge is non-malleable, that is: if it is still secure against man-in-the middle attacks, then we call the proof \emph{simulation-extractable}.
+
+All protocols defined here are simulation-extractable. A simulation-extractable proof is a proof of knowledge. A proof of knowledge is an argument.
+
+\section{Generic $\Sigma$-Protocols}
+
+
 In the following, we formally describe the class of $\Sigma$-protocols, which covers all protocols considered in the remainder of this document.
  For an in-depth discussion of the underlying theory we refer to Cramer~\cite{cramer97}.
 \begin{definition}\label{def:sigma}
@@ -136,54 +150,6 @@ In the following, we formally describe the class of $\Sigma$-protocols, which co
       \end{tabular}
     \end{protocol}
 \end{definition}
-Note that $\Sigma$-protocols were originally introduced for the case $k=2$ only.
-However, we use the above generalized definition as certain practically relevant optimization techniques require $k>2$.
-
-A $\Sigma$-protocol is said to have \emph{unpredictable commitments} if the probability of generating a collision in the first message is negligible, i.e., if there is a negligible function $\negl$ such that for all $(Y,w)\in\relation$ it holds that:
-\[
-  \prob{T'=T'' : T'\gets\prover_1(\witness,\statement), T''\gets\prover_1(\witness,\statement)} \leq \negl\,.
-\]
-
-
-
-\subsection{Terminology}
-
-Zero knowledge means that the protocol does not leak any information about the prover's messages beyond what the attacker may infer form the proof itself or from other sources~\cite[1.6.4]{zkproof-reference}.
-
-Soundness means that it is not possible to make the verifier accept for statements for which no valid witness exists~\cite[1.6.2]{zkproof-reference}.
-If soundness relies on computational assumption, then we call the proof an \emph{argument}.
-If a proof is extractable, that is, the the witness does not only exist but can be efficiently extracted, then the protocol a proof of knowledge~\cite{STOC:GolMicRac85,STOC:FeiFiaSha87,C:BelGol92} and is said to satisfy \emph{knowledge soundness}.
-If the proof of knowledge is non-malleable, that is: if it is still secure against man-in-the middle attacks, then we call the proof \emph{simulation-extractable}.
-
-All protocols defined here are simulation-extractable. A simulation-extractable proof is a proof of knowledge. A proof of knowledge is an argument.
-
-\section{Generic $\Sigma$-Protocols}
-
-This section is structured in two main parts: in \cref{sec:basicsigma}, we study the generic construction of $\Sigma$-protocols in prime-order groups. In \cref{sec:composition}, we study AND and OR-composition of the basic protocol.
-For in-depth discussions of such protocols we refer to~\cite{bangerter05,AFRICACRYPT:Maurer09,DBLP:journals/dcc/Maurer15}.
-
-\subsection{Proving linear relations among witnesses}
-
-  While the above protocol allows one to efficiently prove knowledge of a pre-image under a homomorphism, many protocols found in the literature require one to prove relations among witnesses.
-  Specifically, they require to prove relations like the following:
-\begin{equation*}
-\relation=\set{((\statement_1,\dots,\statement_m),(w_1,\dots,w_n)) :
-\begin{array}{c} (\statement_1,\dots,\statement_m)=\varphi(w_1,\dots,w_n) \\
-                  A(w_1,\dots,w_n) = (b_1,\dots,b_k)\end{array}}\,,
-\end{equation*}
-where the matrix $A\in\ZZ_p^{k\times n}$ and vector $(b_1,\dots,b_k)\in\ZZ_p^k$ specify the system of linear equations.
-
-Proving such a relation can easily by achieved by modifying the above protocol as follows:
-\begin{itemize}
-  \item
-    In \cref{item:basic:p1:randomness}, the prover draws the randomnesses such that they satisfy the system of equations, i.e., such that $A(r_1,\dots,r_n)=(b_1,\dots,b_k)$.
-  \item
-    In \cref{item:basic:v:checks}, the verifier additionally checks that $A(s_1,\dots,s_n)=(c+1)(b_1,\dots,b_k)$ and outputs $\reject$ if this is not the case.
-  \item
-    In \cref{item:basic:sim:s}, the simulator draws the responses such that they satisfy the verification equations, i.e., such that $A(s_1,\dots,s_n)=(c+1)(b_1,\dots,b_k)$.
-\end{itemize}
-
-
 
 \subsection{Composition of $\Sigma$-Protocols}
 \label{sec:composition}
@@ -355,6 +321,28 @@ There are two possible output:
 
 In this section, we consider the concrete security of $\Sigma$-protocols and illustrate the main points that should be considered when implementing them.
 This table is greatly inspired from the remarkable bibliographic work of Lueks et al.~\cite{zksk}.
+
+\subsection{Proving linear relations among witnesses}
+
+  While the above protocol allows one to efficiently prove knowledge of a pre-image under a homomorphism, many protocols found in the literature require one to prove relations among witnesses.
+  Specifically, they require to prove relations like the following:
+\begin{equation*}
+\relation=\set{((\statement_1,\dots,\statement_m),(w_1,\dots,w_n)) :
+\begin{array}{c} (\statement_1,\dots,\statement_m)=\varphi(w_1,\dots,w_n) \\
+                  A(w_1,\dots,w_n) = (b_1,\dots,b_k)\end{array}}\,,
+\end{equation*}
+where the matrix $A\in\ZZ_p^{k\times n}$ and vector $(b_1,\dots,b_k)\in\ZZ_p^k$ specify the system of linear equations.
+
+Proving such a relation can easily by achieved by modifying the above protocol as follows:
+\begin{itemize}
+  \item
+    In \cref{item:basic:p1:randomness}, the prover draws the randomnesses such that they satisfy the system of equations, i.e., such that $A(r_1,\dots,r_n)=(b_1,\dots,b_k)$.
+  \item
+    In \cref{item:basic:v:checks}, the verifier additionally checks that $A(s_1,\dots,s_n)=(c+1)(b_1,\dots,b_k)$ and outputs $\reject$ if this is not the case.
+  \item
+    In \cref{item:basic:sim:s}, the simulator draws the responses such that they satisfy the verification equations, i.e., such that $A(s_1,\dots,s_n)=(c+1)(b_1,\dots,b_k)$.
+\end{itemize}
+
 
 
 \subsection{Fiat-Shamir}
