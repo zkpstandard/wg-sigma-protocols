@@ -64,8 +64,7 @@ $\Sigma$-protocols played an essential component in the building of a number of 
 constructions,
 such as anonymous credentials~\cite{CCS:ChaMeiZav14}, password-authenticated key exchange~\cite{jpake}, signatures~\cite{C:Schnorr89},
 ring signatures~\cite{borromeansig}, blind signatures~\cite{CCS:PoiSte97}, multi signatures~\cite{CCS:NRSW20}, threshold signatures~\cite{EPRINT:KomGol20} and more.
-
-\section{Notation and Terminology}
+\subsection{Notation}
 \label{sec:notation}
 
 For the purpose of this document, the following notation will be used:
@@ -85,12 +84,7 @@ For the purpose of this document, the following notation will be used:
     $|y|$ & bitlength of a string\\
     $\NN,\ZZ$ & non-negative natural numbers and integers, respectively
 \end{tabular}
-
-
-\begin{definition}
-  For two groups $\GG_1,\GG_2$, a function $\varphi:\GG_1\to\GG_2:x\mapsto\varphi(x)$ is a \emph{(group) homomorphism}, if and only if for all $a,b\in\GG_1$ it holds that $\varphi(a+b)=\varphi(a)+\varphi(b)$.
-\end{definition}
-
+\section{Concepts}
 
 \subsection{Terminology}
 
@@ -98,8 +92,8 @@ Zero knowledge means that the protocol does not leak any information about the p
 
 Soundness means that it is not possible to make the verifier accept for statements for which no valid witness exists~\cite[1.6.2]{zkproof-reference}.
 If soundness relies on computational assumption, then we call the proof an \emph{argument}.
-If a proof is extractable, that is, the the witness does not only exist but can be efficiently extracted, then the protocol a proof of knowledge~\cite{STOC:GolMicRac85,STOC:FeiFiaSha87,C:BelGol92} and is said to satisfy \emph{knowledge soundness}.
-If the proof of knowledge is non-malleable, that is: if it is still secure against man-in-the middle attacks, then we call the proof \emph{simulation-extractable}.
+If a proof is extractable, that is, the the witness does not only exist but can be efficiently extracted, then the protocol a proof of knowledge~\cite{STOC:GolMicRac85,STOC:FeiFiaSha87,C:BelGol92} and is said to satisfy \emph{knowledge soundness}~\cite{damgard04}.
+If the proof of knowledge is non-malleable, that is, if it is still secure against man-in-the middle attacks, then we call the proof \emph{simulation-extractable}.
 
 All protocols defined here are simulation-extractable. A simulation-extractable proof is a proof of knowledge. A proof of knowledge is an argument.
 
@@ -108,6 +102,12 @@ All protocols defined here are simulation-extractable. A simulation-extractable 
 
 In the following, we formally describe the class of $\Sigma$-protocols, which covers all protocols considered in the remainder of this document.
  For an in-depth discussion of the underlying theory we refer to Cramer~\cite{cramer97}.
+
+ \begin{definition}
+  For two groups $\GG_1,\GG_2$, a function $\varphi:\GG_1\to\GG_2:x\mapsto\varphi(x)$ is a \emph{(group) homomorphism}, if and only if for all $a,b\in\GG_1$ it holds that $\varphi(a+b)=\varphi(a)+\varphi(b)$.
+\end{definition}
+
+
 \begin{definition}\label{def:sigma}
   Let $\relation$ be a binary relation and let $(Y,w)\in\relation$.
   An interactive two-party protocol specified by algorithms $(\prover_1,\prover_2,\verifier)$ is called a \emph{$\Sigma$-protocol} for $\relation$ with challenge set $\CS$, public input $Y$, and private input $w$, if and only if it satisfies the following conditions:
@@ -306,10 +306,12 @@ We discuss more in details the content the hash in \cref{sec:instantiation}.
 \subsection{Serializing the proof}
 
 \minote{add serialization}
-There are two possible output:
-\begin{itemize}
-\item
-\end{itemize}
+Given the \emph{protocol transcript} $(\vec \commitment,\challenge,\vec s)$ output by the verifier, there are two possible serialization mechanisms:
+\begin{description}
+\item[Short Form] serialize $\vec \commitment$, and concatenate $\vec s$;
+\item[Batchable Form]
+\end{description}
+The short form has shorter proofs if the protocol contains at least an AND statement.
 
 \section{$\Sigma$-protocols in prime order groups}
 \label{sec:instantiation}
@@ -373,13 +375,13 @@ A basic $\Sigma$-protocol for the relation:
     The required simulator $\simulator(\vec \statement,c)$ for a basic $\Sigma$-protocol works as follows:
     \begin{enumerate}
       \item
-        It parses $(\statement_1,\dots,\statement_m)\defeq \vec \statement$.
+        Parse $(\statement_1,\dots,\statement_m)\defeq \vec \statement$.
       \item\label{item:basic:sim:s}
-        It chooses $\response_1,\dots,\response_n\sample\ZZ_p$.
+        Choose $\response_1,\dots,\response_n\sample\ZZ_p$.
       \item
-        It sets $(\commitment_1,\dots,\commitment_m) \defeq \varphi(s_1,\dots,s_n) - c(\statement_1,\dots,\statement_m)$.
+        Set $(\commitment_1,\dots,\commitment_m) \defeq \varphi(s_1,\dots,s_n) - c(\statement_1,\dots,\statement_m)$.
       \item
-        Finally, the algorithm outputs the simulated transcript by setting $(\vec \commitment,\challenge,\vec \response)\defeq((\commitment_1,\dots,\commitment_m),\challenge,(\response_1,\dots,\response_n))$.
+        Finally, output the simulated transcript by setting $(\vec \commitment,\challenge,\vec \response)\defeq((\commitment_1,\dots,\commitment_m),\challenge,(\response_1,\dots,\response_n))$.
     \end{enumerate}
 \end{enumerate}
 
