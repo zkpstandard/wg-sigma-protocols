@@ -309,12 +309,10 @@ The tag $\stag$ contains an arbitrary string, possibly empty, that the prover ca
 We discuss more in details the content the hash in \cref{sec:instantiation}.
 
 \subsection{Serializing the proof}
-
-\minote{add serialization}
 Given the \emph{protocol transcript} $(\vec \commitment,\challenge,\vec s)$ output by the verifier, there are two possible serialization mechanisms:
 \begin{description}
-\item[Short Form] serialize $\vec \commitment$, and concatenate $\vec s$;
-\item[Batchable Form]
+\item[Short Form] serialize $\vec \commitment$, serialize $\vec s$, and return the concatenation of the two;
+\item[Batchable Form] serialize $c$, serialize $\vec s$, and return the concatenation of the two.
 \end{description}
 The short form has shorter proofs if the protocol contains at least an AND statement.
 
@@ -328,6 +326,10 @@ The $\Sigma$-protocols of this section provide the following guarantees}
 
 \subsection{Supported Curves}
  We advise for the use of prime-order elliptic curves of size either 256 or 512 bits, depending on the desired security of the upper layers in the protocol\footnote{For instance, proving a DH relation with one fixed group element such as a public key, might expose the protocol to cryptanalytic attacks such as Brown-Gallant~\cite{EPRINT:BroGal04} and Cheon’s attack~\cite{EC:Cheon06}, and some implementations might opt for larger curve sizes. We consider these attacks out of scope for this standardization effort, and believe this analysis should be deferred to the concrete security study of the larger protocol.}.
+
+ \begin{tabular}{ll}
+
+ \end{tabular}
 Concretely, we see fit NIST's \verb|p-521| and \verb|p-256|~\cite{fips2}; SECG's \verb|secp256k1|~\cite{SECG}, or prime-order group abstractions over non prime-order groups, such as as Decaf~\cite{C:Hamburg15} and Ristretto~\cite{cfrg-ristretto-decaf}\footnote{We are aware of the threats reported in
 \url{https://safecurves.cr.yp.to/}.
 It's however not clear what should be the alternatives, and if dropping their support would hinder adoption.
@@ -754,9 +756,4 @@ We refer, e.g., to Krenn~\cite{krenn12} for generic techniques.
 
 \bibliographystyle{alpha}
 \bibliography{cryptobib/abbrev3,cryptobib/crypto,additional}
-%
-
-\appendix
-\section{Formal definitions and security claims}
-\section{List of implementations up to date}
 \end{document}
