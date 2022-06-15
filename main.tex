@@ -118,7 +118,7 @@ In the following, we formally describe the class of $\Sigma$-protocols, which co
 Statements in sigma protocols take the form of a labeled binary tree:
 $\statementnode$ is either:
 \begin{itemize}
-  \item a label \textsf{AND}, or \textsf{OR}, and two children \textsf{left} or \textsf{right} of type $\statementnode$
+  \item a label \textsf{AND}, or \textsf{OR}, and two children \textsf{left} and \textsf{right} of type $\statementnode$
   \item a $\statementleaf$ instance. Objects of this type depend on the specific group used and will be treated in \cref{sec:sigma-dlog}.
 \end{itemize}
 
@@ -190,7 +190,9 @@ The tree is encoded in breadth-first.
 \subsection{The Fiat-Shamir Transform}\label{sec:fs}
 % \marynote{Considering you are stressing the importance of hashing the instance, I would send the instance in the first message of the interactive versions as well.}
 All protocols described in this standard require three messages being exchanged between the prover and the verifier.
-In practice, public-coin protocols such as $\sigma$ protocols can be converted into non-interactive ones through the Fiat-Samir heuristic.
+In practice, public-coin protocols such as $\sigma$ protocols can be converted into non-interactive ones through the
+Fiat and Shamir heuristic~\cite{C:FiaSha86} and subsequent work, e.g., by Bernhard et al.~\cite{AC:BerPerWar12}
+
 The underlying idea is to replace the verifier with a cryptographically secure hash function, hashing the context from the protocol and the previous message sent by the prover.
 
 \begin{remark}
@@ -199,33 +201,42 @@ The interactive version of $\Sigma$-protocols presented in this paper is unfit f
 
 \subsubsection{Hash Registry}
 
-We support all of the following hash functions that takes as input a sequence of bytes of arbitrary length and output 32 bits of entropy.
+We support all of the following hash functions that takes as input a sequence of bytes of arbitrary length and output 32 bytes of entropy.
 
 \begin{center}
   \begin{tabular}{lll}
   Hash & Security Level & Source \\
   \hline
-  SHA2 \\
   Blake2 \\
   Keccak & \\
   \unsure{Poseidon} &\\
   \end{tabular}
 \end{center}
 
-The $\hash$ of output length 32 bytes, the challenge will be computed as
-$c\defeq\hash(\vec \statement,\vec \commitment, \ctx, \stag)$,
-where $\statement$ is the public image for which knowledge of a witness is proven, $\commitment$ is the prover's first message from the $\Sigma$-protocol, $\stag$ is a (possibly empty, variable-length) label attached to the proof, and
-the context string $\ctx$ is a tuple $\ctx = (\domsepctx, \idctx)$ containing the following application-specific information:
-\begin{itemize}
-  \item $\domsepctx$, a string determining uniquely the name of the target application (and the proof type);
-  \item \textsf{id},
-    local context information (e.g., session identifiers of higher level protocols) to avoid replay-attacks, or shared randomness or a timestamp to guarantee freshness of the proof.
-\end{itemize}
-The tag $\stag$ contains an arbitrary string, possibly empty, that the prover can attach to the proof. This can allow to construct e.g. signatures and ring signatures.
-We discuss more in details the content the hash in \cref{sec:instantiation}.
-
-\subsubsection{Randomness for the commitment}
+\minote{Randomness for the commitment: we can choose to rely on the operating system's entropy. For fault attacks, it does not seem ideal either to have a prf sqeezing all the entropy.}
 \subsubsection{Randomness for the challenge}
+
+% Truncating the output of the hash to $\ceil{\log_2 p} + \kappa$ bits (where $\kappa$ is the targeted statistical
+%  security level), and then reducing mod $p$.
+%  This approach leads to a random value statistically close ($2^{-\kappa}$) to a value sampled uniformly at random in $\ZZ_p$.
+
+Multiple approaches have been used in the past~\cite{EPRINT:Hamburg17, hash-to-curve}.
+The challenge is the hash of:
+\begin{itemize}
+  \item $\ctx$, a 32-byte string identifying the message, containing the
+  hash of the following application-specific information:
+  \begin{itemize}
+    \item $\domsepctx$, a string determining uniquely the name of the target application (and the proof type);
+    \item \textsf{id},
+      local context information (e.g., session identifiers of higher level protocols) to avoid replay-attacks, or shared randomness or a timestamp to guarantee freshness of the proof.
+  \end{itemize}
+  \item $\tau$, a (possibly set to zero) message attached to the proof of 32 bytes.
+  \item $\serialize(T)$, the serialization of the statement.
+\end{itemize}
+
+We note that some families of hash functions allow for preprocessing of the information.
+
+
 
 \subsubsection{Serializing the proof}
 Given the \emph{protocol transcript} $(\vec \commitment,\challenge,\vec s)$ output by the verifier, there are two possible serialization mechanisms:
@@ -435,7 +446,7 @@ A basic $\Sigma$-protocol for the relation:
     The prover's second algorithm $\prover_2(\vec \witness,\vec Y ,\challenge,\st)$ proceeds as follows:
     \begin{enumerate}
       \item
-        Check that $\challenge\in\ZZ_p$ and aborts if this is not the case.
+        Let $c \defeq \frombytes(\challenge)$.
       \item Parse $(r_1,\dots,r_n)\defeq \st$ and $(w_1,\dots,w_n)\defeq \vec \witness$.
       \item Compute its response as $s_i\defeq r_i+cw_i$ for $i=1,\dots,n$.
     \end{enumerate}
@@ -515,13 +526,8 @@ Proving such a relation can easily by achieved by modifying the above protocol a
 
 
 
-\subsection{Fiat-Shamir}
-We describe two ways for achieving non-interactivity. Both variants require identical computations on the prover's side.
-The first allows for efficient batching, but requires point validation and (depending on the hash function, or the elliptic curve chosen) might lead to
-slightly larger proof sizes. The second requires no point validation and only has the hash value.
-We call the first variant \emph{batchable}, and the latter \emph{short}.
-Both constructions are based on the seminal work of Fiat and Shamir~\cite{C:FiaSha86} and subsequent work, e.g., by Bernhard et al.~\cite{AC:BerPerWar12}.
-
+\subsection{Verification}
+We describe two ways for verifying the statement:
 
 \paragraph{Choice of the hash functions.} We advise for the use of consolidated, cryptographically secure hash functions such as \verb|SHA2|, \verb|SHA3|, and \verb|BLAKE2|, \verb|BLAKE3|\footnote{We did not examine closely algebraic hashes for this draft, but we stress that their adoption could be appealing for a number of applications requiring recursive proofs. Unfortunately, this requires a much deeper cryptanalysis within a working group.}.
 In non-interactive $\Sigma$-protocols, the image of the random oracle is assumed to be over the field, and translating the output of the hash function (in $\bin^*$) into an integer mod $p$ requires care to preserve indifferentiability.
@@ -536,30 +542,6 @@ Consider e.g.\ a prime $p$ that is close to $3/4 \cdot 2^{256}$. Reducing a rand
  We remark that, nonetheless, min-entropy wise this will cost at most one bit of security.
  Namely, the chances of guessing a specific challenge is still than negligible despite the bias.
  \minote{check that curves proposed have a very small range. }
-  Truncating the output of the hash to $\ceil{\log_2 p} + \kappa$ bits (where $\kappa$ is the targeted statistical
- security level), and then reducing mod $p$.
- % This is essentially the procedure
- % \verb|hash_to_field| as described in~\cite[Section 5]{hash-to-curve}.
- This approach leads to a random value statistically close ($2^{-\kappa}$) to a value sampled uniformly at random in $\ZZ_p$.
- % \item Rejection sampling, which consists in sampling uniformly at random in the interval $[0, 2^\secpar]$, until a value in $[0, p]$ is found.
- % Unfortunately, since the hash function is used also for hashing the initial (secret) randomness used for computing the commitment, this method is undesirable due to the difficulty of implementing in constant-time (which could lead a secret for the deterministic computation of the commitment).
-% \end{enumerate}
-% Despite options \cref{item:truncate-256,item:truncate-cfrg} are the most fit for computing the challenge, only option \cref{item:truncate-cfrg} is suitable for computing deterministically also the initial nonce. in the non-interactive case. \cref{item:truncate-128} is a valid option for the interactive version.
-
-Hashing variable-length messages into a single challenge (such is the case when hashing $\ctx$, $\tau$) requires care, and multiple approaches have been used in the past~\cite{EPRINT:Hamburg17, hash-to-curve}.
-% \begin{enumerate}[label=$(\alph*)$]
-We propose to hash variable-length messages with their hash, and consider the final value (à la \emph{Merkle-Damgard}):
- \[
-   \ctx \defeq (\hash(\domsepctx), \curvectx, \generatorsctx, \hash(\idctx))
- \]
- this is similar to was is proposed in~\cite{bip-schnorr}.
- % for the specific case of the domain separator (in fact, the authors propose to concatenate the same hash twice to fill an entire SHA-256 block and allow for hash pre-processing).
- The context $\ctx$ can be preprocessed by the end application.
- % \item Encoding the messages in a common format, and hashing the encoded message, i.e.\ computing:
- % \( \ctx \defeq \mathsf{encode}(\ctx)\),
- % where $\mathsf{encode}$ is a serializer such as e.g.\ JSON encoding, or netstring~\cite{bernstein-netstrings-02}.
-%   \item Using a protocol framework such as \textsc{Strobe}~\cite{EPRINT:Hamburg17} that builds a sponge construction and can be used for building protocol transcripts. For more information, we direct the reader towards \cite[Section 5.3]{EPRINT:Hamburg17}.
-% \end{enumerate}
 
 
 \subsubsection{Batchable form}
