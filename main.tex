@@ -370,57 +370,6 @@ The short form has shorter proofs if the protocol contains at least an AND state
     \end{enumerate}
 \end{enumerate}
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-\subsection{The Fiat-Shamir Transform}\label{sec:fs}
-% \marynote{Considering you are stressing the importance of hashing the instance, I would send the instance in the first message of the interactive versions as well.}
-All protocols described so far require three messages being exchanged between the prover and the verifier.
-However, communication rounds are often considered expensive from an efficiency point of view, and for many applications interactivity is not desirable.
-
-    \begin{protocol}{Fiat-Shamir transform of a $\Sigma$-protocol.\\[-2.25em]}{fig:fs_generic}{t}
-      \begin{tabular}{@{}l@{\hspace{-2em}}c@{\hspace{-2em}}r@{}}
-        $\prover(\witness,Y,\relation)$ & & $\verifier(Y,\relation)$  \\
-        \hline  \\
-      % -----------------------------P1-------------------------------
-        $(\commitment,\st) \gets \prover_1(\witness,\statement)$\\
-				$\challenge \gets \hash(\statement,\commitment,\ctx,\stag)$ & & \\
-        $ \response \gets \prover_2(\witness,\statement,\commitment,\challenge,\st)$\\
-        & $\sendr{\Pi}{100}$ \\[2 ex]
-      % -----------------------------V-------------------------------
-        & & $\accept/\reject \gets \verifier(\statement,\commitment,\challenge,\response)$ \\
-      \end{tabular}
-    \end{protocol}
-
-
-
-The underlying idea of the so-called Fiat-Shamir transform is to simulate the verifier's random challenge by means of a random oracle, depending on the first message computed by the prover.
-More precisely, the challenge is computed as
-$\challenge\defeq\hash(\vec \statement,\vec \commitment, \ctx, \stag)$,
-where $\statement$ is the public image for which knowledge of a witness is proven, $\commitment$ is the prover's first message from the $\Sigma$-protocol, $\stag$ is a (possibly empty, variable-length) label attached to the proof, and
-the context string $\ctx$ is a tuple $\ctx = (\domsepctx, \curvectx, \generatorsctx, \idctx)$ containing the following application-specific information:
-\begin{itemize}
-  \item $\domsepctx$, a string determining uniquely the name of the target application (and the proof type);
-  \item $\curvectx$, a label identifying uniquely the group (e.g.\ \verb|secp-256|)
-  \item $\generatorsctx$,
-    a full description of the algebraic setting and proof goal (e.g., group generators, and constants fixed in the protocol) to achieve non-malleability;
-  \item \textsf{id},
-    local context information (e.g., session identifiers of higher level protocols) to avoid replay-attacks, or shared randomness or a timestamp to guarantee freshness of the proof.
-\end{itemize}
-The tag $\stag$ contains an arbitrary string, possibly empty, that the prover can attach to the proof. This can allow to construct e.g. signatures and ring signatures.
-We discuss more in details the content the hash in \cref{sec:instantiation}.
-
-
-
-
-
-\subsection{Serializing the proof}
-Given the \emph{protocol transcript} $(\vec \commitment,\challenge,\vec s)$ output by the verifier, there are two possible serialization mechanisms:
-\begin{description}
-\item[Short Form] serialize $\vec \commitment$, serialize $\vec s$, and return the concatenation of the two;
-\item[Batchable Form] serialize $c$, serialize $\vec s$, and return the concatenation of the two.
-\end{description}
-The short form has shorter proofs if the protocol contains at least an AND statement.
-
 \section{$\Sigma$-protocols in prime order groups}
 \label{sec:instantiation}
 
