@@ -497,20 +497,20 @@ Otherwise, the verifier outputs $\pctrue$. Optionally, the implementation can ch
   While the above protocol allows one to efficiently prove knowledge of a pre-image under a homomorphism, many protocols found in the literature require one to prove relations among witnesses.
   Specifically, they require to prove relations like the following:
 \begin{equation*}
-\relation=\set{((\statement_1,\dots,\statement_m),(w_1,\dots,w_n)) :
-\begin{array}{c} (\statement_1,\dots,\statement_m)=\varphi(w_1,\dots,w_n) \\
-                  A(w_1,\dots,w_n) = (b_1,\dots,b_k)\end{array}}\,,
+\relation=\set{((\statement_1,\dots,\statement_m),(\witness_1,\dots,\witness_n)) :
+\begin{array}{c} (\statement_1,\dots,\statement_m)=\varphi(\witness_1,\dots,\witness_n) \\
+                  A\cdot(\witness_1,\dots,\witness_n)^\intercal = (b_1,\dots,b_k)^\intercal\end{array}}\,,
 \end{equation*}
 where the matrix $A\in\ZZ_p^{k\times n}$ and vector $(b_1,\dots,b_k)\in\ZZ_p^k$ specify the system of linear equations.
 
 Proving such a relation can easily by achieved by modifying the above protocol as follows:
 \begin{itemize}
   \item
-    In \cref{item:basic:p1:randomness}, the prover draws the randomnesses such that they satisfy the system of equations, i.e., such that $A(r_1,\dots,r_n)=(b_1,\dots,b_k)$.
+    In \cref{item:basic:p1:randomness}, the prover draws the randomnesses such that they satisfy the system of equations, i.e., such that $A\cdot(r_1,\dots,r_n)=(b_1,\dots,b_k)$.
   \item
-    In \cref{item:basic:v:checks}, the verifier additionally checks that $A(s_1,\dots,s_n)=(c+1)(b_1,\dots,b_k)$ and outputs $\reject$ if this is not the case.
+    In \cref{item:basic:v:checks}, the verifier additionally checks that $A\cdot(\response_1,\dots,\response_n)^\intercal=(\challenge+1)\cdot(b_1,\dots,b_k)^\intercal$ and outputs $\reject$ if this is not the case.
   \item
-    In \cref{item:basic:sim:s}, the simulator draws the responses such that they satisfy the verification equations, i.e., such that $A(s_1,\dots,s_n)=(c+1)(b_1,\dots,b_k)$.
+    In \cref{item:basic:sim:s}, the simulator draws the responses such that they satisfy the verification equations, i.e., such that $A\cdot(\response_1,\dots,\response_n)=(c+1)\cdot(b_1,\dots,b_k)^\intercal$.
 \end{itemize}
 
 
