@@ -118,7 +118,7 @@ In the following, we formally describe the class of $\Sigma$-protocols, which co
 Statements in sigma protocols take the form of a labeled binary tree:
 $\statementnode$ is either:
 \begin{itemize}
-  \item a label \textsf{AND}, or \textsf{OR}, and two childrens of type $\statementnode$
+  \item a label \textsf{AND}, or \textsf{OR}, and two children \textsf{left} or \textsf{right} of type $\statementnode$
   \item a $\statementleaf$ instance. Objects of this type depend on the specific group used and will be treated in \cref{sec:sigma-dlog}.
 \end{itemize}
 
@@ -178,6 +178,13 @@ A $\Sigma$-protocol consists of three algorithms $(\prover_1,\prover_2,\verifier
 \subsection{Serialization}
 
 \subsubsection{Serializing the statement}
+  There are many different options for serialization that could be considered:
+  \begin{itemize}
+  \item \href{https://datatracker.ietf.org/doc/html/rfc7049}{RFC7049}
+  \end{itemize}
+The zk proof Reference document provides a serialization document for r1cs~\cite[]{zkproof-reference}
+
+
 \subsubsection{Serializing the proof}
 Given the \emph{protocol transcript} $(\vec \commitment,\challenge,\vec s)$ output by the verifier, there are two possible serialization mechanisms:
 \begin{description}
@@ -223,6 +230,8 @@ the context string $\ctx$ is a tuple $\ctx = (\domsepctx, \idctx)$ containing th
 The tag $\stag$ contains an arbitrary string, possibly empty, that the prover can attach to the proof. This can allow to construct e.g. signatures and ring signatures.
 We discuss more in details the content the hash in \cref{sec:instantiation}.
 
+\subsubsection{Randomness for the commitment}
+\subsubsection{Randomness for the challenge}
 
 
 \subsection{Composition of $\Sigma$-Protocols}
@@ -360,6 +369,7 @@ We discuss more in details the content the hash in \cref{sec:instantiation}.
 \end{enumerate}
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 \subsection{The Fiat-Shamir Transform}\label{sec:fs}
 % \marynote{Considering you are stressing the importance of hashing the instance, I would send the instance in the first message of the interactive versions as well.}
 All protocols described so far require three messages being exchanged between the prover and the verifier.
@@ -409,14 +419,11 @@ Given the \emph{protocol transcript} $(\vec \commitment,\challenge,\vec s)$ outp
 \end{description}
 The short form has shorter proofs if the protocol contains at least an AND statement.
 
-=======
->>>>>>> d8c6260 (Add hash functions)
 \section{$\Sigma$-protocols in prime order groups}
 \label{sec:instantiation}
 
 \minote{
 The $\Sigma$-protocols of this section provide the following guarantees}
-
 
 
 \subsection{Ciphersuite Registry}
