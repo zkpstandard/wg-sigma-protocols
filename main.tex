@@ -114,8 +114,7 @@ In the following, we formally describe the class of $\Sigma$-protocols, which co
 
  \subsection{Capabilities}
  $\Sigma$-protocols are composable: it is possible to prove conjunction and disjunctions of statements in zero-knowledge. Basic statements include proofs of knowledge of a secret key, openings of commitments, and more in general of representations.
-
-Statements in sigma protocols take the form of a labeled binary tree:
+Statements in $\Sigma$-protocols take the form of a labeled binary tree:
 $\statementnode$ is either:
 \begin{itemize}
   \item a label \textsf{AND}, or \textsf{OR}, and two children \textsf{left} and \textsf{right} of type $\statementnode$
@@ -215,6 +214,7 @@ We support all of the following hash functions that takes as input a sequence of
 
 \minote{Randomness for the commitment: we can choose to rely on the operating system's entropy. For fault attacks, it does not seem ideal either to have a prf sqeezing all the entropy.}
 \subsubsection{Randomness for the challenge}
+\label{sec:fs-challenge}
 
 % Truncating the output of the hash to $\ceil{\log_2 p} + \kappa$ bits (where $\kappa$ is the targeted statistical
 %  security level), and then reducing mod $p$.
@@ -234,17 +234,77 @@ The challenge is the hash of:
   \item $\serialize(T)$, the serialization of the statement.
 \end{itemize}
 
-We note that some families of hash functions allow for preprocessing of the information.
+We note that the chosen hash functions allow for preprocessing: it is possible to store the partial state and process the commitment.
 
 
 
 \subsubsection{Serializing the proof}
-Given the \emph{protocol transcript} $(\vec \commitment,\challenge,\vec s)$ output by the verifier, there are two possible serialization mechanisms:
-\begin{description}
-\item[Short Form] given the protocol transcript, return $\serialize(T) \concat \serialize(\vec s)$;
-\item[Batchable Form] given the protocol transcript, return $\serialize(c) \concat \serialize(\vec s)$.
-\end{description}
+There are two possible provers, short and batchable.
 The short form has shorter proofs if the protocol contains at least an AND statement.
+
+\minote{what if the statement / witness is not valid? should we run verification after proving?}
+\begin{description}
+\item[Batchable Form]
+The prover's algorithm $\batchprover(\vec \witness, \vec \statement,\ctx, \stag)$ works as follows:
+\begin{itemize}
+\item
+  Compute $(\vec \commitment,\st)\gets\prover_1(\vec \witness, \vec \statement)$.
+\item
+  Compute the challenge according to \cref{sec:fs-challenge}
+\item
+  Define $\vec \response\gets\prover_2(\vec \witness, \vec \statement,\challenge,\st)$.
+  \item Optionally, check $\verifier(\vec \commitment, \challenge, \vec \response)$
+\item
+  Output $\serialize(\commitment) \concat \serialize(\vec \response)$
+\end{itemize}
+
+\item[Short Form]
+The prover's algorithm $\shortprover(\vec \witness, \vec \statement,\ctx, \stag)$ works as follows:
+\begin{itemize}
+  \item
+    Compute $(\vec \commitment,\st)\gets\prover_1(\vec \witness, \vec \statement)$.
+  \item
+    Compute the challenge according to \cref{sec:fs-challenge}.
+  \item
+    Define $\vec \response\gets\prover_2(\vec \witness,\vec \statement, \challenge,\st)$.
+    \item Optionally, check $\verifier(\vec \commitment, \challenge, \vec \response)$
+  \item
+  Our $\serialize(c) \concat \serialize(\vec s)$.
+\end{itemize}
+\end{description}
+
+\subsection{Verification}
+\minote{Add de-serialization sub-procedures that may fail}
+\minote{Check the inputs to the sub-procedures, like the simulator is not having enough information for recomputing the challenge}
+
+If input parsing fails, an exception should be raised.
+If verification fails, an exception should be raised.
+Otherwise, the verifier outputs $\pctrue$. Optionally, the implementation can choose to return the parsed statement.
+
+\begin{description}
+  \item[Batchable Form]
+      The verifier's algorithm $\batchverifier(\vec \statement, \ctx, \stag, (\vec \commitment,\vec s))$ works as follows:
+      \begin{itemize}
+        \item
+          Recompute the challenge as $\challenge\gets\hash(\vec \statement, \vec \commitment, \ctx, \stag)$.
+        \item
+          Output whatever $\verifier(\vec \statement,\vec \commitment,\challenge,\vec \response)$ outputs.
+      \end{itemize}
+  \item[Short Form]
+      The verifier's algorithm $\shortverifier(\vec \statement, \ctx, \stag, (\challenge, \vec \response))$ works as follows:
+      \begin{itemize}
+        \item Set $\vec \commitment \gets \simulator(\challenge, \vec \response)$
+        \minote{this is not correct}
+         Recompute the first message $\vec \commitment$ by running the appropriate steps of the simulator $\simulator$.
+
+    More precisely, we stress that, on input a challenge $\challenge$, all simulators introduced so far first draw a response $\response$, and then compute the commitment $\commitment$ from $\challenge$ and $\response$.
+       Instead of sampling $\response$, use the input value to recompute $\commitment$ according to the remaining steps of the simulator.
+        Check that $\challenge=\hash(\vec \commitment, \vec \statement, \ctx, \tau)$ and reject if this is not the case.
+        \item Check $c = c^*$ where $c^*$ is computed according to \cref{sec:fs-challenge}.
+      \end{itemize}
+\end{description}
+
+
 
 
 \subsection{Composition of $\Sigma$-Protocols}
@@ -254,8 +314,7 @@ The short form has shorter proofs if the protocol contains at least an AND state
   In this section, we specify composition techniques of $\Sigma$-protocols.
   Specifically, we define mechanisms for proving knowledge of multiple independent witnesses (\emph{AND composition}), and for proving knowledge for one out of a set of witnesses (\emph{OR composition}).
   Without loss of generality, the techniques presented in the following focus on the composition of two protocols;
-  proving knowledge of more than two witnesses, or for out of a larger set of witnesses, can directly be achieved by iteratively deploying the techniques.
-
+  proving knowledge of more than two witnesses, or for out of a larger set of witnesses.
   For the rest of this section, we let $(\prover_1^0,\prover_2^0,\verifier^0)$ and $(\prover_1^1,\prover_2^1,\verifier^1)$ be the specifications of two $\Sigma$-protocols for two relations $\relation^0$ and $\relation^1$, and let $\simulator^0$ and $\simulator^1$ be their simulators.
 
 \subsubsection{AND Composition}
@@ -448,7 +507,7 @@ A basic $\Sigma$-protocol for the relation:
       \item
         Let $c \defeq \frombytes(\challenge)$.
       \item Parse $(r_1,\dots,r_n)\defeq \st$ and $(w_1,\dots,w_n)\defeq \vec \witness$.
-      \item Compute its response as $s_i\defeq r_i+cw_i$ for $i=1,\dots,n$.
+      \item Compute the response $s_i\defeq r_i+cw_i$ for $i=1,\dots,n$.
     \end{enumerate}
   \item\label{item:basic:v}
     The verifier's algorithm $\verifier(\vec \statement,\vec \commitment,\challenge,\vec \response)$ proceeds as follows:
@@ -459,12 +518,12 @@ A basic $\Sigma$-protocol for the relation:
       \item Check whether $(\commitment_1 + c\statement_1,\dots,\commitment_m + c\statement_m) = \varphi(s_1,\dots,s_n)$, and outputs $\accept$ if this is the case; otherwise, $\verifier$ outputs $\reject$.
     \end{enumerate}
   \item\label{item:basic:sim}
-    The required simulator $\simulator(\vec \statement,c)$ for a basic $\Sigma$-protocol works as follows:
+    The required simulator $\simulator(\vec \statement,c, \vec s)$ for a basic $\Sigma$-protocol works as follows:
     \begin{enumerate}
       \item
         Parse $(\statement_1,\dots,\statement_m)\defeq \vec \statement$.
       \item\label{item:basic:sim:s}
-        Choose $\response_1,\dots,\response_n\sample\ZZ_p$.
+        Parse $\response_1,\dots,\response_n\sample\ZZ_p$.
       \item
         Set $(\commitment_1,\dots,\commitment_m) \defeq \varphi(s_1,\dots,s_n) - c(\statement_1,\dots,\statement_m)$.
       \item
@@ -473,35 +532,10 @@ A basic $\Sigma$-protocol for the relation:
 \end{enumerate}
 
 
-
-\paragraph{Commitment.} The first step is the generation of uniformly-distributed random element(s) over $\ZZ_p$. The nonce must be distributed uniformly at random, and even a small bias in the distribution could completely compromise zero-knowledge~\cite{lattice-attack,bleichenbacher,CCS:ANTTY20}.
-
-We propose the construction of a synthetic nonce obtained from hashing statement, context, and secret, together with 8 additional bytes from operating system's entropy:
-\[
-  r \defeq \hash(\ctx, \stag, \witness, \mathsf{rnd})
-\]
-where $\mathsf{rnd} \defeq \bin^{64}$ are 64 bits of entropy.
-The construction of cryptographically secure source of randomness is a difficult problem, that is particularly challenging on embedded devices such as smart-cards or embedded systems. For those applications for which obtaining a high-quality entropy is challenging, a stateful counter would be sufficient to achieve random $r$.
-
-Hashing the statement and the witness to obtain a commitment was already suggested in previous standards~\cite{rfc6979} in the context of deterministic nonce generation.
-While it is widely recognized that having deterministic nonce helps strengthening the concrete security  and mitigates the risks associated to the generation of a commitment, it could on the other hand leak information about the witness used for a proof, when examining consecutive executions of the protocol. This is e.g. the case of a OR-proof that attempts to preserve anonymity.
-Consider a ring signature for the ring \(R = (Y_0 , Y_1)\),
-and two OR-proofs with the same tag $\stag$.  In a scenario where the nonce is deterministically generated, then the proofs are identical if the same key is used, and different otherwise.
-
-\paragraph{Computing the challenge.}
-The challenge is computed as:
-\[
-  c \defeq \hash(\vec \statement, \vec \commitment, \ctx, \stag)
-\]
-according to the prescriptions of the previous paragraph and section \cref{sec:fs}. The implementer can pre-process the hash evaluation of the context $\ctx$ and the statement $\vec \statement$.
-
 \paragraph{Response and proof output.} The response is computed using standard field addition and multiplication. The implementation should support batched and short form, as wrappers around the proof transcript as generated by $\prover_2$.
 \paragraph{Verification.} The implementation should support two different verification functions, for batched and short verification.
 The case of batched verification must include a point verification sub-routing that asserts the statement and commitments are in question. Failure to properly check that a commitment is in the group could lead to subgroup attacks~\cite{EC:VanWie96,C:LimLee97} or invalid curve attacks~\cite{C:BieMeyMul00,RSA:BBPV12}.
 
-If verification fails, an exception should be raised.
-If input parsing fails, an exception should be raised.
-Otherwise, the verifier outputs $\pctrue$. Optionally, the implementation can choose to return the parsed statement.
 
 \subsection{Proving linear relations among witnesses}
 
@@ -526,52 +560,8 @@ Proving such a relation can easily by achieved by modifying the above protocol a
 
 
 
-\subsection{Verification}
-We describe two ways for verifying the statement:
+\subsection{Batch Verification}
 
-\paragraph{Choice of the hash functions.} We advise for the use of consolidated, cryptographically secure hash functions such as \verb|SHA2|, \verb|SHA3|, and \verb|BLAKE2|, \verb|BLAKE3|\footnote{We did not examine closely algebraic hashes for this draft, but we stress that their adoption could be appealing for a number of applications requiring recursive proofs. Unfortunately, this requires a much deeper cryptanalysis within a working group.}.
-In non-interactive $\Sigma$-protocols, the image of the random oracle is assumed to be over the field, and translating the output of the hash function (in $\bin^*$) into an integer mod $p$ requires care to preserve indifferentiability.
-% To the best of our knowledge, the best options for performing this operation are the following:
-% \begin{enumerate}[label=$(\alph*)$]
-%   \item\label{item:truncate-128}  Truncating the output of the hash to 128 bits, and interpreting it as a small integer mod $p$.
-%   Despite being the most efficient option at our disposal, it is unclear if the collision probability of $2^{-64}$ could be too small for certain applications;
-%  \item\label{item:truncate-256}
-We proceed truncating the output of the hash to 256 bits, and then reducing mod $p$.
- This is by far the most natural approach; however, the output distribution could be potentially far from uniformly random, in terms of statistical distance.
-Consider e.g.\ a prime $p$ that is close to $3/4 \cdot 2^{256}$. Reducing a random $256$-bit integer modulo this $p$ yields a value that is in the range $[0, p / 3]$ with probability roughly $1/2$~\cite{hash-to-curve}.
- We remark that, nonetheless, min-entropy wise this will cost at most one bit of security.
- Namely, the chances of guessing a specific challenge is still than negligible despite the bias.
- \minote{check that curves proposed have a very small range. }
-
-
-\subsubsection{Batchable form}
-
-
-\begin{enumerate}
-  \item
-    The prover's algorithm $\batchprover(\vec \witness, \vec \statement,\ctx, \stag)$ works as follows:
-    \begin{enumerate}
-      \item
-        Compute $(\vec \commitment,\st)\gets\prover_1(\vec \witness, \vec \statement)$.
-      \item
-        Compute the challenge by setting $\challenge\defeq\hash(\vec \commitment, \vec \statement,\ctx, \stag)$.
-      \item
-        Define $\vec \response\gets\prover_2(\vec \witness, \vec \statement,\challenge,\st)$.
-      \item
-        Output $(\vec \commitment, \vec \response)$.
-    \end{enumerate}
-  \item
-    The verifier's algorithm $\batchverifier(\vec \statement, \ctx, \stag, (\vec \commitment,\vec s))$ works as follows:
-    \begin{enumerate}
-      \item
-        Recompute the challenge as $\challenge\gets\hash(\vec \statement, \vec \commitment, \ctx, \stag)$.
-      \item
-        Output whatever $\verifier(\vec \statement,\vec \commitment,\challenge,\vec \response)$ outputs.
-    \end{enumerate}
-\end{enumerate}
-
-
-\paragraph{Verification equation.}
 The batchable form can take advantage of the following fact.
 Given the single verification equations of the form:
 \[
@@ -587,32 +577,7 @@ If the matrix $G_{i, j}$ of generators has identical rows, by linearity the righ
 If the statements $\statement_i$'s have identical rows, by linearity the second term in the equation can be computed as a single scalar product.
 The random vector $\vec a$ can be \emph{deterministically} generated by fixing $a_0 \defeq 1$ and setting $(a_1, \dots, a_{\ell-1}) \defeq \prg(\vec Y, \vec T,  \challenge, \vec s)$~\cite{bip-schnorr}.
 
-\subsubsection{Short form}
-\begin{enumerate}
-  \item
-    The prover's algorithm $\shortprover(\vec \witness, \vec \statement,\ctx, \stag)$ works as follows:
-    \begin{enumerate}
-      \item
-        Compute $(\vec \commitment,\st)\gets\prover_1(\vec \witness, \vec \statement)$.
-      \item
-        Compute the challenge by setting $\challenge\defeq\hash(\vec \commitment, \vec \statement,\ctx, \stag)$.
-      \item
-        Define $\vec \response\gets\prover_2(\vec \witness,\vec \statement, \challenge,\st)$.
-      \item
-        Output $(\challenge,\vec \response)$.
-    \end{enumerate}
-  \item
-    The verifier's algorithm $\shortverifier(\vec \statement, \ctx, \stag, (\challenge, \vec \response))$ works as follows:
-    \begin{enumerate}
-      \item\label{item:fslong:v:recomputet}
-        Recompute the first message $\vec \commitment$ by running the appropriate steps of the simulator $\simulator$.
 
-         More precisely, we stress that, on input a challenge $\challenge$, all simulators introduced so far first draw a response $\response$, and then compute the commitment $\commitment$ from $\challenge$ and $\response$.
-        Instead of sampling $\response$, use the input value to recompute $\commitment$ according to the remaining steps of the simulator.
-        \item
-        Check that $\challenge=\hash(\vec \commitment, \vec \statement, \ctx, \tau)$ and reject if this is not the case.
-    \end{enumerate}
-\end{enumerate}
 
 \subsection{Examples}
 
