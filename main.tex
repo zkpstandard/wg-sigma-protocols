@@ -46,6 +46,7 @@
 \newcommand{\frombytes}{\texttt{FromBytes}}
 \newcommand{\statementnode}{\texttt{Statement}}
 \newcommand{\statementleaf}{\texttt{StatementLeaf}}
+\newcommand{\unsure}[1]{\textcolor{red}{#1}}
 
 \title{Proposal: $\Sigma$-protocols}
 %
@@ -111,7 +112,9 @@ Such protocols can be used to prove that, for some binary relation $\relation$ a
 In the following, we formally describe the class of $\Sigma$-protocols, which covers all protocols considered in the remainder of this document.
  For an in-depth discussion of the underlying theory we refer to Cramer~\cite{cramer97}.
 
- \subsection{Encoding the statement}
+ \subsection{Capabilities}
+ $\Sigma$-protocols are composable: it is possible to prove conjunction and disjunctions of statements in zero-knowledge. Basic statements include proofs of knowledge of a secret key, openings of commitments, and more in general of representations.
+
 Statements in sigma protocols take the form of a labeled binary tree:
 $\statementnode$ is either:
 \begin{itemize}
@@ -171,6 +174,55 @@ A $\Sigma$-protocol consists of three algorithms $(\prover_1,\prover_2,\verifier
 %git For those applications where latency is not a problem, we direct the reader towards~\cref{XXX} for general techniques.
  For practical applications, their non-interactive versions---as described in \cref{sec:fs}---shall be used.
 \end{remark}
+
+\subsection{Serialization}
+
+\subsubsection{Serializing the statement}
+\subsubsection{Serializing the proof}
+Given the \emph{protocol transcript} $(\vec \commitment,\challenge,\vec s)$ output by the verifier, there are two possible serialization mechanisms:
+\begin{description}
+\item[Short Form] given the protocol transcript, return $\serialize(T) \concat \serialize(\vec s)$;
+\item[Batchable Form] given the protocol transcript, return $\serialize(c) \concat \serialize(\vec s)$.
+\end{description}
+The short form has shorter proofs if the protocol contains at least an AND statement.
+
+
+\subsection{The Fiat-Shamir Transform}\label{sec:fs}
+% \marynote{Considering you are stressing the importance of hashing the instance, I would send the instance in the first message of the interactive versions as well.}
+All protocols described in this standard require three messages being exchanged between the prover and the verifier.
+In practice, public-coin protocols such as $\sigma$ protocols can be converted into non-interactive ones through the Fiat-Samir heuristic.
+The underlying idea is to replace the verifier with a cryptographically secure hash function, hashing the context from the protocol and the previous message sent by the prover.
+
+\begin{remark}
+The interactive version of $\Sigma$-protocols presented in this paper is unfit for practical applications.
+\end{remark}
+
+\subsubsection{Hash Registry}
+
+
+\begin{center}
+  \begin{tabular}{lll}
+  Hash & Security Level & Source \\
+  \hline
+  SHA2 \\
+  Blake2 \\
+  Keccak & \\
+  \unsure{Poseidon} &\\
+  \end{tabular}
+\end{center}
+
+The $\hash$ of output length 32 bytes, the challenge will be computed as
+$c\defeq\hash(\vec \statement,\vec \commitment, \ctx, \stag)$,
+where $\statement$ is the public image for which knowledge of a witness is proven, $\commitment$ is the prover's first message from the $\Sigma$-protocol, $\stag$ is a (possibly empty, variable-length) label attached to the proof, and
+the context string $\ctx$ is a tuple $\ctx = (\domsepctx, \idctx)$ containing the following application-specific information:
+\begin{itemize}
+  \item $\domsepctx$, a string determining uniquely the name of the target application (and the proof type);
+  \item \textsf{id},
+    local context information (e.g., session identifiers of higher level protocols) to avoid replay-attacks, or shared randomness or a timestamp to guarantee freshness of the proof.
+\end{itemize}
+The tag $\stag$ contains an arbitrary string, possibly empty, that the prover can attach to the proof. This can allow to construct e.g. signatures and ring signatures.
+We discuss more in details the content the hash in \cref{sec:instantiation}.
+
 
 
 \subsection{Composition of $\Sigma$-Protocols}
@@ -307,6 +359,7 @@ A $\Sigma$-protocol consists of three algorithms $(\prover_1,\prover_2,\verifier
     \end{enumerate}
 \end{enumerate}
 
+<<<<<<< HEAD
 \subsection{The Fiat-Shamir Transform}\label{sec:fs}
 % \marynote{Considering you are stressing the importance of hashing the instance, I would send the instance in the first message of the interactive versions as well.}
 All protocols described so far require three messages being exchanged between the prover and the verifier.
@@ -338,6 +391,8 @@ Given the \emph{protocol transcript} $(\vec \commitment,\challenge,\vec s)$ outp
 \end{description}
 The short form has shorter proofs if the protocol contains at least an AND statement.
 
+=======
+>>>>>>> d8c6260 (Add hash functions)
 \section{$\Sigma$-protocols in prime order groups}
 \label{sec:instantiation}
 
@@ -353,20 +408,20 @@ The $\Sigma$-protocols of this section provide the following guarantees}
  \begin{center}
  \begin{tabular}{llcc}
   \hline
-  Curve & Hash & Security Level & Sources \\
+  Curve  & Security Level & Sources \\
   \hline
-  \verb|p-521| & SHA3 & 256& \cite{fips2} \\
-  \verb|p-256| & SHA3 & 128 & \cite{fips2}  \\
-  \verb|secp256k1| & SHA3 & 128 & \cite{SECG} \\
-  \verb|Ristretto| & SHA3 & 128 & \cite{cfrg-ristretto-decaf} \\
-  \verb|BLS12-381| & SHA3 & 128 & \cite{bls12} \\
+  \verb|p-521|     & 256& \cite{fips2} \\
+  \verb|p-256|     & 128 & \cite{fips2}  \\
+  \verb|secp256k1| & 128 & \cite{SECG} \\
+  \verb|Ristretto| & 128 & \cite{cfrg-ristretto-decaf} \\
+  \verb|BLS12-381| & 128 & \cite{bls12} \\
  \end{tabular}
 \end{center}
-\minote{The hash funcitons might be changed, but ellitpc curves are pretty stable. Considering Poseidon and more fancy hash functions.}
+We denote with $\GG$ the prime-order group of the elliptic curve, with $\ZZ_p$ the scalar field, and with $G$ the generator of $\GG$.
 We assume that all above ciphersuites provide the following functions:
 
 \begin{itemize}
-  \item \texttt{FromBytes}, taking as input 32 bytes and returning an element in the scalar field of the elliptic curve;
+  \item \texttt{FromRandomBytes}, taking as input 32 bytes and mapping them into an element of the scalar field;
   \item \texttt{Serialize}, taking as input a point in the elliptic curve and returning a fixed-length sequence of bits;
   \item \texttt{Deserialize}, taking a (fixed-length and curve-dependent) sequence of bits and returning an elliptic curve point. This procedure may output an error if the conversion fails.
 \end{itemize}
@@ -385,6 +440,7 @@ A basic $\Sigma$-protocol for the relation:
 \[
   \relation=\set{((\statement_1,\dots,\statement_m),(w_1,\dots,w_n)) : (\statement_1,\dots,\statement_m)=\varphi(w_1,\dots,w_n)}
 \]
+\minote{what if some of the $w$'s are publicly known}
  for a group homomorphism $\varphi:\ZZ_p^n\to\GG^m$ is given by the following algorithms:
 
 \begin{enumerate}
