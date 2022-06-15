@@ -175,23 +175,16 @@ A $\Sigma$-protocol consists of three algorithms $(\prover_1,\prover_2,\verifier
  For practical applications, their non-interactive versions---as described in \cref{sec:fs}---shall be used.
 \end{remark}
 
-\subsection{Serialization}
 
 \subsubsection{Serializing the statement}
   There are many different options for serialization that could be considered:
   \begin{itemize}
-  \item \href{https://datatracker.ietf.org/doc/html/rfc7049}{RFC7049}
-  \end{itemize}
-The zk proof Reference document provides a serialization document for r1cs~\cite[]{zkproof-reference}
+  \item Concise Binary Object Representation (CBOR) \href{https://datatracker.ietf.org/doc/html/rfc7049}{RFC7049}
+    \item The zk proof Reference document provides a serialization document for r1cs~\cite[3.4.2]{zkproof-reference}, but there is nothing in it.
+    \item Strobe [\href{https://strobe.sourceforge.io/specs/}{Strobe Specification}], which limits us to sponge functions
+\end{itemize}
+The tree is encoded in breadth-first.
 
-
-\subsubsection{Serializing the proof}
-Given the \emph{protocol transcript} $(\vec \commitment,\challenge,\vec s)$ output by the verifier, there are two possible serialization mechanisms:
-\begin{description}
-\item[Short Form] given the protocol transcript, return $\serialize(T) \concat \serialize(\vec s)$;
-\item[Batchable Form] given the protocol transcript, return $\serialize(c) \concat \serialize(\vec s)$.
-\end{description}
-The short form has shorter proofs if the protocol contains at least an AND statement.
 
 
 \subsection{The Fiat-Shamir Transform}\label{sec:fs}
@@ -206,6 +199,7 @@ The interactive version of $\Sigma$-protocols presented in this paper is unfit f
 
 \subsubsection{Hash Registry}
 
+We support all of the following hash functions that takes as input a sequence of bytes of arbitrary length and output 32 bits of entropy.
 
 \begin{center}
   \begin{tabular}{lll}
@@ -232,6 +226,14 @@ We discuss more in details the content the hash in \cref{sec:instantiation}.
 
 \subsubsection{Randomness for the commitment}
 \subsubsection{Randomness for the challenge}
+
+\subsubsection{Serializing the proof}
+Given the \emph{protocol transcript} $(\vec \commitment,\challenge,\vec s)$ output by the verifier, there are two possible serialization mechanisms:
+\begin{description}
+\item[Short Form] given the protocol transcript, return $\serialize(T) \concat \serialize(\vec s)$;
+\item[Batchable Form] given the protocol transcript, return $\serialize(c) \concat \serialize(\vec s)$.
+\end{description}
+The short form has shorter proofs if the protocol contains at least an AND statement.
 
 
 \subsection{Composition of $\Sigma$-Protocols}
