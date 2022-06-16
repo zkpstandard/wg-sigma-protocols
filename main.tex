@@ -49,7 +49,7 @@
 \newcommand{\unsure}[1]{\textcolor{red}{#1}}
 \newcommand{\simresponse}{\textsf{SimResp}}
 \newcommand{\simcommitment}{\textsf{SimCom}}
-\newcommand{\proverstatement}{\prover.\textsf{stmt}}
+\newcommand{\proverstatement}{\textsf{stmt}}
 \newcommand{\andstmt}{\textsf{AND}}
 \newcommand{\orstmt}{\textsf{OR}}
 \newcommand{\seedlen}{\ensuremath{32B}}
@@ -253,7 +253,7 @@ The challenge is the hash of:
     \item \textsf{id},
       local context information (e.g., session identifiers of higher level protocols) to avoid replay-attacks, or shared randomness or a timestamp to guarantee freshness of the proof.
   \end{itemize}
-  \item $\proverstatement$, a 32-byte string identifying the statement being proven. Besides the morphism, it must include all public parameters being used.
+  \item $\prover.\proverstatement$, a 32-byte string identifying the statement being proven. Besides the morphism, it must include all public parameters being used.
   \item $\tau$, a (possibly set to zero) message attached to the proof of \seedlen.
   \item $\serialize(T)$, the serialization of the statement.
 \end{itemize}
@@ -263,14 +263,14 @@ We note that the chosen hash functions allow for preprocessing: it is possible t
 
 
 \subsubsection{Non-interactive provers}
-The prover is an object containing the 3-move sigma protocol, and a fixed-length 32byte string $\proverstatement$ uniquely identifying the statement.
-There are provers tied to a particular homomorphism $\varphi$.
-There exist $\textsf{ANDProvers}$ that are initialized with two provers and
-There are two possible non-interactive prover outputs, short and batchable.
-The length of the commitment is the length of the statement.
+The prover is an object containing the 3-move sigma protocol methods $(\prover_1, \prover_2, \verifier, \simresponse, \simcommitment)$, and a fixed-length $\seedlen$ attribute $\proverstatement$ uniquely identifying the statement being proven.
+This prover can be composed with other provers as shown in \cref{sec:composition}.
+The API of this prover is not being exposed, instead only two methods are exposed for outputting non-interactive proofs: short and batchable.
 The short form has shorter proofs if the protocol contains at least an AND statement, and the difference is $|\vec \commitment| - \seedlen$.
+(Note: The length of the commitment is the length of the statement.)
 
-\minote{what if the statement / witness is not valid? should we run verification after proving?}
+Both provers in the batchable form may raise an exception if the statement is not valid.
+
 \begin{description}
 \item[Batchable Form]
 The prover's algorithm $\batchprover(\vec \witness, \vec \statement,\ctx, \stag)$ works as follows:
@@ -281,8 +281,7 @@ The prover's algorithm $\batchprover(\vec \witness, \vec \statement,\ctx, \stag)
   Compute the challenge according to \cref{sec:fs-challenge}
 \item
   Define $\vec \response\gets\prover_2(\vec \witness, \vec \statement,\challenge,\st)$.
-  \item Optionally, check $\verifier(\vec \commitment, \challenge, \vec \response)$
-	\stnote{add statement as input}
+  \item Optionally, check $\verifier(\vec \statement, \vec \commitment, \challenge, \vec \response)$
 \item
   Output $\serialize(\commitment) \concat \serialize(\vec \response)$
 \end{itemize}
@@ -296,7 +295,7 @@ The prover's algorithm $\shortprover(\vec \witness, \vec \statement,\ctx, \stag)
     Compute the challenge according to \cref{sec:fs-challenge}.
   \item
     Define $\vec \response\gets\prover_2(\vec \witness,\vec \statement, \challenge,\st)$.
-    \item Optionally, check $\verifier(\vec \commitment, \challenge, \vec \response)$
+    \item Optionally, check $\verifier(\vec \statement, \vec \commitment, \challenge, \vec \response)$
   \item
   Our $\serialize(c) \concat \serialize(\vec s)$.
 \end{itemize}
@@ -405,6 +404,8 @@ The case of batched verification must include a point verification sub-routing t
     \end{enumerate}
 \end{enumerate}
 
+The statement $\prover.\proverstatement$ is obtained via the hash function $\hash(\texttt{sigmastdv0.1-AND} \concat \prover_1.\proverstatement \concat \prover_2.\proverstatement)$
+
 
 \subsubsection{OR Composition}
   In the following we explain how to construct a $\Sigma$-protocol proving knowledge of one out of a set of witnesses, e.g., one of a set of secret keys in the case of ring signatures.
@@ -472,6 +473,7 @@ The case of batched verification must include a point verification sub-routing t
         Output $(\vec \commitment,\challenge,\vec s)\defeq ((\commitment^0,\commitment^1),\challenge,(\response^0,\response^1,\challenge^0))$.
     \end{enumerate}
 \end{enumerate}
+The statement $\prover.\proverstatement$ is obtained via $\hash(\texttt{sigmastdv0.1-IOR} \concat \prover_1.\proverstatement \concat \prover_2.\proverstatement)$
 
 \section{$\Sigma$-protocols in prime order groups}
 \label{sec:instantiation}
