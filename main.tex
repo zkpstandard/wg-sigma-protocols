@@ -109,19 +109,22 @@ All protocols defined here are simulation-extractable. A simulation-extractable 
 
 \section{Generic $\Sigma$-Protocols}
 In the following, we describe the class of $\Sigma$-protocols.
-Such protocols can be used to prove that, for some binary relation $\relation$ and a public value $Y$, a witness $w$ such that $(Y,w)\in\relation$ is known.
+Such protocols can be used to prove that, for some binary relation $\relation$ and a public value $\statement$, a witness $\witness$ such that $(\statement,\witness)\in\relation$ is known.
 
-In the following, we formally describe the class of $\Sigma$-protocols, which covers all protocols considered in the remainder of this document.
- For an in-depth discussion of the underlying theory we refer to Cramer~\cite{cramer97}.
+\medskip
 
- \subsection{Capabilities}
- $\Sigma$-protocols are composable: it is possible to prove conjunction and disjunctions of statements in zero-knowledge. Basic statements include proofs of knowledge of a secret key, openings of commitments, and more in general of representations.
+An important property of $\Sigma$-protocols is that they are composable: it is possible to prove conjunction and disjunctions of statements in zero-knowledge. Basic statements include proofs of knowledge of a secret key, openings of commitments, and more in general of representations.
 Statements in $\Sigma$-protocols take the form of a labeled binary tree:
 $\statementnode$ is either:
 \begin{itemize}
   \item a label \textsf{AND}, or \textsf{OR}, and two children \textsf{left} and \textsf{right} of type $\statementnode$
   \item a $\statementleaf$ instance. Objects of this type depend on the specific algebraic setting used, and will be treated in \cref{sec:sigma-dlog}.
 \end{itemize}
+Composition of $\Sigma$-protocols is dealt in details in \cref{sec:composition}.
+
+ \subsection{Foundations of $\Sigma$-protocols}
+The following formally describes the class of $\Sigma$-protocols, which covers all protocols considered in the remainder of this document.
+ For an in-depth discussion of the underlying theory we refer to Cramer~\cite{cramer97}.
 
 A $\Sigma$-protocol consists of three algorithms $(\prover_1,\prover_2,\verifier)$, where:
       The protocol is of the following form (cf. also~\cref{fig:generic}):
@@ -144,17 +147,6 @@ A $\Sigma$-protocol consists of three algorithms $(\prover_1,\prover_2,\verifier
       \end{itemize}
 %      The protocol transcript $(\commitment,\challenge,\response)$ is called \emph{accepting} if the verifier accepts the protocol run.
 
-Besides these algorithms, also a so-called simulator is defined for $\Sigma$-protocols, which is needed when composing protocols to realize complex statements such as, e.g., knowledge of one out of a set of witnesses.
-The simulator consists of the following two procedures:
-\begin{itemize}
-  \item
-	  $\simresponse(\statement)$
-	\item
-	  $\simcommitment(\statement,\challenge,\response)$
-\end{itemize}
-
-\minote{We need also a $\simresponse$ procedure?}
-  An additional procedure, called the simulator $\simulator$ is defined for the basic protocol instances and will be needed when composing protocols \cref{sec:sigma-dlog}.
  The flow of a $\Sigma$-protocol is also depicted in~\cref{fig:generic}.
 
     \begin{protocol}{Generic flow of a $\Sigma$-protocol.\\[-2.25em]}{fig:generic}{t}
@@ -174,6 +166,21 @@ The simulator consists of the following two procedures:
         & & $\accept/\reject \gets \verifier(\statement,\commitment,\challenge,\response)$ \\
       \end{tabular}
     \end{protocol}
+		
+	\medskip
+
+Besides these algorithms, also a so-called simulator is defined for $\Sigma$-protocols, which is needed when composing protocols to realize complex statements such as, e.g., knowledge of one out of a set of witnesses.
+The simulator consists of the following two procedures:
+\begin{itemize}
+  \item
+	  In a first step, given the statement $\statement$, the simulator draws generates a response by running:
+		$$\response\sample\simresponse(\statement)\,.$$
+	\item
+	  Given a statement $\statement$, a challenge $\challenge$, as well as a response $\response$, the second stage of the simulator computes a commitment $\commitment$ as:
+	  $$\commitment\sample\simcommitment(\statement,\challenge,\response)\,.$$
+\end{itemize}
+\stnote{are there any reasonable $\Sigma$-protocols where the simulator cannot be split like this? e.g., are there any protocols where $\challenge$ and $\response$ do not uniquely determine $\commitment$ (which would maybe mean that the short form of fiat-shamir does not work anyways)?}
+
 
 \begin{remark}
   The interactive versions of the $\Sigma$-protocols presented in this document are not fit for practical applications, due to subtle yet impactful details in their security guarantees.
