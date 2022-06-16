@@ -49,6 +49,10 @@
 \newcommand{\unsure}[1]{\textcolor{red}{#1}}
 \newcommand{\simresponse}{\textsf{SimResp}}
 \newcommand{\simcommitment}{\textsf{SimCom}}
+\newcommand{\proverstatement}{\prover.\textsf{stmt}}
+\newcommand{\andstmt}{\textsf{AND}}
+\newcommand{\orstmt}{\textsf{OR}}
+\newcommand{\seedlen}{\ensuremath{32B}}
 
 \title{Proposal: $\Sigma$-protocols}
 %
@@ -96,6 +100,9 @@ For the purpose of this document, the following notation will be used:
 \section{Concepts}
 
 \subsection{Terminology}
+\minote{what is a witness}
+\minote{What is a statement}
+\minote{What is a proof}
 
 Zero knowledge means that the protocol does not leak any information about the prover's messages beyond what the attacker may infer form the proof itself or from other sources~\cite[1.6.4]{zkproof-reference}.
 
@@ -116,12 +123,7 @@ In the following, we formally describe the class of $\Sigma$-protocols, which co
 
  \subsection{Capabilities}
  $\Sigma$-protocols are composable: it is possible to prove conjunction and disjunctions of statements in zero-knowledge. Basic statements include proofs of knowledge of a secret key, openings of commitments, and more in general of representations.
-Statements in $\Sigma$-protocols take the form of a labeled binary tree:
-$\statementnode$ is either:
-\begin{itemize}
-  \item a label \textsf{AND}, or \textsf{OR}, and two children \textsf{left} and \textsf{right} of type $\statementnode$
-  \item a $\statementleaf$ instance. Objects of this type depend on the specific algebraic setting used, and will be treated in \cref{sec:sigma-dlog}.
-\end{itemize}
+Statements in $\Sigma$-protocols can be composed arbitrarily and it is possible to obtain \textsf{AND} and \textsf{OR} composition for statements.
 
 A $\Sigma$-protocol consists of three algorithms $(\prover_1,\prover_2,\verifier)$, where:
       The protocol is of the following form (cf. also~\cref{fig:generic}):
@@ -183,11 +185,18 @@ The simulator consists of the following two procedures:
 
 
 \subsubsection{Serializing the statement}
+
+Statements in $\Sigma$-protocols take the form of a labeled binary tree:
+$\statementnode$ is either:
+\begin{itemize}
+  \item a label \textsf{AND}, or \textsf{OR}, and two children \textsf{left} and \textsf{right} of type $\statementnode$
+  \item a $\statementleaf$ instance. Objects of this type depend on the specific algebraic setting used, and will be treated in \cref{sec:sigma-dlog}.
+\end{itemize}
+Statements are serialized depth-first.
   There are many different options for serialization that could be considered:
   \begin{itemize}
   \item Concise Binary Object Representation (CBOR) \href{https://datatracker.ietf.org/doc/html/rfc7049}{RFC7049}
     \item The zk proof Reference document provides a serialization document for r1cs~\cite[3.4.2]{zkproof-reference}, but there is nothing in it.
-    \item Strobe [\href{https://strobe.sourceforge.io/specs/}{Strobe Specification}], which limits us to sponge functions
 \end{itemize}
 The tree is encoded in breadth-first.
 
@@ -207,7 +216,7 @@ The interactive version of $\Sigma$-protocols presented in this paper is unfit f
 
 \subsubsection{Hash Registry}
 
-We support all of the following hash functions that takes as input a sequence of bytes of arbitrary length and output 32 bytes of entropy.
+We support all of the following hash functions that takes as input a sequence of bytes of arbitrary length and output \seedlen of entropy.
 
 \begin{center}
   \begin{tabular}{lll}
@@ -237,7 +246,8 @@ The challenge is the hash of:
     \item \textsf{id},
       local context information (e.g., session identifiers of higher level protocols) to avoid replay-attacks, or shared randomness or a timestamp to guarantee freshness of the proof.
   \end{itemize}
-  \item $\tau$, a (possibly set to zero) message attached to the proof of 32 bytes.
+  \item $\proverstatement$, a 32-byte string identifying the statement being proven. Besides the morphism, it must include all public parameters being used.
+  \item $\tau$, a (possibly set to zero) message attached to the proof of \seedlen.
   \item $\serialize(T)$, the serialization of the statement.
 \end{itemize}
 
@@ -245,12 +255,13 @@ We note that the chosen hash functions allow for preprocessing: it is possible t
 
 
 
-\subsubsection{Serializing the proof}
-
-\minote{The prover must also work on a tree as input, and invoke the prove at associated to the root of the statement.}
-There are two possible provers, short and batchable.
-The short form has shorter proofs if the protocol contains at least an AND statement.
-\minote{quantify the gain}
+\subsubsection{Non-interactive provers}
+The prover is an object containing the 3-move sigma protocol, and a fixed-length 32byte string $\proverstatement$ uniquely identifying the statement.
+There are provers tied to a particular homomorphism $\varphi$.
+There exist $\textsf{ANDProvers}$ that are initialized with two provers and
+There are two possible non-interactive prover outputs, short and batchable.
+The length of the commitment is the length of the statement.
+The short form has shorter proofs if the protocol contains at least an AND statement, and the difference is $|\vec \commitment| - \seedlen$.
 
 \minote{what if the statement / witness is not valid? should we run verification after proving?}
 \begin{description}
@@ -482,7 +493,7 @@ We denote with $\GG$ the prime-order group of the elliptic curve, with $\ZZ_p$ t
 We assume that all above ciphersuites provide the following functions:
 
 \begin{itemize}
-  \item \texttt{FromRandomBytes}, taking as input 32 bytes and mapping them into an element of the scalar field;
+  \item \texttt{FromRandomBytes}, taking as input \seedlen and mapping them into an element of the scalar field;
   \item \texttt{Serialize}, taking as input a point in the elliptic curve and returning a fixed-length sequence of bits;
   \item \texttt{Deserialize}, taking a (fixed-length and curve-dependent) sequence of bits and returning an elliptic curve point. This procedure may output an error if the conversion fails.
 \end{itemize}
