@@ -41,18 +41,6 @@
 \newtheorem{theorem}{Theorem}
 \newtheorem{remark}{Remark}
 
-\newcommand{\serialize}{\texttt{Serialize}}
-\newcommand{\deserialize}{\texttt{Deserialize}}
-\newcommand{\frombytes}{\texttt{FromBytes}}
-\newcommand{\statementnode}{\texttt{Statement}}
-\newcommand{\statementleaf}{\texttt{StatementLeaf}}
-\newcommand{\unsure}[1]{\textcolor{red}{#1}}
-\newcommand{\simresponse}{\textsf{SimResp}}
-\newcommand{\simcommitment}{\textsf{SimCom}}
-\newcommand{\proverstatement}{\prover.\textsf{stmt}}
-\newcommand{\andstmt}{\textsf{AND}}
-\newcommand{\orstmt}{\textsf{OR}}
-\newcommand{\seedlen}{\ensuremath{32B}}
 
 \title{Proposal: $\Sigma$-protocols}
 %
@@ -124,9 +112,9 @@ An important property of $\Sigma$-protocols is that they are composable: it is p
 Statements in $\Sigma$-protocols can be composed arbitrarily and it is possible to obtain \textsf{AND} and \textsf{OR} composition for statements.
 Composition of $\Sigma$-protocols is dealt in details in \cref{sec:composition}.
 
+\subsection{Basics of $\Sigma$-protocols}
 The following formally describes the class of $\Sigma$-protocols, which covers all protocols considered in the remainder of this document.
  For an in-depth discussion of the underlying theory we refer to Cramer~\cite{cramer97}.
-
 
 A $\Sigma$-protocol consists of three algorithms $(\prover_1,\prover_2,\verifier)$, where:
       The protocol is of the following form (cf. also~\cref{fig:generic}):
@@ -360,7 +348,8 @@ The case of batched verification must include a point verification sub-routing t
   Intuitively, the algorithm simply runs the instances of the different protocols to be composed in parallel, using the same challenge $\challenge$ for all instances.
 	The verifier will then accept the protocol run, if and only if all instances of the partial protocols output $\accept$.
 
-\begin{enumerate}
+The main procedures of the resulting $\Sigma$-protocol are specified by the following algorithms:
+\begin{itemize}
   \item
     The prover's first algorithm $\prover_1(\vec \witness, \vec\statement)$ consists of the following steps:
     \begin{enumerate}
@@ -379,31 +368,43 @@ The case of batched verification must include a point verification sub-routing t
       \item
 	Parse $(\st^0,\st^1)\defeq \st$
       \item
-        Compute $s^0\gets\prover_2^0(\witness^0,\statement^0,\challenge,\st^0)$ and $s^1\gets\prover_2^1(\witness^1,\statement^1,\challenge,\st^1)$.
+        Compute $\response^0\gets\prover_2^0(\witness^0,\statement^0,\challenge,\st^0)$ and $\response^1\gets\prover_2^1(\witness^1,\statement^1,\challenge,\st^1)$.
       \item
-        Output $\vec \response\defeq(s^0,s^1)$.
+        Output $\vec \response\defeq(\response^0,\response^1)$.
     \end{enumerate}
   \item
     The verifier's algorithm $\verifier(\vec \statement, \vec \commitment,\challenge,\vec \response)$ proceeds as follows:
     \begin{enumerate}
       \item
-        Parse $(s^0,s^1)\defeq \vec \response$.
+        Parse $(\response^0,\response^1)\defeq \vec \response$.
       \item
 	Output $\verifier^0(\statement^0, \commitment^0,\challenge, \response^0)\land\verifier^1(\statement^1, \commitment^1,\challenge, \response^1)$.
     \end{enumerate}
+	\end{itemize}
+	
+The required algorithms of the simulator are defined as follows:
+	\begin{itemize}
   \item
-    The required simulator $\simulator(\vec Y,c)$ works as follows:
+    $\simresponse(\vec\statement)$ generates a simulated response as follows:
     \begin{enumerate}
       \item
-        Parse $(\statement^0,\statement^1)\defeq \vec Y$.
+        Parse $(\statement^0,\statement^1)\defeq \vec \statement$.
       \item
-        Choose $\challenge\sample\CS$.
+        Compute $\response^0\gets\simresponse^0(\statement^0)$ and $\response^1\gets\simresponse^1(\statement^1)$.
       \item
-        Compute $(\commitment^0,\challenge,s^0)\gets\simulator^0(\statement^0,c)$ and $(\commitment^1,\challenge,s^1)\gets\simulator^1(\statement^1,c)$.
-      \item
-        Finally, output $(\vec \commitment,\challenge, \vec \response)\defeq((\commitment^0, \commitment^1),\challenge,(s^0,s^1))$.
+        Output $\vec \response\defeq(\response^0,\response^1)$.
     \end{enumerate}
-\end{enumerate}
+  \item
+    The commitment is simulated by $\simcommitment(\vec \statement, \challenge, \vec \response)$ works as follows:
+    \begin{enumerate}
+      \item
+        Parse $(\statement^0,\statement^1)\defeq \vec\statement$ and $(\response^0,\response^1)\defeq\vec\response$.
+      \item
+        Compute $\commitment^0\gets\simcommitment^0(\statement^0,\challenge,\response^0)$ and $\commitment^1\gets\simcommitment^1(\statement^1,\challenge,\response^1)$.
+      \item
+        Finally, output $\vec \commitment\defeq(\commitment^0, \commitment^1)$.
+    \end{enumerate}
+\end{itemize}
 
 
 \subsubsection{OR Composition}
@@ -422,17 +423,19 @@ The case of batched verification must include a point verification sub-routing t
 	Having received the challenge, the prover then computes challenge for the known witness, depending on the received challenge and the one from the simulated transcript.
 	Having computed the response, the prover transfers the responses of both transcripts, as well as the partial challenges to the verifier, who accepts if and only if both instances of the partial protocols output $\accept$ and the partial challenges correctly add up to the random challenge.
 
-	More specifically, the protocol flow is described in the following.
-\begin{enumerate}
+The main procedures of the resulting $\Sigma$-protocol are specified by the following algorithms:
+\begin{itemize}
   \item
     The prover's first algorithm $\prover_1(\vec \witness, \vec \statement)$ consists of the following steps:
     \begin{enumerate}
       \item
-        Parse $(\witness^0,\witness^1)\defeq \vec \witness$ and $(\statement^0,\statement^1)\defeq \vec \statement$, where $\witness^{1-j}=\bot$.
+        Parse $(\witness^0,\witness^1)\defeq \vec \witness$ and $(\statement^0,\statement^1)\defeq \vec \statement$, where $\witness^{1-j}=\none$.
       \item
         Compute $(\commitment^j,\st^j)\gets\prover_1^j(\statement^j,\witness^j)$.
       \item
-        Choose $\challenge^{1-j}\sample\CS$ and set $(\commitment^{1-j},\challenge^{1-j},s^{1-j})\gets\simulator^{1-j}(\statement^{1-j},\challenge^{1-j})$.
+			  Set $\response^{1-j}\gets\simresponse(\statement^{1-j})$.
+			\item
+        Choose $\challenge^{1-j}\sample\CS$ and set $\commitment^{1-j}\gets\simcommitment^{1-j}(\statement^{1-j},\challenge^{1-j},\response^{1-j})$.
       \item
 	Output $(\vec \commitment,\st) \defeq ((\commitment^0,\commitment^1),(\st^j,\challenge^{1-j},\response^{1-j}))$.
     \end{enumerate}
@@ -445,9 +448,9 @@ The case of batched verification must include a point verification sub-routing t
       \item
         Compute $\challenge^j\defeq \challenge\oplus \challenge^{1-j}$, and sets $\response^j\gets\prover_2^j(\witness^j,\statement^j,\challenge^j,\st^j)$.
       \item
-        Compute $s^0\gets\prover_2^0(\witness^0,\statement^0,\challenge,\st^0)$ and $s^1\gets\prover_2^1(\witness^1,\statement^1,\challenge,\st^1)$.
+        Compute $\response^0\gets\prover_2^0(\witness^0,\statement^0,\challenge,\st^0)$ and $\response^1\gets\prover_2^1(\witness^1,\statement^1,\challenge,\st^1)$.
       \item
-        Output $\vec \response\defeq(\response^0,\response^1, c^0)$.
+        Output $\vec \response\defeq(\response^0,\response^1, \challenge^0)$.
     \end{enumerate}
   \item
     The verifier's algorithm $\verifier(\vec \statement, \vec \commitment,\challenge,\vec \response)$ proceeds as follows:
@@ -457,21 +460,37 @@ The case of batched verification must include a point verification sub-routing t
       \item
         Set $\challenge^1\defeq \challenge \oplus \challenge^0$.
       \item
-	    Output $\verifier^0(\statement^0, \commitment^0,c^0,s^0)\land\verifier^1(\statement^1, \commitment^1,c^1,s^1)$.
+	    Output $\verifier^0(\statement^0, \commitment^0,\challenge^0,\response^0)\land\verifier^1(\statement^1, \commitment^1,\challenge^1,\response^1)$.
     \end{enumerate}
+\end{itemize}
+
+The required algorithms of the simulator are defined as follows:
+\begin{itemize}
   \item
-    The required simulator $\simulator(\vec \statement,\challenge)$ works as follows:
+    $\simresponse(\vec \statement)$ generates a simulated response as follows:
     \begin{enumerate}
       \item
         Parse $(\statement^0,\statement^1)\defeq \vec \statement$.
       \item
-        Choose a random $\challenge^0$ in $\CS$ and compute $\challenge^1\defeq \challenge \oplus \challenge^0$.
+        Compute $\response^0\gets\simresponse^0(\statement^0)$ and $\response^1\gets\simresponse^1(\statement^1)$.
       \item
-        Compute $(\commitment^0,\challenge^0, \response^0)\gets\simulator^0(\commitment^0,\challenge^0)$ and $(\commitment^1,\challenge^1,\response^1)\gets\simulator^1(\statement^1,\challenge^1)$.
-      \item
-        Output $(\vec \commitment,\challenge,\vec s)\defeq ((\commitment^0,\commitment^1),\challenge,(\response^0,\response^1,\challenge^0))$.
+        Choose a random $\challenge^0$ in $\CS$.
+			\item
+        Output $\vec \response \defeq (\response^0,\response^1,\challenge^0)$.
     \end{enumerate}
-\end{enumerate}
+\item
+    The commitment is simulated by $\simcommitment(\vec\statement,\challenge,\vec\response)$ works as follows:
+    \begin{enumerate}
+      \item
+        Parse $(\statement^0,\statement^1)\defeq \vec \statement$ and $(\response^0,\response^1,\challenge^0)\defeq\vec\response$.
+      \item
+        Compute $\challenge^1\defeq \challenge \oplus \challenge^0$.
+      \item
+        Compute $\commitment^0 \gets\simcommitment^0(\statement^0,\challenge^0,\response^0)$ and $\commitment^1\gets\simcommitment^1(\statement^1,\challenge^1,\response^1)$.
+      \item
+        Finally, output $\vec \commitment \defeq (\commitment^0,\commitment^1)$.
+    \end{enumerate}
+\end{itemize}
 
 \section{$\Sigma$-protocols in prime order groups}
 \label{sec:instantiation}
