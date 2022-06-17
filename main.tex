@@ -206,8 +206,9 @@ The dots \texttt{[...]} denote prover implementations that will be covered in
   That is, the algorithms specified below constitute a $\Sigma$-protocol for the following relation:
 \[
   \relation^\land = \set{
-    ((\statement^0,\statement^1),(\witness^0,\witness^1) : (\statement^0,\witness^0)\in \relation^0 ~\land~ (\statement^1,\witness^1)\in\relation^1}\,.
+    ((\statement^0,\statement^1),(\witness^0,\witness^1) : (\statement^0,\witness^0)\in \relation^0 ~\land~ (\statement^1,\witness^1)\in\relation^1}
 \]
+\minote{say explicitly that now the witness is a pair of witnesses valid for the respective relation. Same goes for the statement}
   Intuitively, the algorithm simply runs the instances of the different protocols to be composed in parallel, using the same challenge $\challenge$ for all instances.
 	The verifier will then accept the protocol run, if and only if all instances of the partial protocols output $\accept$.
 
@@ -275,6 +276,7 @@ The main procedures of the resulting $\Sigma$-protocol are specified by the foll
 
 
 \subsubsection{OR Composition}
+\minote{It is not immediate to build a constant-time operation for the or composation. It is possible to double the cost and run prover and simulator for each branch, but at the end we still need the ternary operator to select the correct transcirpt. This is the only place where we are incurring in non non-constant-time operations assuming the algebraic operations are already solved. }
   In the following we explain how to construct a $\Sigma$-protocol proving knowledge of one out of a set of witnesses, e.g., one of a set of secret keys in the case of ring signatures.
   That is, the algorithms specified below constitute a $\Sigma$-protocol for the following relation:
 \[
@@ -282,7 +284,7 @@ The main procedures of the resulting $\Sigma$-protocol are specified by the foll
     ((\statement^0,\statement^1),(\witness^0,\witness^1) :
     (\statement^0,\witness^0)\in \relation^0 ~\lor~ (\statement^1,\witness^1)\in\relation^1}\,.
 \]
-
+\minote{Say explicitly that now the witnesses are a pair of optional arugments, at least one of them being a non-null witness.}
   In the following protocol specification, let $j$ be such that $w^j$ is known to the prover, whereas without loss of generality $\witness^{1-j}$ is assumed to be unknown to the prover.
 
 	On a high level, the protocol works as follows.
@@ -320,7 +322,7 @@ The main procedures of the resulting $\Sigma$-protocol are specified by the foll
         Output $\vec \response\defeq(\response^0,\response^1, \challenge^0)$.
     \end{enumerate}
   \item
-  $\accept/\reject \gets \andcomposition.\verifiertt(\vec \statement, (\vec \commitment, \challenge, \vec \response))$,
+  $\accept/\reject \gets \orcomposition.\verifiertt(\vec \statement, (\vec \commitment, \challenge, \vec \response))$,
     \begin{enumerate}
       \item
         Parse $(\response^0, \response^1, \challenge^0)\defeq \vec \response$.
