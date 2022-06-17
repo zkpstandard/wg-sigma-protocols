@@ -250,6 +250,7 @@ The main procedures of the resulting $\Sigma$-protocol are specified by the foll
     \[
      \hash(\texttt{''sigmastdv0.1-AND''} \concat \firstprover.\labeltt() \concat \secondprover.\labeltt())
    \]
+   The supported hash functions are described in \cref{sec:hash-registry}.
   \item
   $\vec \response \gets \andcomposition.\simresponsett(\statement)$
    generates a simulated response as follows:
@@ -335,6 +336,7 @@ The main procedures of the resulting $\Sigma$-protocol are specified by the foll
     \[
      \hash(\texttt{''sigmastdv0.1-IOR''} \concat \firstprover.\labeltt() \concat \secondprover.\labeltt())
    \]
+   The supported hash functions are described in \cref{sec:hash-registry}.
   \item
   $\vec \response \gets \orcomposition.\simresponsett(\statement)$
     \begin{enumerate}
@@ -375,6 +377,7 @@ The interactive version of $\Sigma$-protocols presented in this paper is unfit f
 \end{remark}
 
 \subsubsection{Hash Registry}
+\label{sec:hash-registry}.
 
 We support all of the following hash functions that takes as input a sequence of bytes of arbitrary length and output \seedlen of entropy.
 
@@ -387,7 +390,7 @@ We support all of the following hash functions that takes as input a sequence of
   \unsure{Poseidon} &\\
   \end{tabular}
 \end{center}
-
+\minote{The output of poseidon are not bytes. How do make this work in the bigger picture?}
 \minote{Randomness for the commitment: we can choose to rely on the operating system's entropy. For fault attacks, it does not seem ideal either to have a prf sqeezing all the entropy.}
 \subsubsection{Randomness for the challenge}
 \label{sec:fs-challenge}
@@ -406,7 +409,7 @@ The challenge is the hash of:
     \item \textsf{id},
       local context information (e.g., session identifiers of higher level protocols) to avoid replay-attacks, or shared randomness or a timestamp to guarantee freshness of the proof.
   \end{itemize}
-  \item $\prover.\proverstatement$, a 32-byte string identifying the statement being proven. Besides the morphism, it must include all public parameters being used.
+  \item $\sigmaprotocol.\labeltt()$, the 32-byte string identifying the statement being proven.
   \item $\tau$, a (possibly set to zero) message attached to the proof of \seedlen.
   \item $\serialize(T)$, the serialization of the statement.
 \end{itemize}
@@ -811,7 +814,7 @@ We refer, e.g., to Krenn~\cite{krenn12} for generic techniques.
 \minote{Add OR prooof for knowledge of one of multiple discrete logs}
 
 
-\subsection{Serializing and sharing the statement}
+\section{Serializing and sharing the statement}
 
 Statements in $\Sigma$-protocols take the form of a labeled binary tree:
 $\statementnode$ is either:
