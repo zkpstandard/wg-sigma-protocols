@@ -308,7 +308,7 @@ Otherwise, the verifier outputs $\pctrue$. Optionally, the implementation can ch
       The verifier's algorithm $\batchverifier(\vec \statement, \ctx, \stag, (\vec \commitment,\vec s))$ works as follows:
       \begin{itemize}
         \item
-          Recompute the challenge as $\challenge\gets\hash(\vec \statement, \vec \commitment, \ctx, \stag)$.
+          Compute the challenge according to \cref{sec:fs-challenge}, obtaining $\challenge$.
         \item
           Output whatever $\verifier(\vec \statement,\vec \commitment,\challenge,\vec \response)$ outputs.
       \end{itemize}
@@ -317,14 +317,17 @@ The case of batched verification must include a point verification sub-routing t
   \item[Short Form]
       The verifier's algorithm $\shortverifier(\vec \statement, \ctx, \stag, (\challenge, \vec \response))$ works as follows:
       \begin{itemize}
-        \item Set $\vec \commitment \gets \simulator(\challenge, \vec \response)$
-        \minote{this is not correct}
-         Recompute the first message $\vec \commitment$ by running the appropriate steps of the simulator $\simulator$.
+        \item 
+         Recompute the first message $\vec \commitment$ by running the appropriate steps of the simulator, i.e. set
+				$$\vec \commitment \gets \simcommitment(\vec\statement, \challenge, \vec \response)\,.$$
 
-    More precisely, we stress that, on input a challenge $\challenge$, all simulators introduced so far first draw a response $\response$, and then compute the commitment $\commitment$ from $\challenge$ and $\response$.
-       Instead of sampling $\response$, use the input value to recompute $\commitment$ according to the remaining steps of the simulator.
-        Check that $\challenge=\hash(\vec \commitment, \vec \statement, \ctx, \tau)$ and reject if this is not the case.
-        \item Check $c = c^*$ where $c^*$ is computed according to \cref{sec:fs-challenge}.
+%    More precisely, we stress that, on input a challenge $\challenge$, all simulators introduced so far first draw a response $\response$, and then compute the commitment $\commitment$ from $\challenge$ and $\response$.
+%       Instead of sampling $\response$, use the input value to recompute $\commitment$ according to the remaining steps of the simulator.
+        \item
+				  Compute the challenge according to \cref{sec:fs-challenge}, obtaining $\challenge^*$.
+				\item
+        Check whether $\challenge=\challenge^*$.
+				Output $\accept$ if this is the case, and $\reject$ otherwise.
       \end{itemize}
 \end{description}
 
@@ -339,7 +342,7 @@ The case of batched verification must include a point verification sub-routing t
   Specifically, we define mechanisms for proving knowledge of multiple independent witnesses (\emph{AND composition}), and for proving knowledge for one out of a set of witnesses (\emph{OR composition}).
   Without loss of generality, the techniques presented in the following focus on the composition of two protocols;
   proving knowledge of more than two witnesses, or for out of a larger set of witnesses.
-  For the rest of this section, we let $(\prover_1^0,\prover_2^0,\verifier^0)$ and $(\prover_1^1,\prover_2^1,\verifier^1)$ be the specifications of two $\Sigma$-protocols for two relations $\relation^0$ and $\relation^1$, and let $\simulator^0$ and $\simulator^1$ be their simulators.
+  For the rest of this section, we let $(\prover_1^0,\prover_2^0,\verifier^0)$ and $(\prover_1^1,\prover_2^1,\verifier^1)$ be the specifications of two $\Sigma$-protocols for two relations $\relation^0$ and $\relation^1$, and let $\simresponse^0,\simcommitment^0$ and $\simresponse^1,\simcommitment^1$ be their respective simulators.
 
 \subsubsection{AND Composition}
   In the following we explain how to construct a $\Sigma$-protocol proving knowledge of multiple independent witnesses, e.g., knowledge of multiple secret keys, or openings to multiple commitments.
@@ -350,6 +353,8 @@ The case of batched verification must include a point verification sub-routing t
 \]
   Intuitively, the algorithm simply runs the instances of the different protocols to be composed in parallel, using the same challenge $\challenge$ for all instances.
 	The verifier will then accept the protocol run, if and only if all instances of the partial protocols output $\accept$.
+
+\stnote{make clear that this and-composition is generic, i.e., using the same witness in both relations will not prove equality of these witnesses!}
 
 The main procedures of the resulting $\Sigma$-protocol are specified by the following algorithms:
 \begin{itemize}
@@ -533,7 +538,7 @@ We assume that all above ciphersuites provide the group operations: check for eq
 \end{itemize}
 
 \subsection{Basic $\Sigma$-Protocols in prime-order groups}
-\stnote{Check that commitment/challenge/response are not all zero}
+\stnote{which checks are necessary? which values need to be on the curve, etc.?}
 For an in-depth discussion of the underlying theory we refer to Cramer~\cite{cramer97}.
  \begin{definition}
   For two groups $\GG_1,\GG_2$, a function $\varphi:\GG_1\to\GG_2:x\mapsto\varphi(x)$ is a \emph{(group) homomorphism}, if and only if for all $a,b\in\GG_1$ it holds that $\varphi(a+b)=\varphi(a)+\varphi(b)$.
