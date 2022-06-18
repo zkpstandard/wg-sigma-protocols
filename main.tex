@@ -33,20 +33,7 @@
 \usepackage{booktabs}
 \usepackage{graphicx}
 \usepackage{pifont}
-\newcommand{\sigmaprotocol}{\texttt{SigmaProtocol}}
-\newcommand{\provertt}{\texttt{Prover}}
-\newcommand{\provercommitment}{\texttt{prover\_commit}}
-\newcommand{\verifiertt}{\texttt{verifier}}
-\newcommand{\proverstatett}{\texttt{pstate}}
-\newcommand{\proverresponse}{\texttt{prover\_response}}
-\newcommand{\labeltt}{\texttt{label}}
-\newcommand{\seedtype}{\texttt{[u8; 32]}}
-\newcommand{\simresponsett}{\texttt{simulate\_response}}
-\newcommand{\simcommitmenttt}{\texttt{simulate\_commitment}}
-\newcommand{\firstprover}{\texttt{left}}
-\newcommand{\secondprover}{\texttt{rigtht}}
-\newcommand{\andcomposition}{\texttt{AndComposition}}
-\newcommand{\orcomposition}{\texttt{OrComposition}}
+
 \input{macros}
 
 \newtheorem{definition}{Definition}
@@ -128,8 +115,10 @@ The following formally describes the class of $\Sigma$-protocols, which covers a
 
 A $\Sigma$-protocol is a structure $\sigmaprotocol$, not exposed to the user, consisting of the following methods (cf. also~\cref{fig:generic}):
       \begin{itemize}
+        % \item $\proto \gets \sigmaprotocol.\new(\ctx, \statement)$,
+        % denoting the initialization function. This function holds the shared values in the protocol, and may pre-compute parts of the statement, and initialize the state of the hash function.
         \item
-          $(\commitment, \proverstatett)\gets \sigmaprotocol.\provercommitment(\witness, \statement)$,
+          $(\commitment, \proverstatett)\gets \sigmaprotocol.\provercommitment(\witness)$,
           denoting the \emph{commitment phase}, that is, the computation of the first message sent by the prover in a sigma protocol. This method outputs a new proving instance together with some commitment, depending on the witness known to the prover and the statement to be proven.
 					The value $\commitment$ is meant to be shared, while $\proverstatett$ must be kept secret.
         \item
@@ -401,7 +390,7 @@ We support all of the following hash functions that takes as input a sequence of
 Multiple approaches have been used in the past~\cite{EPRINT:Hamburg17, hash-to-curve}.
 The challenge is the hash of:
 \[
-  c \defeq \hash(\ctx, \sigmaprotocol.\labeltt(), \tau, \serialize(\commitment))\enspace,
+  c \defeq \hash(\ctx \concat \sigmaprotocol.\labeltt() \concat \msg \concat  \serialize(\commitment))\enspace,
 \]
 where:
 \begin{itemize}
@@ -413,54 +402,83 @@ where:
     session identifiers (to avoid replay attacks), protocol metadata (to avoid hijacking), and optionally a timestamp and some pre-shared randomness (to guarantee freshness of the proof).
   \end{itemize}
   \item $\sigmaprotocol.\labeltt()$, the 32-byte string identifying the statement being proven.
-  \item $\tau$, a (possibly set to zero) message attached to the proof of \seedlen.
+  \item $\msg$, a $\seedlen$ tag, or message, to be attached to the proof.
+  Useful when defining signatures. Can be set to zero if not used.
   \item $\serialize(T)$, the serialization of the statement.
 \end{itemize}
 
 We note that the chosen hash functions allow for preprocessing: it is possible to store the partial state and process the commitment.
 
 
+\subsubsection{Non-interactive proofs}
 
-\subsubsection{Non-interactive provers}
-The prover is an object containing the 3-move sigma protocol methods $(\prover_1, \prover_2, \verifier, \simresponse, \simcommitment)$, and a fixed-length $\seedlen$ attribute $\proverstatement$ uniquely identifying the statement being proven.
-This prover can be composed with other provers as shown in \cref{sec:composition}.
-The API of this prover is not being exposed, instead only two methods are exposed for outputting non-interactive proofs: short and batchable.
-The short form has shorter proofs if the protocol contains at least an AND statement, and the difference is $|\vec \commitment| - \seedlen$.
+In a non-interactive protocol, since challenge is computed deterministically from the commitment and the statement, it is not necessary to include it within a proof as it can be deduced in the verification phase.
+
+We define two types of proofs: short proofs, denoted $\shortproof$, and batchable proofs, denoted $\batchableproof$.
+Short proofs are the most efficient if the protocol contains at least an AND statement, and the gain in size can be trivially measured as $|\vec \commitment| - \seedlen$.
 (Note: The length of the commitment is the length of the statement.)
-
+Batchable proofs are the canonical forms of proofs.
 Both provers in the batchable form may raise an exception if the statement is not valid.
+Proofs are seen directly as fixed-length bit strings, whose exact length can be inferred from the statement during initialization of the sigma protocol.
 
+\paragraph{Prover initialization.}
+  The sigma protocol itelf can be initialized with the full statement and the context. $\sigmaprotocol.\new(\ctx, \statement)$
+
+\subsubsection{Batchable Proofs}
 \begin{description}
-\item[Batchable Form]
-The prover's algorithm $\batchprover(\vec \witness, \vec \statement,\ctx, \stag)$ works as follows:
+\item[Prover algorithm]
+A new proof $\sigmaprotocol.\batchableproof(\vec \witness, \vec \statement,\ctx, \stag)$ is built as follows:
 \begin{itemize}
 \item
-  Compute $(\vec \commitment,\st)\gets\prover_1(\vec \witness, \vec \statement)$.
+  Compute $(\vec \commitment,\proverstatett)\gets\sigmaprotocol.\provercommitment(\witness, \statement)$.
 \item
   Compute the challenge according to \cref{sec:fs-challenge}
 \item
-  Define $\vec \response\gets\prover_2(\vec \witness, \vec \statement,\challenge,\st)$.
-  \item Optionally, check $\verifier(\vec \statement, \vec \commitment, \challenge, \vec \response)$
+  Define $\vec \response\gets\sigmaprotocol.\proverresponse(\vec \witness, \vec \statement,\challenge,\proverstatett)$.
+  \item Optionally, check $\sigmaprotocol.\verifiertt(\vec \statement, \vec \commitment, \challenge, \vec \response)$
 \item
-  Output $\serialize(\commitment) \concat \serialize(\vec \response)$
+  Output the bitstring $\serialize(\commitment) \concat \serialize(\vec \response)$
 \end{itemize}
-
-\item[Short Form]
-The prover's algorithm $\shortprover(\vec \witness, \vec \statement,\ctx, \stag)$ works as follows:
+\item[Verifier algorithm] The verifier's algorithm $\sigmaprotocol.\batchverifier(\vec \statement, \ctx, \stag, (\vec \commitment,\vec s))$ works as follows:
 \begin{itemize}
   \item
-    Compute $(\vec \commitment,\st)\gets\prover_1(\vec \witness, \vec \statement)$.
+    Compute the challenge according to \cref{sec:fs-challenge}, obtaining $\challenge$.
+  \item
+    Output whatever $\sigmaprotocol.\verifiertt(\vec \statement,\vec \commitment,\challenge,\vec \response)$ outputs.
+\end{itemize}
+\paragraph{Remark.}
+The case of batched verification must include a point verification sub-routing that asserts the statement and commitments are in question. Failure to properly check that a commitment is in the group could lead to subgroup attacks~\cite{EC:VanWie96,C:LimLee97} or invalid curve attacks~\cite{C:BieMeyMul00,RSA:BBPV12}.
+
+\end{description}
+
+\subsubsection{Short Proofs}
+\begin{description}
+\item[Prover algorithm]
+A new proof $\sigmaprotocol.\shortproof(\vec \witness, \vec \statement,\ctx, \stag)$ is built as follows:
+\begin{itemize}
+  \item
+    Compute $(\vec \commitment,\st)\gets\sigmaprotocol.\provercommitment(\vec \witness, \vec \statement)$.
   \item
     Compute the challenge according to \cref{sec:fs-challenge}.
   \item
-    Define $\vec \response\gets\prover_2(\vec \witness,\vec \statement, \challenge,\st)$.
-    \item Optionally, check $\verifier(\vec \statement, \vec \commitment, \challenge, \vec \response)$
+    Define $\vec \response\gets\sigmaprotocol.\proverresponse(\vec \witness,\vec \statement, \challenge,\st)$.
+    \item Optionally, check $\sigmaprotocol.\verifiertt(\vec \statement, \vec \commitment, \challenge, \vec \response)$
   \item
   Our $\serialize(c) \concat \serialize(\vec s)$.
 \end{itemize}
-\end{description}
+\item[Verifier algorithm] The verifier's algorithm $\sigmaprotocol.\shortverifier(\vec \statement, \ctx, \stag, (\challenge, \vec \response))$ works as follows:
+\begin{itemize}
+  \item Compute $\vec \commitment \gets \sigmaprotocol.\simcommitmenttt(\vec\statement, \challenge, \vec \response)\,.$
 
-\subsection{Verification}
+%    More precisely, we stress that, on input a challenge $\challenge$, all simulators introduced so far first draw a response $\response$, and then compute the commitment $\commitment$ from $\challenge$ and $\response$.
+%       Instead of sampling $\response$, use the input value to recompute $\commitment$ according to the remaining steps of the simulator.
+  \item
+    Compute the challenge according to \cref{sec:fs-challenge}, obtaining $\challenge^*$.
+  \item
+  Check whether $\challenge=\challenge^*$.
+  Output $\accept$ if this is the case, and $\reject$ otherwise.
+\end{itemize}
+\end{description}
 \minote{Add de-serialization sub-procedures that may fail}
 \minote{Check the inputs to the sub-procedures, like the simulator is not having enough information for recomputing the challenge}
 
@@ -470,33 +488,6 @@ Otherwise, the verifier outputs $\pctrue$. Optionally, the implementation can ch
 
 
 
-\begin{description}
-  \item[Batchable Form]
-      The verifier's algorithm $\batchverifier(\vec \statement, \ctx, \stag, (\vec \commitment,\vec s))$ works as follows:
-      \begin{itemize}
-        \item
-          Compute the challenge according to \cref{sec:fs-challenge}, obtaining $\challenge$.
-        \item
-          Output whatever $\verifier(\vec \statement,\vec \commitment,\challenge,\vec \response)$ outputs.
-      \end{itemize}
-      \paragraph{Remark.}
-The case of batched verification must include a point verification sub-routing that asserts the statement and commitments are in question. Failure to properly check that a commitment is in the group could lead to subgroup attacks~\cite{EC:VanWie96,C:LimLee97} or invalid curve attacks~\cite{C:BieMeyMul00,RSA:BBPV12}.
-  \item[Short Form]
-      The verifier's algorithm $\shortverifier(\vec \statement, \ctx, \stag, (\challenge, \vec \response))$ works as follows:
-      \begin{itemize}
-        \item
-         Recompute the first message $\vec \commitment$ by running the appropriate steps of the simulator, i.e. set
-				$$\vec \commitment \gets \simcommitment(\vec\statement, \challenge, \vec \response)\,.$$
-
-%    More precisely, we stress that, on input a challenge $\challenge$, all simulators introduced so far first draw a response $\response$, and then compute the commitment $\commitment$ from $\challenge$ and $\response$.
-%       Instead of sampling $\response$, use the input value to recompute $\commitment$ according to the remaining steps of the simulator.
-        \item
-				  Compute the challenge according to \cref{sec:fs-challenge}, obtaining $\challenge^*$.
-				\item
-        Check whether $\challenge=\challenge^*$.
-				Output $\accept$ if this is the case, and $\reject$ otherwise.
-      \end{itemize}
-\end{description}
 
 
 \section{$\Sigma$-protocols in prime order groups}
