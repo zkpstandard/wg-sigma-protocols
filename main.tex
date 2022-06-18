@@ -40,7 +40,7 @@
 \newtheorem{theorem}{Theorem}
 \newtheorem{remark}{Remark}
 
-\title{Proposal: $\Sigma$-protocols}
+\title{A spec for $\Sigma$-protocols}
 %
 
 \author{Michele Orrù \thanks{michele.orru@berkeley.edu} \and Stephan Krenn
@@ -85,6 +85,7 @@ For the purpose of this document, the following notation will be used:
 \end{tabular}
 \section{Concepts}
 
+
 \subsection{Terminology}
 \minote{what is a witness}
 \minote{What is a statement}
@@ -99,6 +100,9 @@ If the proof of knowledge is non-malleable, that is, if it is still secure again
 
 All protocols defined here are simulation-extractable. A simulation-extractable proof is a proof of knowledge. A proof of knowledge is an argument.
 
+\section{Scope of this document}
+\minote{It would be useful to set a scope for this document.
+For instnace, I don't want to go in the details of how to sample uniformly at random scalars, that should be available in the community reference! Or, we don't want to waste time on how to securely store the witness.}
 
 \section{Generic $\Sigma$-Protocols}
 In the following, we describe the class of $\Sigma$-protocols.
@@ -129,6 +133,7 @@ A $\Sigma$-protocol is a structure $\sigmaprotocol$, not exposed to the user, co
         \item
           $\accept/\reject \gets \sigmaprotocol.\verifiertt(\statement, (\commitment, \challenge, \response))$,
           denoting the \emph{verifier algorithm}, that is, the checks that the verifier performs on the statement, the prover's commitment, the random challenge, and the response
+          \minote{Inconsistency: either return variable or return a type.}
           \item $\seedtype \gets \sigmaprotocol.\labeltt()$,
           returning a string of $\seedlen$ uniquely identifying the relation being proven. The label must be computed following the directives in the relative instantiations: it is crucial for security that the label includes all data available in the statement, including the parameters and the relation being proven.
           This will be discussed more in detail in the respective
@@ -144,7 +149,7 @@ A $\Sigma$-protocol is a structure $\sigmaprotocol$, not exposed to the user, co
 
     \begin{protocol}{Generic flow of a $\Sigma$-protocol.\\[-2.25em]}{fig:generic}{t}
       \begin{tabular}{@{}l@{\hspace{-2em}}c@{\hspace{-2em}}r@{}}
-        $\sigmaprotocol.\prover(\witness,\statement,\relation)$ & & $\sigmaprotocol.\verifier(\statement,\relation)$  \\
+        & $\sigmaprotocol.\new(\statement)$  \\
         \hline  \\
       % -----------------------------P1-------------------------------
         $(\commitment,\proverstatett) \gets \provercommitment(\witness,\statement)$\\
@@ -156,7 +161,7 @@ A $\Sigma$-protocol is a structure $\sigmaprotocol$, not exposed to the user, co
         $ s \gets \proverresponse(\witness,\statement,\commitment,\challenge,\proverstatett)$\\
         & $\sendr{\response}{100}$ \\[2 ex]
       % -----------------------------V-------------------------------
-        & & $\accept/\reject \gets \verifiertt(\statement,\commitment,\challenge,\response)$ \\
+        & & $\accept/\reject \gets \verifiertt(\statement,(\commitment,\challenge,\response))$ \\
       \end{tabular}
     \end{protocol}
 
@@ -221,7 +226,7 @@ The main procedures of the resulting $\Sigma$-protocol are specified by the foll
       \item
         Check that $\challenge\in\CS$ and aborts if this is not the case.
       \item
-	Parse $(\st^0,\st^1)\defeq \st$
+	Parse $(\st^0,\st^1)\defeq \proverstatett$
       \item
         Compute $\response^0\gets\prover_2^0(\witness^0,\statement^0,\challenge,\st^0)$ and $\response^1\gets\prover_2^1(\witness^1,\statement^1,\challenge,\st^1)$.
       \item
@@ -296,14 +301,14 @@ The main procedures of the resulting $\Sigma$-protocol are specified by the foll
 			\item
         Choose $\challenge^{1-j}\sample\CS$ and set $\commitment^{1-j}\gets\simcommitment^{1-j}(\statement^{1-j},\challenge^{1-j},\response^{1-j})$.
       \item
-	Output $(\vec \commitment,\st) \defeq ((\commitment^0,\commitment^1),(\st^j,\challenge^{1-j},\response^{1-j}))$.
+	Output $(\vec \commitment,\proverstatett) \defeq ((\commitment^0,\commitment^1),(\st^j,\challenge^{1-j},\response^{1-j}))$.
     \end{enumerate}
   \item
   $\vec \response \gets \orcomposition.\proverresponse(\vec \witness, \vec \statement, \challenge, \proverstatett)$:
     \begin{enumerate}
       \item
         Check that $\challenge\in\CS$ and aborts if this is not the case.
-      \item Parse $(\st^j,\challenge^{1-j},\response^{1-j})\defeq\st$.
+      \item Parse $(\st^j,\challenge^{1-j},\response^{1-j})\defeq\proverstatett$.
       \item
         Compute $\challenge^j\defeq \challenge\oplus \challenge^{1-j}$, and sets $\response^j\gets\prover_2^j(\witness^j,\statement^j,\challenge^j,\st^j)$.
       \item
@@ -387,7 +392,7 @@ We support all of the following hash functions that takes as input a sequence of
 % Truncating the output of the hash to $\ceil{\log_2 p} + \kappa$ bits (where $\kappa$ is the targeted statistical
 %  security level), and then reducing mod $p$.
 %  This approach leads to a random value statistically close ($2^{-\kappa}$) to a value sampled uniformly at random in $\ZZ_p$.
-
+\minote{Assign a function $\sigmaprotocol.\texttt{challenge}$ that in the case of Fiat-Shamir (the only one supported so far) outputs the challenge $c$. In an implementation this would have anyway to go within a separate function.}
 Multiple approaches have been used in the past~\cite{EPRINT:Hamburg17, hash-to-curve}.
 The challenge is the hash of:
 \[
@@ -429,7 +434,7 @@ Proofs are seen directly as fixed-length bit strings, whose exact length can be 
 \begin{description}
 \item[Prover algorithm]
 A new proof $\sigmaprotocol.\batchableproof(\vec \witness, \vec \statement,\ctx, \stag)$ is built as follows:
-\begin{itemize}
+\begin{enumerate}
 \item
   Compute $(\vec \commitment,\proverstatett)\gets\sigmaprotocol.\provercommitment(\witness, \statement)$.
 \item
@@ -439,14 +444,14 @@ A new proof $\sigmaprotocol.\batchableproof(\vec \witness, \vec \statement,\ctx,
   \item Optionally, check $\sigmaprotocol.\verifiertt(\vec \statement, \vec \commitment, \challenge, \vec \response)$
 \item
   Output the bitstring $\serialize(\commitment) \concat \serialize(\vec \response)$
-\end{itemize}
+\end{enumerate}
 \item[Verifier algorithm] The verifier's algorithm $\sigmaprotocol.\batchverifier(\vec \statement, \ctx, \stag, (\vec \commitment,\vec s))$ works as follows:
-\begin{itemize}
+\begin{enumerate}
   \item
     Compute the challenge according to \cref{sec:fs-challenge}, obtaining $\challenge$.
   \item
     Output whatever $\sigmaprotocol.\verifiertt(\vec \statement,\vec \commitment,\challenge,\vec \response)$ outputs.
-\end{itemize}
+\end{enumerate}
 \paragraph{Remark.}
 The case of batched verification must include a point verification sub-routing that asserts the statement and commitments are in question. Failure to properly check that a commitment is in the group could lead to subgroup attacks~\cite{EC:VanWie96,C:LimLee97} or invalid curve attacks~\cite{C:BieMeyMul00,RSA:BBPV12}.
 
@@ -456,19 +461,19 @@ The case of batched verification must include a point verification sub-routing t
 \begin{description}
 \item[Prover algorithm]
 A new proof $\sigmaprotocol.\shortproof(\vec \witness, \vec \statement,\ctx, \stag)$ is built as follows:
-\begin{itemize}
+\begin{enumerate}
   \item
-    Compute $(\vec \commitment,\st)\gets\sigmaprotocol.\provercommitment(\vec \witness, \vec \statement)$.
+    Compute $(\vec \commitment,\proverstatett)\gets\sigmaprotocol.\provercommitment(\vec \witness, \vec \statement)$.
   \item
     Compute the challenge according to \cref{sec:fs-challenge}.
   \item
-    Define $\vec \response\gets\sigmaprotocol.\proverresponse(\vec \witness,\vec \statement, \challenge,\st)$.
+    Define $\vec \response\gets\sigmaprotocol.\proverresponse(\vec \witness,\vec \statement, \challenge,\proverstatett)$.
     \item Optionally, check $\sigmaprotocol.\verifiertt(\vec \statement, \vec \commitment, \challenge, \vec \response)$
   \item
   Our $\serialize(c) \concat \serialize(\vec s)$.
-\end{itemize}
+\end{enumerate}
 \item[Verifier algorithm] The verifier's algorithm $\sigmaprotocol.\shortverifier(\vec \statement, \ctx, \stag, (\challenge, \vec \response))$ works as follows:
-\begin{itemize}
+\begin{enumerate}
   \item Compute $\vec \commitment \gets \sigmaprotocol.\simcommitmenttt(\vec\statement, \challenge, \vec \response)\,.$
 
 %    More precisely, we stress that, on input a challenge $\challenge$, all simulators introduced so far first draw a response $\response$, and then compute the commitment $\commitment$ from $\challenge$ and $\response$.
@@ -478,7 +483,7 @@ A new proof $\sigmaprotocol.\shortproof(\vec \witness, \vec \statement,\ctx, \st
   \item
   Check whether $\challenge=\challenge^*$.
   Output $\accept$ if this is the case, and $\reject$ otherwise.
-\end{itemize}
+\end{enumerate}
 \end{description}
 \minote{Add de-serialization sub-procedures that may fail}
 \minote{Check the inputs to the sub-procedures, like the simulator is not having enough information for recomputing the challenge}
@@ -524,7 +529,6 @@ We assume that all above ciphersuites provide the group operations: check for eq
 \end{itemize}
 
 \subsection{Basic $\Sigma$-Protocols in prime-order groups}
-\stnote{which checks are necessary? which values need to be on the curve, etc.?}
 For an in-depth discussion of the underlying theory we refer to Cramer~\cite{cramer97}.
  \begin{definition}
   For two groups $\GG_1,\GG_2$, a function $\varphi:\GG_1\to\GG_2:x\mapsto\varphi(x)$ is a \emph{(group) homomorphism}, if and only if for all $a,b\in\GG_1$ it holds that $\varphi(a+b)=\varphi(a)+\varphi(b)$.
@@ -534,17 +538,18 @@ For an in-depth discussion of the underlying theory we refer to Cramer~\cite{cra
 
 
 \label{sec:sigma-dlog}
-A basic $\Sigma$-protocol for the relation:
+We provide a generic template of $\Sigma$-protocol for the relation:
 \[
   \relation=\set{((\statement_1,\dots,\statement_m),(w_1,\dots,w_n)) : (\statement_1,\dots,\statement_m)=\varphi(w_1,\dots,w_n)}
 \]
 \minote{what if some of the $w$'s are publicly known}
 \stnote{let all $\witness$'s be secret for the time being}
- for a group homomorphism $\varphi:\ZZ_p^n\to\GG^m$ is given by the following algorithms:
-
-\begin{enumerate}
+ where $\varphi:\ZZ_p^n\to\GG^m$ is a group morphism. In the section  given by the following algorithms:
+ \stnote{which checks are necessary? which values need to be on the curve, etc.?}
+\minote{It's maybe dangerously unclear, but I as assuming that all private methods written here have valid elements in the curve, and that validation is up to serialization/deserialization...}
+\begin{itemize}
   \item\label{item:basic:p1}
-    The prover's first algorithm $\prover_1(\vec \witness,\vec \statement)$ consists of the following steps:
+   $\vec \commitment \gets \dlogsigmaprotocol.\provercommitment(\vec \witness,\vec \statement)$ consists of the following steps:
     \begin{enumerate}
       \item\label{item:basic:p1:randomness}
         Choose random elements $r_1,\dots,r_n\sample\ZZ_p$.
@@ -552,90 +557,57 @@ A basic $\Sigma$-protocol for the relation:
         Compute $(\commitment_1,\dots,\commitment_m)\gets\varphi(r_1,\dots,r_n)$.
       \item Set $\st\defeq (r_1,\dots,r_n)$ and $\vec \commitment\defeq(\commitment_1,\dots,\commitment_m)$.
       \item
-        Output $(\vec \commitment,\st)$.
+        Output $(\vec \commitment,\proverstatett)$.
     \end{enumerate}
   \item\label{item:basic:p2}
-    The prover's second algorithm $\prover_2(\vec \witness,\vec Y ,\challenge,\st)$ proceeds as follows:
+    $\vec \response \gets \dlogsigmaprotocol.\proverresponse(\vec \witness,\vec Y ,\challenge,\proverstatett)$ proceeds as follows:
     \begin{enumerate}
       \item
         Let $c \defeq \frombytes(\challenge)$.
-      \item Parse $(r_1,\dots,r_n)\defeq \st$ and $(w_1,\dots,w_n)\defeq \vec \witness$.
+      \item Parse $(r_1,\dots,r_n)\defeq \proverstatett$ and $(w_1,\dots,w_n)\defeq \vec \witness$.
       \item Compute the response $s_i\defeq r_i+cw_i$ for $i=1,\dots,n$.
     \end{enumerate}
   \item\label{item:basic:v}
-    The verifier's algorithm $\verifier(\vec \statement,\vec \commitment,\challenge,\vec \response)$ proceeds as follows:
+     $\accept/\reject \gets \dlogsigmaprotocol.\verifiertt(\vec \statement,\vec \commitment,\challenge,\vec \response)$ proceeds as follows:
     \begin{enumerate}
       \item Parse $(\response_1, \dots, \response_n) \defeq \vec \response$, $(\commitment_1, \dots, \commitment_m) \defeq \vec \commitment$, and $(\statement_1, \dots, \statement_m) = \vec \statement$.
       \item\label{item:basic:v:checks}
         Check that $\response_i\in\ZZ_p$ for $i=1,\dots,n$ and $\commitment_j\in\GG$ for $j=1,\dots,m$, and outputs $0$ if this is not the case.
       \item Check whether $(\commitment_1 + c\statement_1,\dots,\commitment_m + c\statement_m) = \varphi(s_1,\dots,s_n)$, and outputs $\accept$ if this is the case; otherwise, $\verifier$ outputs $\reject$.
     \end{enumerate}
+  \item $\vec \response \gets \dlogsigmaprotocol.\simresponsett(\vec \statement)$:
+  \begin{enumerate}
+    \item Sample $\response_1,\dots,\response_n\sample\ZZ_p$.
+    \item Return $(\response_1, \dots, \response_n)$
+  \end{enumerate}
   \item\label{item:basic:sim}
-    The required simulator $\simulator(\vec \statement,c, \vec s)$ for a basic $\Sigma$-protocol works as follows:
+     $\vec \commitment \gets \dlogsigmaprotocol.\simcommitmenttt(\vec \statement,c, \vec s)$:
     \begin{enumerate}
       \item
         Parse $(\statement_1,\dots,\statement_m)\defeq \vec \statement$.
       \item\label{item:basic:sim:s}
-        Parse $\response_1,\dots,\response_n\sample\ZZ_p$.
+        Parse $(\response_1,\dots,\response_n) \defeq \vec \response$.
       \item
         Set $(\commitment_1,\dots,\commitment_m) \defeq \varphi(s_1,\dots,s_n) - c(\statement_1,\dots,\statement_m)$.
       \item
-        Finally, output the simulated transcript by setting $(\vec \commitment,\challenge,\vec \response)\defeq((\commitment_1,\dots,\commitment_m),\challenge,(\response_1,\dots,\response_n))$.
+        Output $\vec \commitment \defeq(\response_1,\dots,\response_n)$.
     \end{enumerate}
-\end{enumerate}
-
-\subsection{Proving linear relations among witnesses}
-\stnote{or rewrite the homomorphism?}
-  While the above protocol allows one to efficiently prove knowledge of a pre-image under a homomorphism, many protocols found in the literature require one to prove relations among witnesses.
-  Specifically, they require to prove relations like the following:
-\begin{equation*}
-\relation=\set{((\statement_1,\dots,\statement_m),(\witness_1,\dots,\witness_n)) :
-\begin{array}{c} (\statement_1,\dots,\statement_m)=\varphi(\witness_1,\dots,\witness_n) \\
-                  A\cdot(\witness_1,\dots,\witness_n)^\intercal = (b_1,\dots,b_k)^\intercal\end{array}}\,,
-\end{equation*}
-where the matrix $A\in\ZZ_p^{k\times n}$ and vector $(b_1,\dots,b_k)\in\ZZ_p^k$ specify the system of linear equations.
-
-Proving such a relation can easily by achieved by modifying the above protocol as follows:
-\begin{itemize}
-  \item
-    In \cref{item:basic:p1:randomness}, the prover draws the randomnesses such that they satisfy the system of equations, i.e., such that $A\cdot(r_1,\dots,r_n)=(b_1,\dots,b_k)$.
-  \item
-    In \cref{item:basic:v:checks}, the verifier additionally checks that $A\cdot(\response_1,\dots,\response_n)^\intercal=(\challenge+1)\cdot(b_1,\dots,b_k)^\intercal$ and outputs $\reject$ if this is not the case.
-  \item
-    In \cref{item:basic:sim:s}, the simulator draws the responses such that they satisfy the verification equations, i.e., such that $A\cdot(\response_1,\dots,\response_n)=(c+1)\cdot(b_1,\dots,b_k)^\intercal$.
 \end{itemize}
 
-
-\subsection{Serializing the morphism}
-
-the morphism is described via a unique string that identifies it, the group elements used in the morphism must be added
-\subsection{Batch Verification}
-
-The batchable form can take advantage of the following fact.
-Given the single verification equations of the form:
-\[
-   \commitment_i + c_i Y_i = \sum_j s_{i, j} G_j
-\]
-for $i=0, \dots,\ell-1$,
-%(So, $T \in \GG^\ell$, $c \in \ZZ_p^\ell$ and $s \in \ZZ_p^{\ell \times m}$ and $\mat G \in \GG^{m \times \ell}$.)
-the ve,jrifier can sample a random vector of coefficients $a \in \ZZ_p^\ell$ instead test that:
-\[
-  \left(\sum_{i=0}^{\ell-1} a_i \commitment_i\right) + \left(\sum_{i=0}^{\ell-1} a_i \cdot  c_i \statement_i \right) = \left(\sum_{i=0}^{\ell-1} a_i \cdot \response_i G_i\right).
-\]
-If the matrix $G_{i, j}$ of generators has identical rows, by linearity the right-hand side can be computed as a single scalar product.
-If the statements $\statement_i$'s have identical rows, by linearity the second term in the equation can be computed as a single scalar product.
-The random vector $\vec a$ can be \emph{deterministically} generated by fixing $a_0 \defeq 1$ and setting $(a_1, \dots, a_{\ell-1}) \defeq \prg(\vec Y, \vec T,  \challenge, \vec s)$~\cite{bip-schnorr}.
-
-
-
 \subsection{Examples}
-\minote{rename this to schnorr signatures. Use the templates of the functions before.}
-\paragraph{Example 1 (DLOG).}
+\subsubsection{Schnorr Signatures}
+
 Let $\GG$ be a group over an elliptic curve with prime order $p$.
 Proving knowledge of the discrete logarithm $w$ of a point $Y$ in base $G$ means proving knowledge of $w\in\ZZ_p$ such that $Y=wG$.
 For a description of this proof goal in the general case of residue classes, we also refer to~\cite[1.4.1]{zkproof-reference}.
 
 Using the above notation, we have $\varphi:\ZZ_p^2\to\GG:x\mapsto xG$.
+\begin{itemize}
+  \item $\schnorr.\labeltt()$ returns
+  \[
+    \hash(``\texttt{sigmastdv0.1-SCH}''\concat \curvectx \concat \serialize(G) \concat \serialize(Y))
+  \]
+\end{itemize}
 The protocol flow is then as depicted in~\cref{fig:dlog}.
     \begin{protocol}{Proving knowledge of a discrete logarithm.\\[-2.25em]}{fig:dlog}{bpt}
       \begin{tabular}{@{}l@{\hspace{2em}}c@{\hspace{-3em}}r@{}}
@@ -659,6 +631,49 @@ The protocol flow is then as depicted in~\cref{fig:dlog}.
 
 For a given challenge $c\in\ZZ_p$, the simulator chooses $s\sample\ZZ_p$, and sets $T\gets sG-cY$.
 It then outputs the simulated transcript $(\commitment,\challenge,s)$.
+
+\subsection{Proving linear relations among witnesses}
+\stnote{or rewrite the homomorphism?}
+  While the above protocol allows one to efficiently prove knowledge of a pre-image under a homomorphism, many protocols found in the literature require one to prove relations among witnesses.
+  Specifically, they require to prove relations like the following:
+\begin{equation*}
+\relation=\set{((\statement_1,\dots,\statement_m),(\witness_1,\dots,\witness_n)) :
+\begin{array}{c} (\statement_1,\dots,\statement_m)=\varphi(\witness_1,\dots,\witness_n) \\
+                  A\cdot(\witness_1,\dots,\witness_n)^\intercal = (b_1,\dots,b_k)^\intercal\end{array}}\,,
+\end{equation*}
+where the matrix $A\in\ZZ_p^{k\times n}$ and vector $(b_1,\dots,b_k)\in\ZZ_p^k$ specify the system of linear equations.
+
+Proving such a relation can easily by achieved by modifying the above protocol as follows:
+\begin{itemize}
+  \item
+    In \cref{item:basic:p1:randomness}, the prover draws the randomnesses such that they satisfy the system of equations, i.e., such that $A\cdot(r_1,\dots,r_n)=(b_1,\dots,b_k)$.
+  \item
+    In \cref{item:basic:v:checks}, the verifier additionally checks that $A\cdot(\response_1,\dots,\response_n)^\intercal=(\challenge+1)\cdot(b_1,\dots,b_k)^\intercal$ and outputs $\reject$ if this is not the case.
+  \item
+    In \cref{item:basic:sim:s}, the simulator draws the responses such that they satisfy the verification equations, i.e., such that $A\cdot(\response_1,\dots,\response_n)=(c+1)\cdot(b_1,\dots,b_k)^\intercal$.
+\end{itemize}
+
+\subsection{Batch Verification}
+
+The batchable form can take advantage of the following fact.
+Given the single verification equations of the form:
+\[
+   \commitment_i + c_i Y_i = \sum_j s_{i, j} G_j
+\]
+for $i=0, \dots,\ell-1$,
+%(So, $T \in \GG^\ell$, $c \in \ZZ_p^\ell$ and $s \in \ZZ_p^{\ell \times m}$ and $\mat G \in \GG^{m \times \ell}$.)
+the ve,jrifier can sample a random vector of coefficients $a \in \ZZ_p^\ell$ instead test that:
+\[
+  \left(\sum_{i=0}^{\ell-1} a_i \commitment_i\right) + \left(\sum_{i=0}^{\ell-1} a_i \cdot  c_i \statement_i \right) = \left(\sum_{i=0}^{\ell-1} a_i \cdot \response_i G_i\right).
+\]
+If the matrix $G_{i, j}$ of generators has identical rows, by linearity the right-hand side can be computed as a single scalar product.
+If the statements $\statement_i$'s have identical rows, by linearity the second term in the equation can be computed as a single scalar product.
+The random vector $\vec a$ can be \emph{deterministically} generated by fixing $a_0 \defeq 1$ and setting $(a_1, \dots, a_{\ell-1}) \defeq \prg(\vec Y, \vec T,  \challenge, \vec s)$~\cite{bip-schnorr}.
+
+
+
+\subsection{Examples}
+\minote{rename this to schnorr signatures. Use the templates of the functions before.}
 
 
 \paragraph{Example 2 (DLEQ).}
