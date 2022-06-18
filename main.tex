@@ -240,6 +240,7 @@ The main procedures of the resulting $\Sigma$-protocol are specified by the foll
       \item
 	Output $\accept$ if $\verifier^0(\statement^0, \commitment^0,\challenge, \response^0)$ and $\verifier^1(\statement^1, \commitment^1,\challenge, \response^1)$ return $\accept$. Otherwise, return $\reject$.
     \end{enumerate}
+    \minote{the label needs access to $\statement$, so this is either given as an argument, or it's also removed from the response procedure.}
   \item  $\seedtype \gets \andcomposition.\labeltt()$ is computed as:
     \[
      \hash(\texttt{''sigmastdv0.1-AND''} \concat \firstprover.\labeltt() \concat \secondprover.\labeltt())
