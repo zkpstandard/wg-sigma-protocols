@@ -56,7 +56,7 @@
 \title{Proposal: $\Sigma$-protocols}
 %
 
-\author{Michele Orru \thanks{michele.orru@berkeley.edu} \and Stephan Krenn
+\author{Michele Orrù \thanks{michele.orru@berkeley.edu} \and Stephan Krenn
 \thanks{stephan.krenn@ait.ac.at}
 }
 \begin{document}
@@ -118,16 +118,15 @@ In the following, we describe the class of $\Sigma$-protocols.
 Such protocols can be used to prove that, for some binary relation $\relation$ and a public value $\statement$, a witness $\witness$ such that $(\statement,\witness)\in\relation$ is known.
 
 \medskip
-
-An important property of $\Sigma$-protocols is that they are composable: it is possible to prove conjunction and disjunctions of statements in zero-knowledge. Basic statements include proofs of knowledge of a secret key, openings of commitments, and more in general of representations.
-Statements in $\Sigma$-protocols can be composed arbitrarily and it is possible to obtain \textsf{AND} and \textsf{OR} composition for statements.
+Basic statements include proofs of knowledge of a secret key, openings of commitments, and more in general of representations.
+In addition, an important property of $\Sigma$-protocols is that they are composable: it is possible to prove conjunction and disjunctions of statements in zero-knowledge.
 Composition of $\Sigma$-protocols is dealt in details in \cref{sec:composition}.
 
 \subsection{Basics of $\Sigma$-protocols}
 The following formally describes the class of $\Sigma$-protocols, which covers all protocols considered in the remainder of this document.
  For an in-depth discussion of the underlying theory we refer to Cramer~\cite{cramer97}.
 
-A $\Sigma$-protocol are structures $\sigmaprotocol$, not exposed to the user, consisting of the following methods (cf. also~\cref{fig:generic}):
+A $\Sigma$-protocol is a structure $\sigmaprotocol$, not exposed to the user, consisting of the following methods (cf. also~\cref{fig:generic}):
       \begin{itemize}
         \item
           $(\commitment, \proverstatett)\gets \sigmaprotocol.\provercommitment(\witness, \statement)$,
@@ -140,8 +139,9 @@ A $\Sigma$-protocol are structures $\sigmaprotocol$, not exposed to the user, co
         \item
           $\accept/\reject \gets \sigmaprotocol.\verifiertt(\statement, (\commitment, \challenge, \response))$,
           denoting the \emph{verifier algorithm}, that is, the checks that the verifier performs on the statement, the prover's commitment, the random challenge, and the response
-        \item $\seedtype \gets \sigmaprotocol.\labeltt()$,
-          returning a string of $\seedlen$ uniquely identifying the relation being proven.
+          \item $\seedtype \gets \sigmaprotocol.\labeltt()$,
+          returning a string of $\seedlen$ uniquely identifying the relation being proven. The label must be computed following the directives in the relative instantiations: it is crucial for security that the label includes all data available in the statement, including the parameters and the relation being proven.
+          This will be discussed more in detail in the respective
           \minote{Add references and examples of how to produce a valid label. Add warning on the importance of constructing appropriatedly the label}
         \item $\response \gets \sigmaprotocol.\simresponsett(\statement)$,
         denoting the first stage of the \emph{simulator}. It is an algorithm drawing a random response that follows the same output distribution of the algorithm $\sigmaprotocol.\proverresponse$.
@@ -195,8 +195,7 @@ A $\Sigma$-protocol are structures $\sigmaprotocol$, not exposed to the user, co
     }
   \end{verbatim}
 
-The dots \texttt{[...]} denote prover implementations that will be covered in
-\cref{sec:sigma-dlog} and prefixed with \texttt{BaseSigmaProtocol}.
+The dots \texttt{[...]} denote optinal, specific sigma protocol instantiations that will be covered in \cref{sec:sigma-dlog} and prefixed with \texttt{BaseSigmaProtocol}.
   Without loss of generality, the techniques presented in the following focus on the composition of two protocols;
   proving knowledge of more than two witnesses, or for out of a larger set of witnesses.
   For the rest of this section, we let $(\prover_1^0,\prover_2^0,\verifier^0)$ and $(\prover_1^1,\prover_2^1,\verifier^1)$ be the specifications of two $\Sigma$-protocols for two relations $\relation^0$ and $\relation^1$, and let $\simresponse^0,\simcommitment^0$ and $\simresponse^1,\simcommitment^1$ be their respective simulators.
@@ -401,13 +400,17 @@ We support all of the following hash functions that takes as input a sequence of
 
 Multiple approaches have been used in the past~\cite{EPRINT:Hamburg17, hash-to-curve}.
 The challenge is the hash of:
+\[
+  c \defeq \hash(\ctx, \sigmaprotocol.\labeltt(), \tau, \serialize(\commitment))\enspace,
+\]
+where:
 \begin{itemize}
-  \item $\ctx$, a 32-byte string identifying the message, containing the
-  hash of the following application-specific information:
+  \item $\ctx$, a 32-byte string identifying the following application-specific data:
   \begin{itemize}
-    \item $\domsepctx$, a string determining uniquely the name of the target application (and the proof type);
-    \item \textsf{id},
-      local context information (e.g., session identifiers of higher level protocols) to avoid replay-attacks, or shared randomness or a timestamp to guarantee freshness of the proof.
+    \item the revision of of this specification;
+    \item a domain separator, indicating the application name;
+    \item local context information, such as:
+    session identifiers (to avoid replay attacks), protocol metadata (to avoid hijacking), and optionally a timestamp and some pre-shared randomness (to guarantee freshness of the proof).
   \end{itemize}
   \item $\sigmaprotocol.\labeltt()$, the 32-byte string identifying the statement being proven.
   \item $\tau$, a (possibly set to zero) message attached to the proof of \seedlen.
@@ -814,7 +817,7 @@ We refer, e.g., to Krenn~\cite{krenn12} for generic techniques.
 \minote{Add OR prooof for knowledge of one of multiple discrete logs}
 
 
-\section{Serializing and sharing the statement}
+\section{Encoding the statement}
 
 Statements in $\Sigma$-protocols take the form of a labeled binary tree:
 $\statementnode$ is either:
