@@ -114,11 +114,12 @@ The following formally describes the class of $\Sigma$-protocols, which covers a
  For an in-depth discussion of the underlying theory we refer to Cramer~\cite{cramer97}.
 
 A $\Sigma$-protocol is a structure $\sigmaprotocol$, not exposed to the user, consisting of the following methods (cf. also~\cref{fig:generic}):
+\minote{Thinking a bit more of the API: what happens if the statement given in the commitment phase from the user is different from the one used in the response? Also, can we offload some computation? It's probably best to have also a initialization function that takes as input a well-formed statement, and have the relevant part of the witness be stored with the state.}
       \begin{itemize}
         % \item $\proto \gets \sigmaprotocol.\new(\ctx, \statement)$,
         % denoting the initialization function. This function holds the shared values in the protocol, and may pre-compute parts of the statement, and initialize the state of the hash function.
         \item
-          $(\commitment, \proverstatett)\gets \sigmaprotocol.\provercommitment(\witness)$,
+          $(\commitment, \proverstatett)\gets \sigmaprotocol.\provercommitment(\statement, \witness)$,
           denoting the \emph{commitment phase}, that is, the computation of the first message sent by the prover in a sigma protocol. This method outputs a new proving instance together with some commitment, depending on the witness known to the prover and the statement to be proven.
 					The value $\commitment$ is meant to be shared, while $\proverstatett$ must be kept secret.
         \item
@@ -205,7 +206,7 @@ The dots \texttt{[...]} denote optinal, specific sigma protocol instantiations t
 The main procedures of the resulting $\Sigma$-protocol are specified by the following algorithms:
 \begin{itemize}
   \item
-  $(\commitment, \proverstatett)\gets \andcomposition.\provercommitment(\vec \witness, \vec \statement)$:
+  $(\vec \commitment, \proverstatett)\gets \andcomposition.\provercommitment(\vec \witness, \vec \statement)$:
     \begin{enumerate}
       \item
         Parse $(\witness^0,\witness^1)\defeq \vec \witness$ and $(\statement^0,\statement^1)\defeq \vec \statement$.
@@ -215,7 +216,7 @@ The main procedures of the resulting $\Sigma$-protocol are specified by the foll
 	Output $(\vec \commitment,\proverstatett) \defeq ((\commitment^0,  \commitment^1),(\st^0,\st^1))$.
     \end{enumerate}
   \item
-  $(\commitment, \proverstatett)\gets \andcomposition.\proverresponse(\vec \witness, \vec \statement, \challenge, \proverstatett)$:
+  $\vec \response \gets \andcomposition.\proverresponse(\vec \witness, \vec \statement, \challenge, \proverstatett)$:
     \begin{enumerate}
       \item
         Check that $\challenge\in\CS$ and aborts if this is not the case.
@@ -284,7 +285,7 @@ The main procedures of the resulting $\Sigma$-protocol are specified by the foll
 The main procedures of the resulting $\Sigma$-protocol are specified by the following algorithms:
 \begin{itemize}
   \item
-  $(\commitment, \proverstatett)\gets \orcomposition.\provercommitment(\vec \witness, \vec \statement)$:
+  $(\vec \commitment, \proverstatett)\gets \orcomposition.\provercommitment(\vec \witness, \vec \statement)$:
     \begin{enumerate}
       \item
         Parse $(\witness^0,\witness^1)\defeq \vec \witness$ and $(\statement^0,\statement^1)\defeq \vec \statement$, where $\witness^{1-j}=\none$.
@@ -298,7 +299,7 @@ The main procedures of the resulting $\Sigma$-protocol are specified by the foll
 	Output $(\vec \commitment,\st) \defeq ((\commitment^0,\commitment^1),(\st^j,\challenge^{1-j},\response^{1-j}))$.
     \end{enumerate}
   \item
-  $(\commitment, \proverstatett)\gets \orcomposition.\proverresponse(\vec \witness, \vec \statement, \challenge, \proverstatett)$:
+  $\vec \response \gets \orcomposition.\proverresponse(\vec \witness, \vec \statement, \challenge, \proverstatett)$:
     \begin{enumerate}
       \item
         Check that $\challenge\in\CS$ and aborts if this is not the case.
