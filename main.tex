@@ -387,7 +387,7 @@ We support all of the following hash functions that takes as input a sequence of
 \end{center}
 \minote{The output of poseidon are not bytes. How do make this work in the bigger picture?}
 \minote{Randomness for the commitment: we can choose to rely on the operating system's entropy. For fault attacks, it does not seem ideal either to have a prf sqeezing all the entropy.}
-\subsubsection{Randomness for the challenge}
+\subsubsection{Computing the challenge}
 \label{sec:fs-challenge}
 
 % Truncating the output of the hash to $\ceil{\log_2 p} + \kappa$ bits (where $\kappa$ is the targeted statistical
@@ -497,7 +497,7 @@ Otherwise, the verifier outputs $\pctrue$. Optionally, the implementation can ch
 
 
 
-\section{$\Sigma$-protocols in prime order groups}
+\section{$\Sigma$-protocols on elliptic curve groups}
 \label{sec:instantiation}
 
 \minote{
@@ -528,6 +528,8 @@ We assume that all above ciphersuites provide the group operations: check for eq
   \item \texttt{Serialize}, taking as input a point in the elliptic curve and returning a fixed-length sequence of bits;
   \item \texttt{Deserialize}, taking a (fixed-length and curve-dependent) sequence of bits and returning an elliptic curve point. This procedure may output an error if the conversion fails.
 \end{itemize}
+
+\minote{Add warning that affine points should be used for encoding and decoding}
 
 \subsection{Basic $\Sigma$-Protocols in prime-order groups}
 For an in-depth discussion of the underlying theory we refer to Cramer~\cite{cramer97}.
