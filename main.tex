@@ -120,8 +120,9 @@ Composition of $\Sigma$-protocols is dealt in details in \cref{sec:composition}.
 The following formally describes the class of $\Sigma$-protocols, which covers all protocols considered in the remainder of this document.
  For an in-depth discussion of the underlying theory we refer to Cramer~\cite{cramer97}.
 
+ \minote{what are the types of commitment, challenge, response}
+
 A $\Sigma$-protocol is a structure $\sigmaprotocol$, not exposed to the user, consisting of the following methods (cf. also~\cref{fig:generic}):
-\minote{Thinking a bit more of the API: what happens if the statement given in the commitment phase from the user is different from the one used in the response? Also, can we offload some computation? It's probably best to have also a initialization function that takes as input a well-formed statement, and have the relevant part of the witness be stored with the state.}
       \begin{itemize}
         \item $\sigmaprotocol::\new(\statement)$,
         denoting the initialization function. This function holds the shared values in the protocol, and may pre-compute parts of the statement, and initialize the state of the hash function.
@@ -137,13 +138,13 @@ A $\Sigma$-protocol is a structure $\sigmaprotocol$, not exposed to the user, co
           $\accept/\reject \gets \sigmaprotocol::\verifiertt(\commitment, \challenge, \response)$,
           denoting the \emph{verifier algorithm}, that is, the checks that the verifier performs on the statement, the prover's commitment, the random challenge, and the response
           \minote{Inconsistency: either return variable or return a type.}
-          \item $\seedtype \gets \sigmaprotocol::\labeltt(\statement)$,
+          \item $\seedtype \gets \sigmaprotocol::\labeltt()$,
           returning a string of $\seedlen$ uniquely identifying the relation being proven. The label must be computed following the directives in the relative instantiations: it is crucial for security that the label includes all data available in the statement, including the parameters and the relation being proven.
           This will be discussed more in detail in the respective
           \minote{Add references and examples of how to produce a valid label. Add warning on the importance of constructing appropriatedly the label}
         \item $\response \gets \sigmaprotocol::\simresponsett()$,
-        denoting the first stage of the \emph{simulator}. It is an algorithm drawing a random response that follows the same output distribution of the algorithm $\sigmaprotocol.\proverresponse$.
-        \item $\commitment \gets \sigmaprotocol::\simcommitmenttt(\challenge, \response)$, denoting the second stage of the \emph{simulator}, returning a commitment that follows the same output distribution of the algorithm $\sigmaprotocol.\provercommitment$.
+        denoting the first stage of the \emph{simulator}. It is an algorithm drawing a random response that follows the same output distribution of the algorithm $\proverresponse$.
+        \item $\commitment \gets \sigmaprotocol::\simcommitmenttt(\challenge, \response)$, denoting the second stage of the \emph{simulator}, returning a commitment that follows the same output distribution of the algorithm $\provercommitment$.
       \end{itemize}
       \stnote{are there any reasonable $\Sigma$-protocols where the simulator cannot be split like this? e.g., are there any protocols where $\challenge$ and $\response$ do not uniquely determine $\commitment$ (which would maybe mean that the short form of fiat-shamir does not work anyways)?}
 %      The protocol transcript $(\commitment,\challenge,\response)$ is called \emph{accepting} if the verifier accepts the protocol run.
@@ -214,17 +215,19 @@ For the rest of this section, we let $(\prover_1^0,\prover_2^0,\verifier^0)$ and
 The main procedures of the resulting $\Sigma$-protocol are specified by the following algorithms:
 \begin{itemize}
   \item
-  $(\vec \commitment, \proverstatett)\gets \andcomposition.\provercommitment(\vec \witness, \vec \statement)$:
+  $\andcomposition::\new(\texttt{left}, \texttt{right})$:
+  \item
+  $(\vec \commitment, \proverstatett)\gets \andcomposition::\provercommitment(\vec \witness)$:
     \begin{enumerate}
       \item
-        Parse $(\witness^0,\witness^1)\defeq \vec \witness$ and $(\statement^0,\statement^1)\defeq \vec \statement$.
+        Parse $(\witness^0,\witness^1)\defeq \vec \witness$.
       \item
         Compute $(\commitment^0,\st^0)\gets\prover_1^0(\witness^0, \statement^0)$ and $(\commitment^1,\st^1)\gets\prover_1^1(\witness^1, \statement^1)$.
       \item
 	Output $(\vec \commitment,\proverstatett) \defeq ((\commitment^0,  \commitment^1),(\st^0,\st^1))$.
     \end{enumerate}
   \item
-  $\vec \response \gets \andcomposition.\proverresponse(\vec \witness, \vec \statement, \challenge, \proverstatett)$:
+  $\vec \response \gets \andcomposition.\proverresponse(\proverstatett, \challenge)$:
     \begin{enumerate}
       \item
         Check that $\challenge\in\CS$ and aborts if this is not the case.
@@ -236,7 +239,7 @@ The main procedures of the resulting $\Sigma$-protocol are specified by the foll
         Output $\vec \response\defeq(\response^0,\response^1)$.
     \end{enumerate}
   \item
-  $\accept/\reject \gets \andcomposition.\verifiertt(\vec \statement, (\vec \commitment, \challenge, \vec \response))$,
+  $\accept/\reject \gets \andcomposition.\verifiertt(\vec \commitment, \challenge, \vec \response)$,
   \begin{enumerate}
       \item
         Parse $(\response^0,\response^1)\defeq \vec \response$.
@@ -244,13 +247,13 @@ The main procedures of the resulting $\Sigma$-protocol are specified by the foll
 	Output $\accept$ if $\verifier^0(\statement^0, \commitment^0,\challenge, \response^0)$ and $\verifier^1(\statement^1, \commitment^1,\challenge, \response^1)$ return $\accept$. Otherwise, return $\reject$.
     \end{enumerate}
     \minote{the label needs access to $\statement$, so this is either given as an argument, or it's also removed from the response procedure.}
-  \item  $\seedtype \gets \andcomposition.\labeltt(\statement)$ is computed as:
+  \item  $\seedtype \gets \andcomposition.\labeltt()$ is computed as:
     \[
-     \hash(\andlabel \concat \firstprover.\labeltt(\statement) \concat \secondprover.\labeltt(\statement))
+     \hash(\andlabel \concat \firstprover.\labeltt() \concat \secondprover.\labeltt())
    \]
    The supported hash functions are described in \cref{sec:hash-registry}.
   \item
-  $\vec \response \gets \andcomposition.\simresponsett(\statement)$
+  $\vec \response \gets \andcomposition.\simresponsett()$
    generates a simulated response as follows:
     \begin{enumerate}
       \item
@@ -261,7 +264,7 @@ The main procedures of the resulting $\Sigma$-protocol are specified by the foll
         Output $\vec \response\defeq(\response^0,\response^1)$.
     \end{enumerate}
   \item
-  $\vec \commitment \gets \andcomposition.\simcommitmenttt(\vec \statement, \challenge, \vec \response)$ works as follows:
+  $\vec \commitment \gets \andcomposition.\simcommitmenttt(\challenge, \vec \response)$ works as follows:
     \begin{enumerate}
       \item
         Parse $(\statement^0,\statement^1)\defeq \vec\statement$ and $(\response^0,\response^1)\defeq\vec\response$.
@@ -294,7 +297,9 @@ The main procedures of the resulting $\Sigma$-protocol are specified by the foll
 The main procedures of the resulting $\Sigma$-protocol are specified by the following algorithms:
 \begin{itemize}
   \item
-  $(\vec \commitment, \proverstatett)\gets \orcomposition.\provercommitment(\vec \witness, \vec \statement)$:
+  $\orcomposition::\new(\texttt{left}, \texttt{right})$:
+  \item
+  $(\vec \commitment, \proverstatett)\gets \orcomposition::\provercommitment(\vec \witness)$:
     \begin{enumerate}
       \item
         Parse $(\witness^0,\witness^1)\defeq \vec \witness$ and $(\statement^0,\statement^1)\defeq \vec \statement$, where $\witness^{1-j}=\none$.
@@ -308,7 +313,7 @@ The main procedures of the resulting $\Sigma$-protocol are specified by the foll
 	Output $(\vec \commitment,\proverstatett) \defeq ((\commitment^0,\commitment^1),(\st^j,\challenge^{1-j},\response^{1-j}))$.
     \end{enumerate}
   \item
-  $\vec \response \gets \orcomposition.\proverresponse(\vec \witness, \vec \statement, \challenge, \proverstatett)$:
+  $\vec \response \gets \orcomposition::\proverresponse(\proverstatett, \challenge)$:
     \begin{enumerate}
       \item
         Check that $\challenge\in\CS$ and aborts if this is not the case.
@@ -321,7 +326,7 @@ The main procedures of the resulting $\Sigma$-protocol are specified by the foll
         Output $\vec \response\defeq(\response^0,\response^1, \challenge^0)$.
     \end{enumerate}
   \item
-  $\accept/\reject \gets \orcomposition.\verifiertt(\vec \statement, (\vec \commitment, \challenge, \vec \response))$,
+  $\accept/\reject \gets \orcomposition.\verifiertt(\vec \commitment, \challenge, \vec \response)$,
     \begin{enumerate}
       \item
         Parse $(\response^0, \response^1, \challenge^0)\defeq \vec \response$.
@@ -330,13 +335,13 @@ The main procedures of the resulting $\Sigma$-protocol are specified by the foll
       \item
 	    Output $\verifier^0(\statement^0, \commitment^0,\challenge^0,\response^0)\land\verifier^1(\statement^1, \commitment^1,\challenge^1,\response^1)$.
     \end{enumerate}
-  \item  $\seedtype \gets \orcomposition.\labeltt(\statement)$ is computed as:
+  \item  $\seedtype \gets \orcomposition.\labeltt()$ is computed as:
     \[
-     \hash(\orlabel \concat \firstprover.\labeltt(\statement) \concat \secondprover.\labeltt(\statement))
+     \hash(\orlabel \concat \firstprover.\labeltt() \concat \secondprover.\labeltt())
    \]
    The supported hash functions are described in \cref{sec:hash-registry}.
   \item
-  $\vec \response \gets \orcomposition.\simresponsett(\statement)$
+  $\vec \response \gets \orcomposition.\simresponsett()$
     \begin{enumerate}
       \item
         Parse $(\statement^0,\statement^1)\defeq \vec \statement$.
@@ -348,7 +353,7 @@ The main procedures of the resulting $\Sigma$-protocol are specified by the foll
         Output $\vec \response \defeq (\response^0,\response^1,\challenge^0)$.
     \end{enumerate}
 \item
-$\vec \commitment \gets \orcomposition.\simcommitmenttt(\vec \statement, \challenge, \vec \response)$ works as follows:
+$\vec \commitment \gets \orcomposition.\simcommitmenttt(\challenge, \vec \response)$ works as follows:
 \begin{enumerate}
       \item
         Parse $(\statement^0,\statement^1)\defeq \vec \statement$ and $(\response^0,\response^1,\challenge^0)\defeq\vec\response$.
@@ -398,11 +403,13 @@ We support all of the following hash functions that takes as input a sequence of
 %  This approach leads to a random value statistically close ($2^{-\kappa}$) to a value sampled uniformly at random in $\ZZ_p$.
 \minote{Assign a function $\sigmaprotocol.\texttt{challenge}$ that in the case of Fiat-Shamir (the only one supported so far) outputs the challenge $c$. In an implementation this would have anyway to go within a separate function.}
 Multiple approaches have been used in the past~\cite{EPRINT:Hamburg17, hash-to-curve}.
-The challenge is the hash of:
-\[
-  c \defeq \hash(\domsepctx \concat \ctx \concat \sigmaprotocol.\labeltt(\statement) \concat \msg \concat  \serialize(\commitment))\enspace,
-\]
+
 where:
+\begin{itemize}
+  \item $\seedtype \gets \sigmaprotocol.\challengett(\ctx, \msg, \commitment)$
+  return the hash:\[
+    \hash(\domsepctx \concat \ctx \concat \sigmaprotocol.\labeltt() \concat \msg \concat  \serialize(\commitment))\enspace \text{, where}
+    \]
 \begin{itemize}
   \item $\ctx$, a 32-byte string identifying the following application-specific data:
   \begin{itemize}
@@ -410,10 +417,11 @@ where:
     \item local context information, such as:
     session identifiers (to avoid replay attacks), protocol metadata (to avoid hijacking), and optionally a timestamp and some pre-shared randomness (to guarantee freshness of the proof).
   \end{itemize}
-  \item $\sigmaprotocol.\labeltt(\statement)$, the 32-byte string identifying the statement being proven.
+  \item $\sigmaprotocol::\labeltt()$, the 32-byte string identifying the statement being proven.
   \item $\msg$, a $\seedlen$ tag, or message, to be attached to the proof.
   Useful when defining signatures. Can be set to zero if not used.
   \item $\serialize(T)$, the serialization of the statement.
+\end{itemize}
 \end{itemize}
 
 We note that the chosen hash functions allow for preprocessing: it is possible to store the partial state and process the commitment.
@@ -431,29 +439,29 @@ Both provers in the batchable form may raise an exception if the statement is no
 Proofs are seen directly as fixed-length bit strings, whose exact length can be inferred from the statement during initialization of the sigma protocol.
 
 \paragraph{Prover initialization.}
-  The sigma protocol itelf can be initialized with the full statement and the context. $\sigmaprotocol.\new(\ctx, \statement)$
+  The sigma protocol itelf can be initialized with the full statement and the context. $\sigmaprotocol.\new(\statement)$
 
 \subsubsection{Batchable Proofs}
 \begin{description}
 \item[Prover algorithm]
-A new proof $\sigmaprotocol.\batchableproof(\vec \witness, \vec \statement,\ctx, \stag)$ is built as follows:
+A new proof $\sigmaprotocol.\batchableproof(\vec \witness, \ctx, \msg)$ is built as follows:
 \begin{enumerate}
 \item
-  Compute $(\vec \commitment,\proverstatett)\gets\sigmaprotocol.\provercommitment(\witness, \statement)$.
+  Compute $(\vec \commitment,\proverstatett)\gets\sigmaprotocol.\provercommitment(\witness)$.
 \item
-  Compute the challenge according to \cref{sec:fs-challenge}
+Compute the challenge $c \gets \sigmaprotocol.\challengett(\ctx, \vec \commitment)$
 \item
-  Define $\vec \response\gets\sigmaprotocol.\proverresponse(\vec \witness, \vec \statement,\challenge,\proverstatett)$.
-  \item Optionally, check $\sigmaprotocol.\verifiertt(\vec \statement, \vec \commitment, \challenge, \vec \response)$
+  Define $\vec \response\gets\sigmaprotocol.\proverresponse(\proverstatett,  \challenge)$.
+  \item Optionally, check $\sigmaprotocol.\verifiertt(\vec \commitment, \challenge, \vec \response)$
 \item
   Output the bitstring $\serialize(\commitment) \concat \serialize(\vec \response)$
 \end{enumerate}
-\item[Verifier algorithm] The verifier's algorithm $\sigmaprotocol.\batchverifier(\vec \statement, \ctx, \stag, (\vec \commitment,\vec s))$ works as follows:
+\item[Verifier algorithm] The verifier's algorithm $\sigmaprotocol.\batchverifier((\vec \commitment,\vec s), \ctx, \msg)$ works as follows:
 \begin{enumerate}
   \item
-    Compute the challenge according to \cref{sec:fs-challenge}, obtaining $\challenge$.
+    Compute the challenge $c \gets \sigmaprotocol.\challengett(\ctx, \vec \commitment)$
   \item
-    Output whatever $\sigmaprotocol.\verifiertt(\vec \statement,\vec \commitment,\challenge,\vec \response)$ outputs.
+    Output whatever $\sigmaprotocol.\verifiertt(\vec \commitment,\challenge,\vec \response)$ outputs.
 \end{enumerate}
 \paragraph{Remark.}
 The case of batched verification must include a point verification sub-routing that asserts the statement and commitments are in question. Failure to properly check that a commitment is in the group could lead to subgroup attacks~\cite{EC:VanWie96,C:LimLee97} or invalid curve attacks~\cite{C:BieMeyMul00,RSA:BBPV12}.
@@ -463,26 +471,26 @@ The case of batched verification must include a point verification sub-routing t
 \subsubsection{Short Proofs}
 \begin{description}
 \item[Prover algorithm]
-A new proof $\sigmaprotocol.\shortproof(\vec \witness, \vec \statement,\ctx, \stag)$ is built as follows:
+A new proof $\sigmaprotocol.\shortproof(\vec \witness,\ctx, \msg)$ is built as follows:
 \begin{enumerate}
   \item
     Compute $(\vec \commitment,\proverstatett)\gets\sigmaprotocol.\provercommitment(\vec \witness, \vec \statement)$.
   \item
-    Compute the challenge according to \cref{sec:fs-challenge}.
+  Compute the challenge $c \gets \sigmaprotocol.\challengett(\ctx, \vec \commitment)$
   \item
-    Define $\vec \response\gets\sigmaprotocol.\proverresponse(\vec \witness,\vec \statement, \challenge,\proverstatett)$.
-    \item Optionally, check $\sigmaprotocol.\verifiertt(\vec \statement, \vec \commitment, \challenge, \vec \response)$
+    Define $\vec \response\gets\sigmaprotocol.\proverresponse(\proverstatett,\vec \statement, \challenge)$.
+    \item Check that the witness is valid. This can (for instance) be done running $\sigmaprotocol.\verifiertt(\vec \commitment, \challenge, \vec \response)$
   \item
-  Our $\serialize(c) \concat \serialize(\vec s)$.
+  Return $\serialize(c) \concat \serialize(\vec s)$.
 \end{enumerate}
-\item[Verifier algorithm] The verifier's algorithm $\sigmaprotocol.\shortverifier(\vec \statement, \ctx, \stag, (\challenge, \vec \response))$ works as follows:
+\item[Verifier algorithm] The verifier's algorithm $\sigmaprotocol.\shortverifier( (\challenge, \vec \response), \ctx, \msg)$ works as follows:
 \begin{enumerate}
-  \item Compute $\vec \commitment \gets \sigmaprotocol.\simcommitmenttt(\vec\statement, \challenge, \vec \response)\,.$
+  \item Compute $\vec \commitment \gets \sigmaprotocol.\simcommitmenttt(\challenge, \vec \response)\,.$
 
 %    More precisely, we stress that, on input a challenge $\challenge$, all simulators introduced so far first draw a response $\response$, and then compute the commitment $\commitment$ from $\challenge$ and $\response$.
 %       Instead of sampling $\response$, use the input value to recompute $\commitment$ according to the remaining steps of the simulator.
   \item
-    Compute the challenge according to \cref{sec:fs-challenge}, obtaining $\challenge^*$.
+  Compute the challenge $c \gets \sigmaprotocol.\challengett(\ctx, \vec \commitment)$
   \item
   Check whether $\challenge=\challenge^*$.
   Output $\accept$ if this is the case, and $\reject$ otherwise.
@@ -554,7 +562,7 @@ We provide a generic template of $\Sigma$-protocol for the relation:
 \minote{It's maybe dangerously unclear, but I as assuming that all private methods written here have valid elements in the curve, and that validation is up to serialization/deserialization...}
 \begin{itemize}
   \item\label{item:basic:p1}
-   $\vec \commitment \gets \dlogsigmaprotocol.\provercommitment(\vec \witness,\vec \statement)$ consists of the following steps:
+   $\vec \commitment \gets \dlogsigmaprotocol.\provercommitment(\vec \witness)$ consists of the following steps:
     \begin{enumerate}
       \item\label{item:basic:p1:randomness}
         Choose random elements $r_1,\dots,r_n\sample\ZZ_p$.
@@ -565,7 +573,7 @@ We provide a generic template of $\Sigma$-protocol for the relation:
         Output $(\vec \commitment,\proverstatett)$.
     \end{enumerate}
   \item\label{item:basic:p2}
-    $\vec \response \gets \dlogsigmaprotocol.\proverresponse(\vec \witness,\vec Y ,\challenge,\proverstatett)$ proceeds as follows:
+    $\vec \response \gets \dlogsigmaprotocol.\proverresponse(\proverstatett, ,\challenge)$ proceeds as follows:
     \begin{enumerate}
       \item
         Let $c \defeq \frombytes(\challenge)$.
@@ -573,20 +581,20 @@ We provide a generic template of $\Sigma$-protocol for the relation:
       \item Compute the response $s_i\defeq r_i+cw_i$ for $i=1,\dots,n$.
     \end{enumerate}
   \item\label{item:basic:v}
-     $\accept/\reject \gets \dlogsigmaprotocol.\verifiertt(\vec \statement,( \vec \commitment,\challenge,\vec \response))$ proceeds as follows:
+     $\accept/\reject \gets \dlogsigmaprotocol.\verifiertt(\vec \commitment,\challenge,\vec \response)$ proceeds as follows:
     \begin{enumerate}
       \item Parse $(\response_1, \dots, \response_n) \defeq \vec \response$, $(\commitment_1, \dots, \commitment_m) \defeq \vec \commitment$, and $(\statement_1, \dots, \statement_m) = \vec \statement$.
       \item\label{item:basic:v:checks}
         Check that $\response_i\in\ZZ_p$ for $i=1,\dots,n$ and $\commitment_j\in\GG$ for $j=1,\dots,m$, and outputs $0$ if this is not the case.
       \item Check whether $(\commitment_1 + c\statement_1,\dots,\commitment_m + c\statement_m) = \varphi(s_1,\dots,s_n)$, and outputs $\accept$ if this is the case; otherwise, $\verifier$ outputs $\reject$.
     \end{enumerate}
-  \item $\vec \response \gets \dlogsigmaprotocol.\simresponsett(\vec \statement)$:
+  \item $\vec \response \gets \dlogsigmaprotocol.\simresponsett()$:
   \begin{enumerate}
     \item Sample $\response_1,\dots,\response_n\sample\ZZ_p$.
     \item Return $(\response_1, \dots, \response_n)$
   \end{enumerate}
   \item\label{item:basic:sim}
-     $\vec \commitment \gets \dlogsigmaprotocol.\simcommitmenttt(\vec \statement,c, \vec s)$:
+     $\vec \commitment \gets \dlogsigmaprotocol.\simcommitmenttt(c, \vec s)$:
     \begin{enumerate}
       \item
         Parse $(\statement_1,\dots,\statement_m)\defeq \vec \statement$.

@@ -27,7 +27,7 @@
 
 %variables
 \newcommand{\st}{\mathsf{st}}
-\newcommand{\ctx}{\mathsf{ctx}}
+\newcommand{\ctx}{\texttt{ctx}}
 
 
 \newcommand{\minote}[1]{\todo[color=green!30, inline]{\textbf{Michele's note:} #1}}
@@ -59,20 +59,9 @@
 \newcommand{\commitment}{T}
 \newcommand{\challenge}{c}
 \newcommand{\response}{s}
-\newcommand{\stag}{\tau}
-
-
 
 \newcommand{\cmark}{\ding{51}}%
 \newcommand{\xmark}{\ding{55}}%
-
-% use protocol environment as follows:
-% \begin{protocol}{CAPTION}{LABEL}{PLACEMENT}
-%   ...
-% \end{protocol}
-% Currently, all arguments are MANDATORY!!!
-\usepackage{newfloat}
-\DeclareFloatingEnvironment{protocolFloat}
 
 \newcommand{\templabel}{}% stores the label
 \newcommand{\tempcaption}{}% stores the caption
@@ -137,13 +126,14 @@
 \newcommand{\secondprover}{\texttt{rigtht}}
 \newcommand{\andcomposition}{\texttt{AndComposition}}
 \newcommand{\orcomposition}{\texttt{OrComposition}}
-\newcommand{\msg}{\textsf{msg}}
+\newcommand{\msg}{\texttt{msg}}
 \newcommand{\proofobj}{\texttt{Proof}}
 \newcommand{\proto}{\texttt{proto}}
 \newcommand{\shortproof}{\texttt{short\_proof}}
 \newcommand{\batchableproof}{\texttt{batchable\_proof}}
 \newcommand{\new}{\texttt{new}}
 \newcommand{\morphism}{\texttt{morphism}}
+\newcommand{\challengett}{\texttt{challenge}}
 
 \newcommand{\dloglin}{\texttt{DlogLin}}
 
