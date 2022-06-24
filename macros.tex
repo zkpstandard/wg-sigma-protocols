@@ -42,9 +42,10 @@
 \newcommand{\curvectx}{\textsf{curve}}
 \newcommand{\idctx}{\textsf{id}}
 \newcommand{\generatorsctx}{\textsf{gens}}
-\newcommand{\domsepctx}{\texttt{''zkpstd/sigma/0.1''}}
-\newcommand{\andlabel}{\texttt{''sigma/and$\backslash0\backslash0\dots\backslash0$''}}
-\newcommand{\orlabel}{\texttt{''sigma/or$\backslash0\backslash0\dots\backslash0$''}}
+\newcommand{\str}[1]{\textquotesingle{}#1\textquotesingle}
+\newcommand{\domsepctx}{\texttt{\str{zkpstd/sigma/0.1}}}
+\newcommand{\andlabel}{\texttt{\str{AND composition}}}
+\newcommand{\orlabel}{\texttt{\str{OR composition}}}
 
 \newcommand{\batchprover}{\prover_{\operatorname{batch}}}
 \newcommand{\batchverifier}{\texttt{batchable\_verify}}
@@ -72,24 +73,24 @@
 \usepackage{float}
 \usepackage{fancybox}
 
-\newenvironment{protocol}[3]
-{\begin{protocolFloat}[#3]%   open floating environment
- \gdef\tempcaption{#1}%       store the caption so we can use it later
- \gdef\templabel{#2}%         store the label so we can use it later
- \begin{center}%              let's center everything
- \begin{Sbox}%                put a frame around the protocol
- \fontsize{8}{8}\selectfont%  reduce font size a little bit
-}
-{\end{Sbox}%                               end the frame
- \setlength{\fboxsep}{4pt}\fbox{\TheSbox}% fix the padding of framebox
- \\ \vspace{0.5em}%                        some vertical space to caption
- \centering%                               center the caption
- \refstepcounter{theorem}%                 use the same counter as for theorems
- {\bf Protocol~\thetheorem: }\tempcaption% caption
- \label[protocol]{\templabel}%             label
- \end{center}%                             end centering
- \end{protocolFloat}%                      end floating environment
-}
+% \newenvironment{protocol}[3]
+% {\begin{protocolFloat}[#3]%   open floating environment
+%  \gdef\tempcaption{#1}%       store the caption so we can use it later
+%  \gdef\templabel{#2}%         store the label so we can use it later
+%  \begin{center}%              let's center everything
+%  \begin{Sbox}%                put a frame around the protocol
+%  \fontsize{8}{8}\selectfont%  reduce font size a little bit
+% }
+% {\end{Sbox}%                               end the frame
+%  \setlength{\fboxsep}{4pt}\fbox{\TheSbox}% fix the padding of framebox
+%  \\ \vspace{0.5em}%                        some vertical space to caption
+%  \centering%                               center the caption
+%  \refstepcounter{theorem}%                 use the same counter as for theorems
+%  {\bf Protocol~\thetheorem: }\tempcaption% caption
+%  \label[protocol]{\templabel}%             label
+%  \end{center}%                             end centering
+%  \end{protocolFloat}%                      end floating environment
+% }
 
 
 \newcommand{\verylongrightarrow}[1]
@@ -122,8 +123,6 @@
 \newcommand{\seedtype}{\texttt{[u8; 32]}}
 \newcommand{\simresponsett}{\texttt{simulate\_response}}
 \newcommand{\simcommitmenttt}{\texttt{simulate\_commitment}}
-\newcommand{\firstprover}{\texttt{left}}
-\newcommand{\secondprover}{\texttt{rigtht}}
 \newcommand{\andcomposition}{\texttt{AndComposition}}
 \newcommand{\orcomposition}{\texttt{OrComposition}}
 \newcommand{\msg}{\texttt{msg}}
@@ -148,3 +147,5 @@
 
 \newcommand{\dhtt}{\texttt{Dh}}
 \newcommand{\dhlabel}{\texttt{diffie-hellman}}
+\newcommand{\leftbranch}{\texttt{left}}
+\newcommand{\rightbranch}{\texttt{right}}
