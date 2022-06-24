@@ -269,9 +269,9 @@ The main procedures of the resulting $\Sigma$-protocol are specified by the foll
       \item
 	    $(\proverstatett^0,\proverstatett^1)\defeq \proverstatett$
       \item
-      $\response^0\gets\leftbranch.\proverresponse(\challenge)$
+      $\response^0\gets\leftbranch.\proverresponse(\proverstatett^0, \challenge)$
       \item
-      $\response^1\gets\rightbranch.\proverresponse(\challenge)$
+      $\response^1\gets\rightbranch.\proverresponse(\proverstatett^1, \challenge)$
       \item
       Return $\vec \response\defeq(\response^0,\response^1)$
     \end{enumerate}
@@ -306,7 +306,7 @@ The main procedures of the resulting $\Sigma$-protocol are specified by the foll
         $(\response^0,\response^1)\defeq\vec\response$.
       \item
         $\commitment^0\gets\leftbranch.\simcommitmenttt(\challenge,\response^0)$
-        \item $\commitment^1\gets\rightbranch.\simcommitmenttt(\challenge,\response^1)$.
+        \item $\commitment^1\gets\rightbranch.\simcommitmenttt(\challenge,\response^1)$
       \item
         Return $\vec \commitment\defeq(\commitment^0, \commitment^1)$.
       \end{enumerate}
@@ -355,10 +355,10 @@ The main procedures of the resulting $\Sigma$-protocol are specified by the foll
   \item
   $\vec \response \gets \orcomposition.\proverresponse(\proverstatett, \challenge)$:
     \begin{enumerate}
-      \item  $(\proverstatett^j,\challenge^{1-j},\response^{1-j})\defeq\proverstatett$.
+      \item  $(\proverstatett^j,\challenge^{1-j},\response^{1-j})\defeq\proverstatett$
       \item
          $\challenge^j\defeq \challenge\oplus \challenge^{1-j}$
-         \item $\response^j\gets\provertt[j].\proverresponse(\proverstatett, \challenge^j)$.
+         \item $\response^j\gets\provertt[j].\proverresponse(\proverstatett, \challenge^j)$
       \item
         Return $\vec \response\defeq(\response^0,\response^1, \challenge^0)$.
     \end{enumerate}
@@ -384,7 +384,7 @@ The main procedures of the resulting $\Sigma$-protocol are specified by the foll
          $(\statement^0,\statement^1)\defeq \vec \statement$.
       \item
          $\response^0\gets\leftbranch.\simresponsett()$
-      \item $\response^1\gets\rightbranch.\simresponsett()$.
+      \item $\response^1\gets\rightbranch.\simresponsett()$
       \item
         Choose a random $\challenge^0$ in $\CS$.
 			\item
@@ -399,7 +399,7 @@ $\vec \commitment \gets \orcomposition.\simcommitmenttt(\challenge, \vec \respon
         $\challenge^1\defeq \challenge \oplus \challenge^0$.
       \item
         $\commitment^0 \gets\leftbranch.\simcommitmenttt(\challenge^0,\response^0)$
-    \item $\commitment^1\gets\rightbranch.\simcommitmenttt(\challenge^1,\response^1)$.
+    \item $\commitment^1\gets\rightbranch.\simcommitmenttt(\challenge^1,\response^1)$
       \item
         Return $\vec \commitment \defeq (\commitment^0,\commitment^1)$.
     \end{enumerate}
@@ -613,7 +613,7 @@ They will be defined later in the specific protocols.
     $\vec \response \gets \dlogsigmaprotocol.\proverresponse(\proverstatett,\challenge)$ proceeds as follows:
     \begin{enumerate}
       \item  $(r_1,\dots,r_n)\defeq \proverstatett$
-      \item  $(w_1,\dots,w_n)\defeq \vec \witness$.
+      \item  $(w_1,\dots,w_n)\defeq \vec \witness$
       \item
         $c \defeq \frombytes(\challenge)$.
       \item For $i=1,\dots,n$: $s_i\defeq r_i+cw_i$
@@ -627,11 +627,11 @@ They will be defined later in the specific protocols.
       For $i=1,\dots,n$: check $\response_i\in\ZZ_p$
       \item
       For $j=1,\dots,m$: check $\commitment_j\in\GG$
-      \item Return $\accept$ if $(\commitment_1 + c\statement_1,\dots,\commitment_m + c\statement_m) = \varphi(s_1,\dots,s_n)$; $\reject$ otherwise.
+      \item Return $\accept$ if $(\commitment_1 + c\statement_1,\dots,\commitment_m + c\statement_m) = \varphi(s_1,\dots,s_n)$; $\reject$ otherwise
     \end{enumerate}
   \item $\vec \response \gets \dlogsigmaprotocol.\simresponsett()$:
   \begin{enumerate}
-    \item Sample random elements $\response_1,\dots,\response_n\sample\ZZ_p$.
+    \item Sample random elements $\response_1,\dots,\response_n\sample\ZZ_p$
     \item Return $(\response_1, \dots, \response_n)$
   \end{enumerate}
   \item\label{item:basic:sim}
@@ -718,7 +718,7 @@ For a description of this proof goal in the general case of residue classes, we 
 So-called DLEQ proofs prove equality of the discrete logarithm $w$ of $\statement_1$ in base $G$ and $\statement_2$ in base $H$.
 
 \begin{itemize}
-  \item $\varphi:\ZZ_p\to\GG^2:x\mapsto (xG,xH)$.
+  \item $\varphi:\ZZ_p\to\GG^2:x\mapsto (xG,xH)$
   \item $\dleq.\labeltt()$: return
   \[
     \hash(\dleqlabel \concat \curvectx \concat \serialize(G) \concat \serialize(H) \concat \serialize(\statement_1) \concat \serialize(\statement_2))
@@ -820,7 +820,7 @@ Proving knowledge of a valid opening of a Pedersen commitment means proving know
 
 
 \begin{itemize}
-  \item $\varphi:\ZZ_p^m\to\GG:(x_1,x_2, \dots, x_m)\mapsto \sum_i x_iG_i$.
+  \item $\varphi:\ZZ_p^m\to\GG:(x_1,x_2, \dots, x_m)\mapsto \sum_i x_iG_i$
   \item $\rep.\labeltt(\statement)$ returns
   \[
     \hash(\replabel \concat \curvectx \concat \serialize(G_1) \concat \cdots \concat \serialize(G_m) \concat \serialize(Y_1) \concat \cdots \concat \serialize(Y_m))
