@@ -652,14 +652,14 @@ They will be defined later in the specific protocols.
 \end{equation*}
 where the matrix $A\in\FF_p^{k\times n}$ and vector $(b_1,\dots,b_k)\in\FF_p^k$ specify the system of linear equations.
 
-Proving such a relation can be achieved by modifying the following functions of $\dlogsigmaprotocol$:
+Such relation can be proven by overriding $\dlogsigmaprotocol$ for the following methods:
 \begin{itemize}
   \item $\vec \commitment \gets \dloglin.\provercommitment(\vec \witness)$
     the prover draws the randomnesses such that they satisfy the system of equations, i.e., such that $A\cdot(r_1,\dots,r_n)=(b_1,\dots,b_k)$.
-    This can be achieved sampling a random element from the null space of $A$ and adding $\vec w$. The null space can be found via LU decomposition of $A = LU$, and sampling a solution from the upper triangular matrix $U = 0$.
+    This can be achieved sampling a random element from the null space of $A$ and adding $\vec w$. A random element from the null space can be found via LU decomposition of $A = LU$, and then considering the upper triangular matrix $U$: for every row set to zero sample a uniformly random element, and then all the other according to the linear combination specified in $U$.
     See code listing XXXX.
     \minote{is there a more efficient way of doing this?}
-  \item $\dloglin.\labeltt()$ let $\labeltt()$ denote the method returning the label associated to the morphism; return $\hash(\dloglinlabel \concat \serialize(A) \concat \labeltt())$
+  \item $\dloglin.\labeltt()$ let $\morphismlabel()$ denote the method returning the label associated to the morphism; return $\hash(\dloglinlabel \concat \serialize(A) \concat \morphismlabel())$
   \minote{how to serialize $A$ properly}
   \item $\dloglin.\verifiertt(\vec \commitment, \challenge, \vec \response)$
    the verifier additionally checks that $A\cdot(\response_1,\dots,\response_n)^\intercal=(\challenge+1)\cdot(b_1,\dots,b_k)^\intercal$ and outputs $\reject$ if this is not the case.
