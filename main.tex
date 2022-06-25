@@ -461,7 +461,7 @@ In a non-interactive protocol, since challenge is computed deterministically fro
 
 We define two types of proofs: short proofs, denoted $\shortproof$, and batchable proofs, denoted $\batchableproof$.
 Short proofs are the most efficient if the protocol contains at least an AND statement, and the gain in size can be trivially measured as $|\vec \commitment| - \seedlen$.
-(Note: The length of the commitment is the length of the statement.)
+(Note: the length of the commitment is the length of the statement.)
 Batchable proofs are the canonical forms of proofs.
 Both provers in the batchable form may raise an exception if the statement is not valid.
 Proofs are seen directly as fixed-length bit strings, whose exact length can be inferred from the statement during initialization of the sigma protocol.
@@ -473,7 +473,7 @@ Proofs are seen directly as fixed-length bit strings, whose exact length can be 
 \minote{why in bold witness commitment and response}
 
 \begin{description}
-\item[Prover algorithm]
+\item[Prover algorithm.]
 The public interface $\sigmaprotocol.\batchableproof(\vec \witness, \ctx, \msg)$:
 \begin{enumerate}
 \item
@@ -486,7 +486,7 @@ $c \gets \sigmaprotocol.\challengett(\ctx, \vec \commitment)$
    \item
   Return $\serialize(\commitment) \concat \serialize(\vec \response)$
 \end{enumerate}
-\item[Verifier algorithm] The verifier's algorithm $\sigmaprotocol.\batchverifier((\vec \commitment,\vec s), \ctx, \msg)$ works as follows:
+\item[Verifier algorithm.] The verifier's algorithm $\sigmaprotocol.\batchverifier((\vec \commitment,\vec s), \ctx, \msg)$ works as follows:
 \begin{enumerate}
   \item
     $c \gets \sigmaprotocol.\challengett(\ctx, \vec \commitment)$
@@ -500,7 +500,7 @@ The case of batched verification must include a point verification sub-routing t
 
 \subsubsection{Short Proofs}
 \begin{description}
-\item[Prover algorithm]
+\item[Prover algorithm.]
 A new proof $\sigmaprotocol.\shortproof(\vec \witness,\ctx, \msg)$ is built as follows:
 \begin{enumerate}
   \item
@@ -513,7 +513,7 @@ A new proof $\sigmaprotocol.\shortproof(\vec \witness,\ctx, \msg)$ is built as f
   \item
   Return $\serialize(c) \concat \serialize(\vec s)$.
 \end{enumerate}
-\item[Verifier algorithm] The verifier's algorithm $\sigmaprotocol.\shortverifier( (\challenge, \vec \response), \ctx, \msg)$ works as follows:
+\item[Verifier algorithm.] The verifier's algorithm $\sigmaprotocol.\shortverifier( (\challenge, \vec \response), \ctx, \msg)$ works as follows:
 \begin{enumerate}
   \item $\vec \commitment \gets \sigmaprotocol.\simcommitmenttt(\challenge, \vec \response)\,.$
   \item $c^* \gets \sigmaprotocol.\challengett(\ctx, \vec \commitment)$
@@ -572,6 +572,7 @@ In addition, we require the following functions:
 \minote{Add warning that affine points should be used for encoding and decoding}
 
 \subsection{Basic $\Sigma$-Protocols in prime-order groups}
+
 For an in-depth discussion of the underlying theory we refer to Cramer~\cite{cramer97}.
  \begin{definition}
   For two groups $\GG_1,\GG_2$, a function $\varphi:\GG_1\to\GG_2:x\mapsto\varphi(x)$ is a \emph{(group) homomorphism}, if and only if for all $a,b\in\GG_1$ it holds that $\varphi(a+b)=\varphi(a)+\varphi(b)$.
@@ -599,7 +600,7 @@ They will be defined later in the specific protocols.
       \item\label{item:basic:p1:randomness}
         Sample random elements $r_1,\dots,r_n\sample\FF_p$
       \item
-         $\vec \commitment \defeq (\commitment_1,\dots,\commitment_m)\gets\varphi(r_1,\dots,r_n)$
+         $\vec \commitment \defeq (\commitment_1,\dots,\commitment_m)\defeq\varphi(r_1,\dots,r_n)$
       \item $\proverstatett\defeq (r_1,\dots,r_n)$
       \item
         Return $(\vec \commitment,\proverstatett)$
@@ -613,6 +614,7 @@ They will be defined later in the specific protocols.
         $c \defeq \frombytes(\challenge)$.
       \item For $i=1,\dots,n$: $s_i\defeq r_i+cw_i$
     \end{enumerate}
+  \item $\dlogsigmaprotocol.\labeltt()$ return $\morphismlabel()$.
   \item\label{item:basic:v}
      $\dlogsigmaprotocol.\verifiertt(\vec \commitment,\challenge,\vec \response)$ proceeds as follows:
     \begin{enumerate}
@@ -661,8 +663,11 @@ Proving such a relation can be achieved by modifying the following functions of 
 \begin{itemize}
   \item $\vec \commitment \gets \dloglin.\provercommitment(\vec \witness)$
     the prover draws the randomnesses such that they satisfy the system of equations, i.e., such that $A\cdot(r_1,\dots,r_n)=(b_1,\dots,b_k)$.
-    This can be achieved by setting $\vec r$ to be the addition of a random element of the null space of $A$ plus $\vec w$.
-    \minote{do we have to explain how to do it more in detail?}
+    This can be achieved sampling a random element from the null space of $A$ and adding $\vec w$. The null space can be found via LU decomposition of $A = LU$, and sampling a solution from the upper triangular matrix $U = 0$.
+    See code listing XXXX.
+    \minote{is there a more efficient way of doing this?}
+  \item $\dloglin.\labeltt()$ let $\labeltt()$ denote the method returning the label associated to the morphism; return $\hash(\dloglinlabel \concat \serialize(A) \concat \labeltt())$
+  \minote{how to serialize $A$ properly}
   \item $\dloglin.\verifiertt(\vec \commitment, \challenge, \vec \response)$
    the verifier additionally checks that $A\cdot(\response_1,\dots,\response_n)^\intercal=(\challenge+1)\cdot(b_1,\dots,b_k)^\intercal$ and outputs $\reject$ if this is not the case.
   \item
@@ -678,7 +683,7 @@ That is, they prove knowledge of $w\in\FF_p$ such that $Y=wG$.
 
 \begin{itemize}
   \item $\varphi:\FF_p^2\to\GG:x\mapsto xG$
-  \item $\schnorr.\labeltt()$: return:
+  \item $\schnorr.\morphismlabel()$: return:
   \[
     \hash(\schnorrlabel \concat \curvectx \concat \serialize(G) \concat \serialize(Y))
   \]
@@ -714,7 +719,7 @@ So-called DLEQ proofs prove equality of the discrete logarithm $w$ of $\statemen
 
 \begin{itemize}
   \item $\varphi:\FF_p\to\GG^2:x\mapsto (xG,xH)$
-  \item $\dleq.\labeltt()$: return
+  \item $\dleq.\morphismlabel()$: return
   \[
     \hash(\dleqlabel \concat \curvectx \concat \serialize(G) \concat \serialize(H) \concat \serialize(\statement_1) \concat \serialize(\statement_2))
   \]
@@ -746,13 +751,13 @@ So-called DLEQ proofs prove equality of the discrete logarithm $w$ of $\statemen
 
 
 \begin{remark}{Equivalent statements}{}
-  The DLEQ statement could be written in two ways:
+  The DLEQ relation could be expressed in two ways:
   \begin{itemize}
     \item proving knowledge of $(w_0,w_1)\in\FF_p$ such that $\statement_0=w_0G$ and $\statement_1=w_1H$, and $w_0=w_1$.
-  Using the above notation, we have $\varphi:\FF_p\to\GG^2:(x_0,x_1)\mapsto (x_0G,x_1H)$.
+  Using the above notation, we have $\varphi: (x_0,x_1)\mapsto (x_0G,x_1H)$.
   The linear system of equations $A(w_0,w_1)=b$ is given by $w_0-w_1=0$.
 
-  \item proving knowledge of $w$ such that $\statement_0 = wG$ and $\statement_1 = w H$.
+  \item proving knowledge of $w$ such that $\statement_0 = wG$ and $\statement_1 = w H$. Then, the morphism is as above: $\varphi: w \mapsto (wG, wH)$.
   \end{itemize}
   The two protocols prove the same statement, but achieve this via different approaches.
   The first protocol uses the more general framework of liner relations among witnesses introduced above.
@@ -770,7 +775,7 @@ However, the required multiplicative relation can be proven by observing that th
 
 \begin{itemize}
   \item  $\varphi:\FF_p^2\to\GG^3:(x_1,x_2)\mapsto(x_1G,x_2G,x_2\statement_1)$
-  \item $\dhtt.\labeltt(\statement)$ return:
+  \item $\dhtt.\morphismlabel()$ return:
   \[
     \hash(\dhlabel \concat \curvectx \concat \serialize(G) \concat \serialize(\statement_0) \concat \serialize(\statement_1))
   \]
@@ -816,10 +821,11 @@ Proving knowledge of a valid opening of a Pedersen commitment means proving know
 
 \begin{itemize}
   \item $\varphi:\FF_p^m\to\GG:(x_1,x_2, \dots, x_m)\mapsto \sum_i x_iG_i$
-  \item $\rep.\labeltt(\statement)$ returns
+  \item $\rep.\morphismlabel()$ returns
   \[
     \hash(\replabel \concat \curvectx \concat \serialize(G_1) \concat \cdots \concat \serialize(G_m) \concat \serialize(Y_1) \concat \cdots \concat \serialize(Y_m))
   \]
+  \minote{length is important to avoid generators swapped with statement}
 \end{itemize}
     % \begin{protocol}{Proving knowledge of representation.\\[-2.25em]}{fig:rep}{hbpt}
     %   \begin{tabular}{@{}l@{\hspace{2em}}c@{\hspace{-3em}}r@{}}
@@ -843,15 +849,16 @@ Proving knowledge of a valid opening of a Pedersen commitment means proving know
     %   \end{tabular}
     % \end{protocol}
 
-For a given challenge $c\in\FF_p$, the simulator chooses $s_1,s_2\sample\FF_p$, and sets $T\defeq s_1G + s_2H -cY$.
-It then outputs the simulated transcript $(\commitment,\challenge,(s_1,s_2))$.
 
 \subsection{Additional examples}
-\minote{rename this to schnorr signatures. Use the templates of the functions before.}
 
-
-\minote{Add OR prooof for knowledge of one of multiple discrete logs}
-\minote{Add section on protocols out of scope that can be useful for specific applications, e.g. https://eprint.iacr.org/2014/764.pdf}
+Other protocols are not included here but fit within the description
+of sigma protocols:
+\begin{itemize}
+\item mpc-in-the-head protocol such as ZKBoo~\cite{USENIX:GiaMadOrl16}
+\item one-out-of-many proofs such as~\cite{EC:GroKoh15}
+\end{itemize}
+\minote{Add example for ring signatures}
 
 \subsection{Batch verification}
 
