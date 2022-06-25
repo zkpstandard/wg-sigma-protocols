@@ -87,7 +87,7 @@ For the purpose of this document, the following notation will be used:
     $\response$ & the third message, called response \\
     $x \defeq 1$ & assignment of the value 1 to $x$\\
     $x\sample\someset$ & assignment of a uniformly random element in $\someset$ to $x$\\
-    $x\gets\alg(in)$ & assign to $x$ the output of the randomized algorithm $\alg$ on input $in$\\
+    $x\gets\alg(in)$ & assign to $x$ the output of the randomized procedure on input $in$\\
     $\relation$ & binary relation\\
     $|y|$ & bitlength of a string
 \end{tabular}
@@ -174,7 +174,7 @@ A $\sigmaprotocol$ consists of the following methods:
       \end{itemize}
       \stnote{are there any reasonable $\Sigma$-protocols where the simulator cannot be split like this? e.g., are there any protocols where $\challenge$ and $\response$ do not uniquely determine $\commitment$ (which would maybe mean that the short form of fiat-shamir does not work anyways)?}
       \minote{there are some invariants that these protocols should satisfy:
-      checking the output distribution might be hard, but trivially al simulated transcripts, as well as honest transcripts should verify! }
+      checking the output distribution might be hard, but trivially all simulated transcripts (as well as honest transcripts) should verify! }
 
     % \begin{protocol}{Generic flow of a $\Sigma$-protocol.\\[-2.25em]}{fig:generic}{t}
     %   \begin{tabular}{@{}l@{\hspace{-2em}}c@{\hspace{-2em}}r@{}}
@@ -235,12 +235,10 @@ will be the pair $(\witness^0, \witness^1)$ and the statement associated to it
 $(\statement^0, \statement^1)$.
 \minote{say explicitly that now the witness is a pair of witnesses valid for the respective relation. Same goes for the statement}
   Intuitively, the and composition simply runs the instances of the different protocols to be composed in parallel, using the same challenge $\challenge$ for all instances.
+  The verifier will then accept the protocol run, if and only if all instances of the partial protocols output $\accept$.
   \begin{remark}{Witness equality}{}
   No guarantee about equality of the witnesses is given: if the same witness is used across the and-composition, the protocol will not guarantee that they are indeed the same.
   \end{remark}
-	The verifier will then accept the protocol run, if and only if all instances of the partial protocols output $\accept$.
-
-\stnote{make clear that this and-composition is generic, i.e., using the same witness in both relations will not prove equality of these witnesses!}
 
 The main procedures of the resulting $\Sigma$-protocol are specified by the following algorithms:
 \begin{itemize}
@@ -259,7 +257,6 @@ The main procedures of the resulting $\Sigma$-protocol are specified by the foll
     \end{enumerate}
   \item
   $\vec \response \gets \andcomposition.\proverresponse(\proverstatett, \challenge)$
-  \minote{Check that $\challenge\in\CS$ is nonzero and aborts if this is not the case?}
   \begin{enumerate}
       \item
 	    $(\proverstatett^0,\proverstatett^1)\defeq \proverstatett$
@@ -459,63 +456,59 @@ We note that the chosen hash functions allow for preprocessing: it is possible t
 
 In a non-interactive protocol, since challenge is computed deterministically from the commitment and the statement, it is not necessary to include it within a proof as it can be deduced in the verification phase.
 
-We define two types of proofs: short proofs, denoted $\shortproof$, and batchable proofs, denoted $\batchableproof$.
+We define two \emph{public methods} for generating proofs: $\shortproof$, and $\batchableproof$.
 Short proofs are the most efficient if the protocol contains at least an AND statement, and the gain in size can be trivially measured as $|\vec \commitment| - \seedlen$.
 (Note: the length of the commitment is the length of the statement.)
 Batchable proofs are the canonical forms of proofs.
 Both provers in the batchable form may raise an exception if the statement is not valid.
 Proofs are seen directly as fixed-length bit strings, whose exact length can be inferred from the statement during initialization of the sigma protocol.
 
-\paragraph{Prover initialization.}
-  The sigma protocol itelf can be initialized with the full statement and the context. $\sigmaprotocol.\new(\statement)$
-
 \subsubsection{Batchable Proofs}
-\minote{why in bold witness commitment and response}
 
 \begin{description}
 \item[Prover algorithm.]
-The public interface $\sigmaprotocol.\batchableproof(\vec \witness, \ctx, \msg)$:
+The public interface $\sigmaprotocol.\batchableproof( \witness, \ctx, \msg)$:
 \begin{enumerate}
 \item
-   $(\vec \commitment,\proverstatett)\gets\sigmaprotocol.\provercommitment(\vec \witness)$.
+   $(\commitment,\proverstatett)\gets\sigmaprotocol.\provercommitment( \witness)$.
 \item
-$c \gets \sigmaprotocol.\challengett(\ctx, \vec \commitment)$
+$c \gets \sigmaprotocol.\challengett(\ctx, \commitment)$
 \item
-   $\vec \response\gets\sigmaprotocol.\proverresponse(\proverstatett,  \challenge)$.
-   \item Check that the witness is valid. This can (for instance) be done running \[\sigmaprotocol.\verifiertt(\vec \commitment, \challenge, \vec \response)\]
+   $\response\gets\sigmaprotocol.\proverresponse(\proverstatett,  \challenge)$.
+   \item Check that the witness is valid. This can (for instance) be done running \[\sigmaprotocol.\verifiertt(\commitment, \challenge, \response)\]
    \item
   Return $\serialize(\commitment) \concat \serialize(\vec \response)$
 \end{enumerate}
-\item[Verifier algorithm.] The verifier's algorithm $\sigmaprotocol.\batchverifier((\vec \commitment,\vec s), \ctx, \msg)$ works as follows:
+\item[Verifier algorithm.] The verifier's algorithm $\sigmaprotocol.\batchverifier((\commitment,s), \ctx, \msg)$ works as follows:
 \begin{enumerate}
   \item
-    $c \gets \sigmaprotocol.\challengett(\ctx, \vec \commitment)$
+    $c \gets \sigmaprotocol.\challengett(\ctx, \commitment)$
   \item
-    Return whatever $\sigmaprotocol.\verifiertt(\vec \commitment,\challenge,\vec \response)$ returns.
+    Return whatever $\sigmaprotocol.\verifiertt(\commitment,\challenge, \response)$ returns.
 \end{enumerate}
 \begin{remark}{Input validation}{}
-The case of batched verification must include a point verification sub-routing that asserts the statement and commitments are in question. Failure to properly check that a commitment is in the group could lead to subgroup attacks~\cite{EC:VanWie96,C:LimLee97} or invalid curve attacks~\cite{C:BieMeyMul00,RSA:BBPV12}.
+The case of batched verification must include a point verification sub-routine that asserts the statement and commitments are in question. Failure to properly check that a commitment is in the group could lead to subgroup attacks~\cite{EC:VanWie96,C:LimLee97} or invalid curve attacks~\cite{C:BieMeyMul00,RSA:BBPV12}.
 \end{remark}
 \end{description}
 
 \subsubsection{Short Proofs}
 \begin{description}
 \item[Prover algorithm.]
-A new proof $\sigmaprotocol.\shortproof(\vec \witness,\ctx, \msg)$ is built as follows:
+A new proof $\sigmaprotocol.\shortproof(\witness,\ctx, \msg)$ is built as follows:
 \begin{enumerate}
   \item
-     $(\vec \commitment,\proverstatett)\gets\sigmaprotocol.\provercommitment(\vec \witness)$.
+     $(\commitment,\proverstatett)\gets\sigmaprotocol.\provercommitment(\witness)$.
   \item
-   $c \gets \sigmaprotocol.\challengett(\ctx, \vec \commitment)$
+   $c \gets \sigmaprotocol.\challengett(\ctx, \commitment)$
   \item
      $\vec \response\gets\sigmaprotocol.\proverresponse(\proverstatett,\challenge)$.
-    \item Check that the witness is valid. This can (for instance) be done running \[\sigmaprotocol.\verifiertt(\vec \commitment, \challenge, \vec \response)\]
+    \item Check that the witness is valid. This can (for instance) be done running \[\sigmaprotocol.\verifiertt(\commitment, \challenge, \response)\]
   \item
-  Return $\serialize(c) \concat \serialize(\vec s)$.
+  Return $\serialize(\challenge) \concat \serialize(\response)$.
 \end{enumerate}
-\item[Verifier algorithm.] The verifier's algorithm $\sigmaprotocol.\shortverifier( (\challenge, \vec \response), \ctx, \msg)$ works as follows:
+\item[Verifier algorithm.] The verifier's algorithm $\sigmaprotocol.\shortverifier( (\challenge, \response), \ctx, \msg)$ works as follows:
 \begin{enumerate}
-  \item $\vec \commitment \gets \sigmaprotocol.\simcommitmenttt(\challenge, \vec \response)\,.$
+  \item $\commitment \gets \sigmaprotocol.\simcommitmenttt(\challenge, \response)\,.$
   \item $c^* \gets \sigmaprotocol.\challengett(\ctx, \vec \commitment)$
   \item
   Check whether $\challenge=\challenge^*$.
@@ -850,16 +843,6 @@ Proving knowledge of a valid opening of a Pedersen commitment means proving know
     % \end{protocol}
 
 
-\subsection{Additional examples}
-
-Other protocols are not included here but fit within the description
-of sigma protocols:
-\begin{itemize}
-\item mpc-in-the-head protocol such as ZKBoo~\cite{USENIX:GiaMadOrl16}
-\item one-out-of-many proofs such as~\cite{EC:GroKoh15}
-\end{itemize}
-\minote{Add example for ring signatures}
-
 \subsection{Batch verification}
 
 The batchable form can take advantage of the following fact.
@@ -877,6 +860,15 @@ If the matrix $G_{i, j}$ of generators has identical rows, by linearity the righ
 If the statements $\statement_i$'s have identical rows, by linearity the second term in the equation can be computed as a single scalar product.
 The random vector $\vec a$ can be \emph{deterministically} generated by fixing $a_0 \defeq 1$ and setting $(a_1, \dots, a_{\ell-1}) \defeq \prg(\hash(\challenge \concat \vec s))$~\cite{bip-schnorr}.
 
+\section{Additional examples}
+
+Other protocols are not included here but fit within the description
+of sigma protocols:
+\begin{itemize}
+\item mpc-in-the-head protocol such as ZKBoo~\cite{USENIX:GiaMadOrl16}
+\item one-out-of-many proofs such as~\cite{EC:GroKoh15}
+\end{itemize}
+\minote{Add example for ring signatures}
 
 
 \section{Encoding the statement}
