@@ -331,7 +331,7 @@ The main procedures of the resulting $\Sigma$-protocol are specified by the foll
 
 
 \subsubsection{OR Composition}
-\minote{It is not immediate to build a constant-time operation for the or composation. It is possible to double the cost and run prover and simulator for each branch, but at the end we still need the ternary operator to select the correct transcirpt. This is the only place where we are incurring in non non-constant-time operations assuming the algebraic operations are already solved. }
+\minote{It is not immediate to build OR composition in  constant-time. It is possible to double the cost and run prover and simulator for each branch, but at the end we still need the ternary operator to select the correct transcirpt. This is the only place where we are incurring in non non-constant-time operations assuming the algebraic operations are already solved. }
   In the following we explain how to construct a $\Sigma$-protocol proving knowledge of one out of a set of witnesses, e.g., one of a set of secret keys in the case of ring signatures.
   That is, the algorithms specified below constitute a $\Sigma$-protocol for the following relation:
 \[
@@ -934,4 +934,8 @@ The tree is encoded in breadth-first.
 
 \bibliographystyle{alpha}
 \bibliography{cryptobib/abbrev3,cryptobib/crypto,additional}
+
+\begin{figure}[b]
+\includegraphics[width=\textwidth]{Dinner_Party.png}
+\end{figure}
 \end{document}
