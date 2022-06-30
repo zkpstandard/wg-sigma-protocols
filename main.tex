@@ -50,6 +50,8 @@
     colframe=green!35!black,
     fonttitle=\bfseries}{th}
 
+\newtheorem{example}{Example}
+
 \title{A spec for $\Sigma$-protocols}
 %
 \date{Created on: \today}
@@ -90,12 +92,33 @@ For the purpose of this document, the following notation will be used:
     $x\gets\alg(in)$ & assign to $x$ the output of the randomized procedure on input $in$\\
     $\relation$ & binary relation\\
     $|y|$ & bitlength of a string
+%    $\NN,\ZZ$ & non-negative natural numbers and integers, respectively
 \end{tabular}
 
 \subsection{Terminology}
+A \emph{binary relation} $\relation$ associates elements from a set $\Set{Y}$ with elements from a set $\Set{W}$ through pairs $(y,w)\in\Set{Y}\times\Set{W}$.
+For $(y,w)\in\relation$, we refer to $y$ as a \emph{statement}, and to $w$ as a \emph{witness} (for $y$).
+Note there may be multiple witnesses for a given $y$.
 
-In a zero-knowledge proof, the secret information is called \emph{witness},
-and the public information is called \emph{statement}. A \emph{proof} is a sequence of bytes attesting that a witness is in some relation with the statement.
+\begin{example}
+  Let $\GG$ be a cyclic group of prime order $p$, and let $G$ and $H$ be generators of $\GG$.
+	Then the following relation $\relation$ contains as statements all pairs of elements having the same discrete logarithm with respect to $G$ and $H$, with the corresponding witness being their discrete logarithm:
+  $$
+	  \relation_{DLEQ} = \set{\left((Y_1,Y_2),w)\right)~:~Y_1=wG ~\land~ Y_2=wH}\,.
+	$$
+\end{example}
+
+\begin{example}
+  Let $\GG$ be a cyclic group of prime order $p$, and let $G$ and $H$ be generators of $\GG$.
+	Then the following relation $\relation$ contains as statements all valid Perdersen commitments, with the corresponding witnesses being their openings:
+  $$
+	  \relation_{REP} = \set{\left(Y,(w_1,w_2))\right)~:~Y=w_1G + w_2H}\,.
+	$$
+	Note that in this case, each statement has $p$ valid witnesses.
+\end{example}
+
+In a zero-knowledge proof, the \emph{witness} is secret information, while the statement is public.
+A \emph{proof} is a sequence of bytes attesting that a witness is in some relation with the statement.
 
 Proofs described in this spec are zero-knowledge and sound.
 Zero knowledge means that the protocol does not leak any information about the prover's messages beyond what the attacker may infer form the proof itself or from other sources~\cite[1.6.4]{zkproof-reference}.
