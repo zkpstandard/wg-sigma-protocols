@@ -92,6 +92,7 @@ For the purpose of this document, the following notation will be used:
     $x\gets\alg(in)$ & assign to $x$ the output of the randomized procedure on input $in$\\
     $\relation$ & binary relation\\
     $|y|$ & bitlength of a string
+    $\oplus$ & binary operator denoting the bitwise XOR of two strings of equal length
 %    $\NN,\ZZ$ & non-negative natural numbers and integers, respectively
 \end{tabular}
 
@@ -141,7 +142,7 @@ We will not talk about implementation of cryptographic primitives such as hash f
 We won't provide any guidance for securely storing secrets or producing constant-time code.
 
 \minote{The problem of constant-time is for the most part in the OR composition}
-\minote{People interested in the development of a specific sigma protocol should implement the template from 2 using the algorithm from XX and XX and then refer to section XX}
+\minote{People interested in the development of a specific $\Sigma$ protocol should implement the template from 2 using the algorithm from XX and XX and then refer to section XX}
 \section{Generic $\Sigma$-Protocols}
 In the following, we describe the class of $\Sigma$-protocols.
 Such protocols can be used to prove that, for some binary relation $\relation$ and a public value $\statement$, a witness $\witness$ such that $(\statement,\witness)\in\relation$ is known.
@@ -168,7 +169,7 @@ A $\sigmaprotocol$ consists of the following methods:
         This function may pre-compute parts of the statement, or initialize the state of the hash function.
         \item
           $(\commitment, \proverstatett)\gets \sigmaprotocol.\provercommitment(\witness)$,
-          denoting the \emph{commitment phase}, that is, the computation of the first message sent by the prover in a sigma protocol. This method outputs a new commitment together with its associated prover state, depending on the witness known to the prover and the statement to be proven.
+          denoting the \emph{commitment phase}, that is, the computation of the first message sent by the prover in a $\Sigma$-protocol. This method outputs a new commitment together with its associated prover state, depending on the witness known to the prover and the statement to be proven.
           This step generally requires access to a high-quality entropy source.
           Leakage of even just of a few bits of the nonce could allow for the complete recovery of the witness~\cite{lattice-attack,bleichenbacher,CCS:ANTTY20}.
 					The value $\commitment$ is meant to be shared, while $\proverstatett$ must be kept secret.
@@ -242,7 +243,7 @@ A $\sigmaprotocol$ consists of the following methods:
     }
   \end{verbatim}
 
-The dots \texttt{[...]} denote optinal, specific sigma protocol instantiations that will be covered in \cref{sec:sigma-dlog}.
+The dots \texttt{[...]} denote optional, specific $\Sigma$ protocol instantiations that will be covered in \cref{sec:sigma-dlog}.
   Without loss of generality, the techniques presented in the following focus on the composition of two protocols;
   proving knowledge of more than two witnesses, or for out of a larger set of witnesses.
 
@@ -253,14 +254,14 @@ The dots \texttt{[...]} denote optinal, specific sigma protocol instantiations t
   \relation^\land = \set{
     ((\statement^0,\statement^1),(\witness^0,\witness^1) : (\statement^0,\witness^0)\in \relation^0 ~\land~ (\statement^1,\witness^1)\in\relation^1}
 \]
-For the rest of this section, the witness for the $\Sigma$-protocol
-will be the pair $(\witness^0, \witness^1)$ and the statement associated to it
-$(\statement^0, \statement^1)$.
-\minote{say explicitly that now the witness is a pair of witnesses valid for the respective relation. Same goes for the statement}
-  Intuitively, the and composition simply runs the instances of the different protocols to be composed in parallel, using the same challenge $\challenge$ for all instances.
+For the rest of this section, the witness $\witness$ for the $\Sigma$-protocol will now be a pair $(\witness^0, \witness^1)$ of witnesses, and the associated statement $\statement$ will be a pair $(\statement^0, \statement^1)$ of statements, where $\witness^0$ is the witness for the statement $\statement^0$, and $\witness^1$ is the witness for $\statement^1$.
+%\minote{say explicitly that now the witness is a pair of witnesses valid for the respective relation. Same goes for the statement}
+
+  Intuitively, the AND composition simply runs the instances of the different protocols to be composed in parallel, using the same challenge $\challenge$ for all instances.
   The verifier will then accept the protocol run, if and only if all instances of the partial protocols output $\accept$.
   \begin{remark}{Witness equality}{}
-  No guarantee about equality of the witnesses is given: if the same witness is used across the and-composition, the protocol will not guarantee that they are indeed the same.
+  Note that the AND-composition defined in the following gives no guarantee about equality of the witnesses: if the same witness is used across different clauses of the AND-composition, the protocol will not guarantee that they are indeed the same.
+	How to achieve such claims is discussed in \cref{sec:linear_relations}.
   \end{remark}
 
 The main procedures of the resulting $\Sigma$-protocol are specified by the following algorithms:
@@ -296,7 +297,7 @@ The main procedures of the resulting $\Sigma$-protocol are specified by the foll
       \item
         $(\response^0,\response^1)\defeq \vec \response$.
       \item
-	Return $\accept$ if $\leftbranch.\verifiertt(\commitment^0,\challenge, \response^0)$ and $\rightbranch.\verifiertt(\commitment^1,\challenge, \response^1)$ return $\accept$. Otherwise, return $\reject$.
+	Return $\accept$ if both $\leftbranch.\verifiertt(\commitment^0,\challenge, \response^0)$ and $\rightbranch.\verifiertt(\commitment^1,\challenge, \response^1)$ return $\accept$. Otherwise, return $\reject$.
     \end{enumerate}
   \item  $\andcomposition.\labeltt()$ is computed as:
     \[
@@ -451,7 +452,7 @@ We support all of the following hash functions that takes as input a sequence of
 \subsubsection{Computing the challenge}
 \label{sec:fs-challenge}
 
-We introduce a function, that applies to all sigma protocols, and takes care of the Fiat-Shamir transform:
+We introduce a function, that applies to all $\Sigma$-protocols, and takes care of the Fiat-Shamir transform:
 \begin{itemize}
   \item $\sigmaprotocol.\challengett(\ctx, \msg, \commitment)$
   return the hash:\[
@@ -484,7 +485,7 @@ Short proofs are the most efficient if the protocol contains at least an AND sta
 (Note: the length of the commitment is the length of the statement.)
 Batchable proofs are the canonical forms of proofs.
 Both provers in the batchable form may raise an exception if the statement is not valid.
-Proofs are seen directly as fixed-length bit strings, whose exact length can be inferred from the statement during initialization of the sigma protocol.
+Proofs are seen directly as fixed-length bit strings, whose exact length can be inferred from the statement during initialization of the $\Sigma$-protocol.
 
 \subsubsection{Batchable Proofs}
 
@@ -556,6 +557,13 @@ Otherwise, the verifier outputs $\pctrue$. Optionally, the implementation can ch
 The $\Sigma$-protocols of this section provide the following guarantees}
 
 \minote{notation for elliptic curves}
+The following section now presents concrete instantiations for of $\Sigma$-protocols over elliptic curves.
+
+\begin{remark}{Protocols for residue classes}{}
+  Because of their dominance, the presentation in the following focuses on proof goals over elliptic curves, therefore leveraging additive notation.
+	For prime-order subgroups of residue classes, all notation needs to be changed to multiplicative, and references to elliptic curves (e.g., $\curvectx$) need to be replaced by their respective counterparts over residue classes.
+\end{remark}
+
 \subsection{Ciphersuite Registry}
  We advise for the use of prime-order elliptic curves of size either 256 or 512 bits, depending on the desired security of the upper layers in the protocol\footnote{For instance, proving a DH relation with one fixed group element such as a public key, might expose the protocol to cryptanalytic attacks such as Brown-Gallant~\cite{EPRINT:BroGal04} and Cheon’s attack~\cite{EC:Cheon06}, and some implementations might opt for larger curve sizes. We consider these attacks out of scope for this standardization effort, and believe this analysis should be deferred to the concrete security study of the larger protocol.}.
 
@@ -589,8 +597,11 @@ In addition, we require the following functions:
 
 \subsection{Basic $\Sigma$-Protocols in prime-order groups}
 
+The protocol presented in the following allow one to prove knowledge of a preimage under an arbitrary \emph{group homomorphism}, which is a mapping between two groups respecting the structure of the groups.
+In particular, as will be discussed in \cref{sec:instantiations}, many statements related to discrete logarithms or representations in groups of prime order, can be expressed as statements over group homomorphisms.
 For an in-depth discussion of the underlying theory we refer to Cramer~\cite{cramer97}.
- \begin{definition}
+
+\begin{definition}
   For two groups $\GG_1,\GG_2$, a function $\varphi:\GG_1\to\GG_2:x\mapsto\varphi(x)$ is a \emph{(group) homomorphism}, if and only if for all $a,b\in\GG_1$ it holds that $\varphi(a+b)=\varphi(a)+\varphi(b)$.
 \end{definition}
 
@@ -598,37 +609,40 @@ For an in-depth discussion of the underlying theory we refer to Cramer~\cite{cra
 
 
 \label{sec:sigma-dlog}
-We provide a generic template of $\Sigma$-protocol for the relation:
+We provide a generic template for all $\Sigma$-protocols for statements of the following form over DLOG groups:
 \[
   \relation=\set{((\statement_1,\dots,\statement_m),(w_1,\dots,w_n)) : (\statement_1,\dots,\statement_m)=\varphi(w_1,\dots,w_n)}
 \]
-where $\varphi:\FF_p^n\to\GG^m$ is a group morphism.
+where $\varphi:\FF_p^n\to\GG^m$ is a group homomorphism.
+
+However, the following \emph{does not define neither the morphism nor the label associated to the protocol}.
+These will be defined later in the specific protocols.
+
 \minote{what if some of the $w$'s are publicly known}
 \stnote{let all $\witness$'s be secret for the time being}
  \stnote{which checks are necessary? which values need to be on the curve, etc.?}
 \minote{It's maybe dangerously unclear, but I as assuming that all private methods written here have valid elements in the curve, and that validation is up to serialization/deserialization...}
-We provide a generic template for all sigma protocols over dlog groups, but \emph{we do not define neither the morphism nor the label associated to the protocol}.
-They will be defined later in the specific protocols.
 \begin{itemize}
   \item\label{item:basic:p1}
    $(\vec \commitment, \proverstatett) \gets \dlogsigmaprotocol.\provercommitment(\vec \witness)$ consists of the following steps:
     \begin{enumerate}
       \item\label{item:basic:p1:randomness}
-        Sample random elements $r_1,\dots,r_n\sample\FF_p$
+        Sample random elements $\randomness_1,\dots,\randomness_n\sample\FF_p$
       \item
-         $\vec \commitment \defeq (\commitment_1,\dots,\commitment_m)\defeq\varphi(r_1,\dots,r_n)$
-      \item $\proverstatett\defeq (r_1,\dots,r_n)$
+         $\vec \commitment \defeq (\commitment_1,\dots,\commitment_m)\defeq\varphi(\randomness_1,\dots,\randomness_n)$
+      \item $\proverstatett\defeq (\randomness_1,\dots,\randomness_n)$
       \item
         Return $(\vec \commitment,\proverstatett)$
     \end{enumerate}
   \item\label{item:basic:p2}
     $\vec \response \gets \dlogsigmaprotocol.\proverresponse(\proverstatett,\challenge)$ proceeds as follows:
     \begin{enumerate}
-      \item  $(r_1,\dots,r_n)\defeq \proverstatett$
-      \item  $(w_1,\dots,w_n)\defeq \vec \witness$
+      \item  $(\randomness_1,\dots,\randomness_n)\defeq \proverstatett$
+      \item  $(\witness_1,\dots,\witness_n)\defeq \vec \witness$
       \item
         $c \defeq \frombytes(\challenge)$.
-      \item For $i=1,\dots,n$: $s_i\defeq r_i+cw_i$
+      \item For $i=1,\dots,n$: $\response_i\defeq \randomness_i+\challenge \witness_i$
+			\item Return $\vec\response \defeq (\response_1,\dots,\response_n)$.
     \end{enumerate}
   \item $\dlogsigmaprotocol.\labeltt()$ return $\morphismlabel()$.
   \item\label{item:basic:v}
@@ -640,7 +654,7 @@ They will be defined later in the specific protocols.
       For $i=1,\dots,n$: check $\response_i\in\FF_p$
       \item
       For $j=1,\dots,m$: check $\commitment_j\in\GG$
-      \item Return $\accept$ if $(\commitment_1 + c\statement_1,\dots,\commitment_m + c\statement_m) = \varphi(s_1,\dots,s_n)$; $\reject$ otherwise
+      \item Return $\accept$ if $(\commitment_1 + c\statement_1,\dots,\commitment_m + c\statement_m) = \varphi(\response_1,\dots,\response_n)$; $\reject$ otherwise
     \end{enumerate}
   \item $\vec \response \gets \dlogsigmaprotocol.\simresponsett()$:
   \begin{enumerate}
@@ -655,7 +669,7 @@ They will be defined later in the specific protocols.
       \item\label{item:basic:sim:s}
        $(\response_1,\dots,\response_n) \defeq \vec \response$.
       \item
-         $(\commitment_1,\dots,\commitment_m) \defeq \varphi(s_1,\dots,s_n) - c(\statement_1,\dots,\statement_m)$.
+         $(\commitment_1,\dots,\commitment_m) \defeq \varphi(\response_1,\dots,\response_n) - c(\statement_1,\dots,\statement_m)$.
       \item
         Output $\vec \commitment \defeq(\response_1,\dots,\response_n)$.
     \end{enumerate}
@@ -663,7 +677,7 @@ They will be defined later in the specific protocols.
 
 
 
-\subsection{Advanced: proving linear relations}
+\subsection{Advanced: proving linear relations}\label{sec:linear_relations}
 \stnote{or rewrite the homomorphism?}
 \minote{We must add the linear relation as part of the label, but the morphism does not know about it right now}
   While the above protocol allows one to efficiently prove knowledge of a pre-image under a homomorphism, many protocols found in the literature require one to prove relations among witnesses.
@@ -678,7 +692,7 @@ where the matrix $A\in\FF_p^{k\times n}$ and vector $(b_1,\dots,b_k)\in\FF_p^k$ 
 Such relation can be proven by overriding $\dlogsigmaprotocol$ for the following methods:
 \begin{itemize}
   \item $\vec \commitment \gets \dloglin.\provercommitment(\vec \witness)$
-    the prover draws the randomnesses such that they satisfy the system of equations, i.e., such that $A\cdot(r_1,\dots,r_n)=(b_1,\dots,b_k)$.
+    the prover draws the randomnesses such that they satisfy the system of equations, i.e., such that $A\cdot(\randomness_1,\dots,\randomness_n)=(b_1,\dots,b_k)$.
     This can be achieved sampling a random element from the null space of $A$ and adding $\vec w$. A random element from the null space can be found via LU decomposition of $A = LU$, and then considering the upper triangular matrix $U$: for every row set to zero sample a uniformly random element, and then all the other according to the linear combination specified in $U$.
     See code listing XXXX.
     \minote{is there a more efficient way of doing this?}
@@ -690,7 +704,7 @@ Such relation can be proven by overriding $\dlogsigmaprotocol$ for the following
     $\vec s \gets \dloglin.\simresponsett()$ draw the responses at random in $\FF_p$ such that they satisfy the verification equations, i.e., such that $A\cdot(\response_1,\dots,\response_n)=(c+1)\cdot(b_1,\dots,b_k)^\intercal$.
 \end{itemize}
 
-\subsection{Instantiations}
+\subsection{Instantiations}\label{sec:instantiations}
 Let $\GG$ be a group over an elliptic curve with prime order $p$.
 
 \subsubsection{Schnorr signatures}
@@ -704,6 +718,7 @@ That is, they prove knowledge of $w\in\FF_p$ such that $Y=wG$.
     \hash(\schnorrlabel \concat \curvectx \concat \serialize(G) \concat \serialize(Y))
   \]
 \end{itemize}
+\stnote{stupid question: should the label (or the curve) have constant length to ensure that label-bits and curve-bits can be clearly seperated?}
 
 For a description of this proof goal in the general case of residue classes, we also refer to~\cite[1.4.1]{zkproof-reference}.
 
@@ -802,18 +817,18 @@ However, the required multiplicative relation can be proven by observing that th
     %     $\prover\left( (w_1,w_2),(\statement_1,\statement_2,\statement_3),G)\right)$ & & $\verifier\left((\statement_1,\statement_2,\statement_3),G \right)$  \\
     %     \hline  \\
     %   % -----------------------------P1-------------------------------
-    %     $ r_1\sample\FF_p$ & &\\
-    %     $ r_2\sample\FF_p$ & &\\
-    %     $ \commitment_1 \defeq r_1G$ & & \\
-    %     $ \commitment_2 \defeq r_2G$ & & \\
-    %     $ \commitment_3 \defeq r_2\statement_1$ & & \\
+    %     $ \randomness_1\sample\FF_p$ & &\\
+    %     $ \randomness_2\sample\FF_p$ & &\\
+    %     $ \commitment_1 \defeq \randomness_1G$ & & \\
+    %     $ \commitment_2 \defeq \randomness_2G$ & & \\
+    %     $ \commitment_3 \defeq \randomness_2\statement_1$ & & \\
     %     & $\sendr{\commitment_1,\commitment_2,\commitment_3}{100}$ \\[2 ex]
     %   % -----------------------------CHALLENGE-------------------------------
     %     & & $c \sample \FF_p$ \\
     %     & $\sendl{c}{100}$ & \\[2 ex]
     %   % -----------------------------P2-------------------------------
-    %     $ s_1 \defeq r_1 + cw_1$\\
-    %     $ s_2 \defeq r_2 + cw_2$\\
+    %     $ s_1 \defeq \randomness_1 + cw_1$\\
+    %     $ s_2 \defeq \randomness_2 + cw_2$\\
     %     & $\sendr{s_1,s_2}{100}$ \\[2 ex]
     %   % -----------------------------V-------------------------------
     %     & & Return $\accept$ iff \\
@@ -848,16 +863,16 @@ Proving knowledge of a valid opening of a Pedersen commitment means proving know
     %     $\prover \left( (w_1,w_2),Y,(G,H)\right)$ & & $\verifier \left(Y,(G,H)\right)$  \\
     %     \hline  \\
     %   % -----------------------------P1-------------------------------
-    %     $ r_1\sample\FF_p$ & &\\
-    %     $ r_2\sample\FF_p$ & &\\
-    %     $ T \defeq r_1G + r_2H$ & & \\
+    %     $ \randomness_1\sample\FF_p$ & &\\
+    %     $ \randomness_2\sample\FF_p$ & &\\
+    %     $ T \defeq \randomness_1G + \randomness_2H$ & & \\
     %     & $\sendr{T}{100}$ \\[2 ex]
     %   % -----------------------------CHALLENGE-------------------------------
     %     & & $c \sample \FF_p$ \\
     %     & $\sendl{c}{100}$ & \\[2 ex]
     %   % -----------------------------P2-------------------------------
-    %     $ s_1 \defeq r_1 + cw_1$\\
-    %     $ s_2 \defeq r_2 + cw_2$\\
+    %     $ s_1 \defeq \randomness_1 + cw_1$\\
+    %     $ s_2 \defeq \randomness_2 + cw_2$\\
     %     & $\sendr{s_1,s_2}{100}$ \\[2 ex]
     %   % -----------------------------V-------------------------------
     %     & & Return $\accept$ iff \\
@@ -886,7 +901,7 @@ The random vector $\vec a$ can be \emph{deterministically} generated by fixing $
 \section{Additional examples}
 
 Other protocols are not included here but fit within the description
-of sigma protocols:
+of $\Sigma$-protocols:
 \begin{itemize}
 \item mpc-in-the-head protocol such as ZKBoo~\cite{USENIX:GiaMadOrl16}
 \item one-out-of-many proofs such as~\cite{EC:GroKoh15}
