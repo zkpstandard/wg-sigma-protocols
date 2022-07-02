@@ -26,6 +26,7 @@
 \usepackage{todonotes}
 \usepackage{csquotes}
 \usepackage{tcolorbox}
+\usepackage[binary-units]{siunitx}
 \tcbuselibrary{theorems}
 
 \usepackage[%dvips,
@@ -72,7 +73,7 @@ Introduced by Schnorr~\cite{JC:Schnorr91} over 30 years ago, they are now widely
 $\Sigma$-protocols played an essential component in the building of a number of cryptographic
 constructions,
 such as anonymous credentials~\cite{CCS:ChaMeiZav14}, password-authenticated key exchange~\cite{jpake}, signatures~\cite{C:Schnorr89},
-ring signatures~\cite{borromeansig}, blind signatures~\cite{CCS:PoiSte97}, multi signatures~\cite{CCS:NRSW20}, threshold signatures~\cite{EPRINT:KomGol20} and more. This spec, initially proposed by Orrù and Krenn~\cite{sigma-proposal}, specifies guidelines for correctly implementing $\Sigma$-protocol.
+ring signatures~\cite{borromeansig}, blind signatures~\cite{CCS:PoiSte97}, multi signatures~\cite{CCS:NRSW20}, threshold signatures~\cite{EPRINT:KomGol20} and more. This spec, initially proposed by Orrù and Krenn~\cite{sigma-proposal}, specifies guidelines for correctly implementing $\Sigma$-protocols.
 
 \subsection{Notation}
 \label{sec:notation}
@@ -91,7 +92,7 @@ For the purpose of this document, the following notation will be used:
     $x\sample\someset$ & assignment of a uniformly random element in $\someset$ to $x$\\
     $x\gets\alg(in)$ & assign to $x$ the output of the randomized procedure on input $in$\\
     $\relation$ & binary relation\\
-    $|y|$ & bitlength of a string
+    $|y|$ & bitlength of a string \\
     $\oplus$ & binary operator denoting the bitwise XOR of two strings of equal length
 %    $\NN,\ZZ$ & non-negative natural numbers and integers, respectively
 \end{tabular}
@@ -122,7 +123,7 @@ In a zero-knowledge proof, the \emph{witness} is secret information, while the s
 A \emph{proof} is a sequence of bytes attesting that a witness is in some relation with the statement.
 
 Proofs described in this spec are zero-knowledge and sound.
-Zero knowledge means that the protocol does not leak any information about the prover's messages beyond what the attacker may infer form the proof itself or from other sources~\cite[1.6.4]{zkproof-reference}.
+Zero knowledge means that the protocol does not leak any information about the prover's witness beyond what the attacker may infer from the proven statement or from other sources~\cite[1.6.4]{zkproof-reference}.
 Soundness means that it is not possible to make the verifier accept for statements for which no valid witness exists~\cite[1.6.2]{zkproof-reference}.
 % If soundness relies on computational assumption, then we call the proof an \emph{argument}.
 In particular we will focus on non-malleable extractable proofs, that is, the the witness does not only exist but it really must be known by the prover.
@@ -133,7 +134,7 @@ All protocols defined here are simulation-extractable. A simulation-extractable 
 \subsection{Scope of this document}
 
 This document provides guidelines for secure implementations of $\Sigma$-protocols and is meant to facilitate adoption and the development of reference implementations.
-This document is addressed to applied cryptographers and cryptographic engineers that are looking for implementing a generic
+This document is addressed to applied cryptographers and cryptographic engineers that are looking to implement a generic
 $\Sigma$-protocol or provide an ad-hoc instantiation as part of a larger protocols.
 
 We consider outside of this document the problem of having a high-quality
@@ -186,7 +187,7 @@ A $\sigmaprotocol$ consists of the following methods:
           or an error if verification fails.
           \item $\sigmaprotocol.\labeltt()$,
           returning a string of $\seedlen$ uniquely identifying the relation being proven.
-          Implementing correctly this function is vital security, and one \emph{must} carefully following the directives written in the relative instantiations. It is crucial for security that the label includes all data available in the statement, including the parameters and the relation being proven.
+          Implementing correctly this function is vital security, and one \emph{must} carefully follow the directives written in the relative instantiations. It is crucial for security that the label includes all data available in the statement, including the parameters and the relation being proven.
 
           More precisely, if the label is \emph{not} tied to the relation, then it may be possible to produce another proof for a different relation without knowing its witness.
           Similarly, if the statement is not tied to the statement, then it might be possible to produce proofs
@@ -244,8 +245,8 @@ A $\sigmaprotocol$ consists of the following methods:
   \end{verbatim}
 
 The dots \texttt{[...]} denote optional, specific $\Sigma$ protocol instantiations that will be covered in \cref{sec:sigma-dlog}.
-  Without loss of generality, the techniques presented in the following focus on the composition of two protocols;
-  proving knowledge of more than two witnesses, or for out of a larger set of witnesses.
+  Without loss of generality, the techniques presented in the following focus on the composition of two protocols. 
+  Composition of multiple protocols (e.g., proving knowledge of a witness for one out of many statements) can be achieved by recursively applying composition of two protocols.
 
   \subsubsection{AND Composition}
   In the following we explain how to construct a $\Sigma$-protocol proving knowledge of multiple independent witnesses, e.g., knowledge of multiple secret keys, or openings to multiple commitments.
@@ -386,7 +387,7 @@ The main procedures of the resulting $\Sigma$-protocol are specified by the foll
       \item
          $\challenge^1\defeq \challenge \oplus \challenge^0$.
       \item
-	    Return $\pctrue$ if either of $\leftbranch.\verifiertt(\commitment^0,\challenge^0,\response^0)$ or $\rightbranch.\verifiertt^1(\commitment^1,\challenge^1,\response^1)$ return $\pctrue$. Otherwise, return $\pcfalse$.
+	    Return $\pctrue$ if both $\leftbranch.\verifiertt(\commitment^0,\challenge^0,\response^0)$ and $\rightbranch.\verifiertt^1(\commitment^1,\challenge^1,\response^1)$ return $\pctrue$. Otherwise, return $\pcfalse$.
     \end{enumerate}
   \item  $\orcomposition.\labeltt()$ is computed as:
     \[
@@ -470,7 +471,7 @@ In the above:
   \item $\sigmaprotocol.\labeltt()$, the 32-byte string identifying the statement being proven.
   \item $\msg$, a $\seedlen$ tag, or message, to be attached to the proof.
   Useful when defining signatures. Can be set to zero if not used.
-  \item $\serialize(T)$, the serialization of the statement.
+  \item $\serialize(T)$, the serialization of the commitment.
 \end{itemize}
 
 We note that the chosen hash functions allow for preprocessing: it is possible to store the partial state and process the commitment.
@@ -496,7 +497,7 @@ The public interface $\sigmaprotocol.\batchableproof( \witness, \ctx, \msg)$:
 \item
    $(\commitment,\proverstatett)\gets\sigmaprotocol.\provercommitment( \witness)$.
 \item
-$c \gets \sigmaprotocol.\challengett(\ctx, \commitment)$
+$c \gets \sigmaprotocol.\challengett(\ctx, \msg,\commitment)$
 \item
    $\response\gets\sigmaprotocol.\proverresponse(\proverstatett,  \challenge)$.
    \item Check that the witness is valid. This can (for instance) be done running \[\sigmaprotocol.\verifiertt(\commitment, \challenge, \response)\]
@@ -506,7 +507,7 @@ $c \gets \sigmaprotocol.\challengett(\ctx, \commitment)$
 \item[Verifier algorithm.] The verifier's algorithm $\sigmaprotocol.\batchverifier((\commitment,s), \ctx, \msg)$ works as follows:
 \begin{enumerate}
   \item
-    $c \gets \sigmaprotocol.\challengett(\ctx, \commitment)$
+    $c \gets \sigmaprotocol.\challengett(\ctx, \msg, \commitment)$
   \item
     Return whatever $\sigmaprotocol.\verifiertt(\commitment,\challenge, \response)$ returns.
 \end{enumerate}
@@ -523,7 +524,7 @@ A new proof $\sigmaprotocol.\shortproof(\witness,\ctx, \msg)$ is built as follow
   \item
      $(\commitment,\proverstatett)\gets\sigmaprotocol.\provercommitment(\witness)$.
   \item
-   $c \gets \sigmaprotocol.\challengett(\ctx, \commitment)$
+   $c \gets \sigmaprotocol.\challengett(\ctx, \msg,  \commitment)$
   \item
      $\vec \response\gets\sigmaprotocol.\proverresponse(\proverstatett,\challenge)$.
     \item Check that the witness is valid. This can (for instance) be done running \[\sigmaprotocol.\verifiertt(\commitment, \challenge, \response)\]
@@ -533,7 +534,7 @@ A new proof $\sigmaprotocol.\shortproof(\witness,\ctx, \msg)$ is built as follow
 \item[Verifier algorithm.] The verifier's algorithm $\sigmaprotocol.\shortverifier( (\challenge, \response), \ctx, \msg)$ works as follows:
 \begin{enumerate}
   \item $\commitment \gets \sigmaprotocol.\simcommitmenttt(\challenge, \response)\,.$
-  \item $c^* \gets \sigmaprotocol.\challengett(\ctx, \vec \commitment)$
+  \item $c^* \gets \sigmaprotocol.\challengett(\ctx, \msg, \vec \commitment)$
   \item
   Check whether $\challenge=\challenge^*$.
   Output $\accept$ if this is the case, and $\reject$ otherwise.
@@ -712,7 +713,7 @@ Schnorr signatures, also known as Schnorr proofs or DLOG proofs, prove knowledge
 That is, they prove knowledge of $w\in\FF_p$ such that $Y=wG$.
 
 \begin{itemize}
-  \item $\varphi:\FF_p^2\to\GG:x\mapsto xG$
+  \item $\varphi:\FF_p\to\GG:w\mapsto wG$
   \item $\schnorr.\morphismlabel()$: return:
   \[
     \hash(\schnorrlabel \concat \curvectx \concat \serialize(G) \concat \serialize(Y))
@@ -749,7 +750,7 @@ For a description of this proof goal in the general case of residue classes, we 
 So-called DLEQ proofs prove equality of the discrete logarithm $w$ of $\statement_1$ in base $G$ and $\statement_2$ in base $H$.
 
 \begin{itemize}
-  \item $\varphi:\FF_p\to\GG^2:x\mapsto (xG,xH)$
+  \item $\varphi:\FF_p\to\GG^2:w\mapsto (wG,wH)$
   \item $\dleq.\morphismlabel()$: return
   \[
     \hash(\dleqlabel \concat \curvectx \concat \serialize(G) \concat \serialize(H) \concat \serialize(\statement_1) \concat \serialize(\statement_2))
@@ -785,7 +786,7 @@ So-called DLEQ proofs prove equality of the discrete logarithm $w$ of $\statemen
   The DLEQ relation could be expressed in two ways:
   \begin{itemize}
     \item proving knowledge of $(w_0,w_1)\in\FF_p$ such that $\statement_0=w_0G$ and $\statement_1=w_1H$, and $w_0=w_1$.
-  Using the above notation, we have $\varphi: (x_0,x_1)\mapsto (x_0G,x_1H)$.
+  Using the above notation, we have $\varphi: (w_0,w_1)\mapsto (w_0G,w_1H)$.
   The linear system of equations $A(w_0,w_1)=b$ is given by $w_0-w_1=0$.
 
   \item proving knowledge of $w$ such that $\statement_0 = wG$ and $\statement_1 = w H$. Then, the morphism is as above: $\varphi: w \mapsto (wG, wH)$.
@@ -801,11 +802,11 @@ So-called DLEQ proofs prove equality of the discrete logarithm $w$ of $\statemen
 \subsubsection{Diffie-Hellman}
 Let $\GG$ be a group over an elliptic curve with prime order $p$.
 Proving knowledge of the exponents of a valid Diffie-Hellman triple means proving knowledge of $w_1,w_2\in\FF_p$ such that $\statement_1=w_1G$, $\statement_2=w_2G$, and $\statement_3=w_1 w_2 G$.
-Yet, the mapping $\FF_p^2\to\GG^3:(x_1,x_2)\mapsto (x_1G,x_2G,x_1x_2G)$ is not a homomorphism, and consequently the basic protocol presented before cannot be deployed directly.
+Yet, the mapping $\FF_p^2\to\GG^3:(w_1,w_2)\mapsto (w_1G,w_2G,w_1w_2G)$ is not a homomorphism, and consequently the basic protocol presented before cannot be deployed directly.
 However, the required multiplicative relation can be proven by observing that the proof goal is equivalent to $\statement_1=w_1G$, $\statement_2=w_2G$, and $\statement_3=w_2\statement_1$, leading the homomorphism
 
 \begin{itemize}
-  \item  $\varphi:\FF_p^2\to\GG^3:(x_1,x_2)\mapsto(x_1G,x_2G,x_2\statement_1)$
+  \item  $\varphi:\FF_p^2\to\GG^3:(w_1,w_2)\mapsto(w_1G,w_2G,w_2\statement_1)$
   \item $\dhtt.\morphismlabel()$ return:
   \[
     \hash(\dhlabel \concat \curvectx \concat \serialize(G) \concat \serialize(\statement_0) \concat \serialize(\statement_1))
@@ -851,10 +852,10 @@ Proving knowledge of a valid opening of a Pedersen commitment means proving know
 
 
 \begin{itemize}
-  \item $\varphi:\FF_p^m\to\GG:(x_1,x_2, \dots, x_m)\mapsto \sum_i x_iG_i$
+  \item $\varphi:\FF_p^m\to\GG:(w_1,w_2, \dots, w_m)\mapsto \sum_i w_iG_i$
   \item $\rep.\morphismlabel()$ returns
   \[
-    \hash(\replabel \concat \curvectx \concat \serialize(G_1) \concat \cdots \concat \serialize(G_m) \concat \serialize(Y_1) \concat \cdots \concat \serialize(Y_m))
+    \hash(\replabel \concat \curvectx \concat \serialize(G_1) \concat \cdots \concat \serialize(G_m) \concat \serialize(Y))
   \]
   \minote{length is important to avoid generators swapped with statement}
 \end{itemize}
@@ -881,22 +882,30 @@ Proving knowledge of a valid opening of a Pedersen commitment means proving know
     % \end{protocol}
 
 
+
 \subsection{Batch verification}
 
 The batchable form can take advantage of the following fact.
 Given the single verification equations of the form:
 \[
-   \commitment_i + c_i Y_i = \sum_j s_{i, j} G_j
+   \commitment_i + c_i Y_i = \sum_j s_j G_{i,j}
 \]
-for $i=0, \dots,\ell-1$,
+for $i=1, \dots,\ell$,
 %(So, $T \in \GG^\ell$, $c \in \FF_p^\ell$ and $s \in \FF_p^{\ell \times m}$ and $\mat G \in \GG^{m \times \ell}$.)
-the verifier can sample a random vector of coefficients $a \in \FF_p^\ell$ instead test that:
+the verifier can sample a random vector of coefficients $\vec a \in \FF_p^\ell$ instead test that:
 \[
-  \left(\sum_{i=0}^{\ell-1} a_i \commitment_i\right) + \left(\sum_{i=0}^{\ell-1} a_i \cdot  c_i \statement_i \right) = \left(\sum_{i=0}^{\ell-1} a_i \cdot \response_i G_i\right).
+  \left(\sum_{i=1}^{\ell} a_i \commitment_i\right) + \left(\sum_{i=1}^{\ell} a_i \cdot  c_i \statement_i \right) = \left(\sum_{i=1}^{\ell} a_i \cdot \sum_j \response_j G_{i,j}\right).
 \]
 If the matrix $G_{i, j}$ of generators has identical rows, by linearity the right-hand side can be computed as a single scalar product.
 If the statements $\statement_i$'s have identical rows, by linearity the second term in the equation can be computed as a single scalar product.
-The random vector $\vec a$ can be \emph{deterministically} generated by fixing $a_0 \defeq 1$ and setting $(a_1, \dots, a_{\ell-1}) \defeq \prg(\hash(\challenge \concat \vec s))$~\cite{bip-schnorr}.
+
+In any case, the test can be efficiently implemented as a single multiscalar multiplication, minimizing the number of group operations needed:
+\[
+  \left(\sum_{i=1}^{\ell} a_i \commitment_i\right) + \left(\sum_{i=1}^{\ell} (a_i \cdot  c_i) \statement_i \right) + \left(\sum_{i=1}^{\ell}\sum_j (-a_i \cdot  \response_j) G_{i,j}\right) = 0.
+\]
+
+The random vector $\vec a$ can be \emph{deterministically} generated by fixing $a_1 \defeq 1$ and setting $(a_2, \dots, a_{\ell}) \defeq \prg(\hash(\challenge \concat \vec s))$~\cite{bip-schnorr}.
+
 
 \section{Additional examples}
 
