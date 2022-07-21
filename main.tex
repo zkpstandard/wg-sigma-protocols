@@ -696,10 +696,6 @@ These will be defined later in the specific protocols.
 
 
 \subsection{Advanced: proving linear relations}\label{sec:linear_relations}
-
-
-\stnote{or rewrite the homomorphism?}
-\minote{We must add the linear relation as part of the label, but the morphism does not know about it right now}
   While the above protocol allows one to efficiently prove knowledge of a pre-image under a homomorphism, many protocols found in the literature require one to prove relations among witnesses.
   Specifically, they require to prove relations like the following:
 \begin{equation*}
@@ -709,20 +705,33 @@ These will be defined later in the specific protocols.
 \end{equation*}
 where the matrix $A\in\FF_p^{k\times n}$ and vector $(b_1,\dots,b_k)\in\FF_p^k$ specify the system of linear equations.
 
-Such relation can be proven by overriding $\dlogsigmaprotocol$ for the following methods:
-\begin{itemize}
-  \item $\vec \commitment \gets \dloglin.\provercommitment(\vec \witness)$
-    the prover draws the randomnesses such that they satisfy the system of equations, i.e., such that $A\cdot(\randomness_1,\dots,\randomness_n)=(b_1,\dots,b_k)$.
-    This can be achieved sampling a random element from the null space of $A$ and adding $\vec w$. A random element from the null space can be found via LU decomposition of $A = LU$, and then considering the upper triangular matrix $U$: for every row set to zero sample a uniformly random element, and then all the other according to the linear combination specified in $U$.
-    See code listing XXXX.
-    \minote{is there a more efficient way of doing this?}
-  \item $\dloglin.\labeltt()$ let $\morphismlabel()$ denote the method returning the label associated to the morphism; return $\hash(\dloglinlabel \concat \serialize(A) \concat \morphismlabel())$
-  \minote{how to serialize $A$ properly}
-  \item $\dloglin.\verifiertt(\vec \commitment, \challenge, \vec \response)$
-   the verifier additionally checks that $A\cdot(\response_1,\dots,\response_n)^\intercal=(\challenge+1)\cdot(b_1,\dots,b_k)^\intercal$ and outputs $\reject$ if this is not the case.
-  \item
-    $\vec s \gets \dloglin.\simresponsett()$ draw the responses at random in $\FF_p$ such that they satisfy the verification equations, i.e., such that $A\cdot(\response_1,\dots,\response_n)=(c+1)\cdot(b_1,\dots,b_k)^\intercal$.
-\end{itemize}
+In the following, we sketch how such relations can be translated into relations of the form discussed in \cref{sec:basic_sigma}.
+We assume that $A$ is of the following form:
+\begin{equation*}
+A = \left(\begin{array}{cccccccc}
+      a_{11}     & \dots       & a_{1k}    & 1         & 0       & 0     & \dots    & 0\\
+      a_{21}     & \dots       & a_{2k}    & 0         & 1       & 0     & \dots    & \vdots\\
+      \vdots     &             & \vdots    & \vdots    &         & \vdots&          & 0\\
+      \vdots     &             & \vdots    & \vdots    &         & 0     & 1        & 0\\
+      a_{k1}     & \dots       & a_{kk}    & 0         & \dots   & \dots & 0        & 1\\
+    \end{array}\right)
+\end{equation*}
+Note that this is without loss of generality.
+If the system of linear equations has a different form, the above form can always be achieved using, e.g., Gaussian elimination and re-ordering of witnesses.
+Further note that we only need to consider the case where $k<n$, as otherwise the linear equations would uniquely determine the witnesses, which is not desirable in our context.
+
+The following relation $\relation'$ is now equivalent to that specified by $\relation$:
+\begin{equation*}
+\relation'=\set{((\statement_1,\dots,\statement_m),(\witness_1,\dots,\witness_{n-k})) :
+(\statement_1,\dots,\statement_m)=\psi(\witness_1,\dots,\witness_{n-k})}
+\end{equation*}
+where
+\begin{align*}
+  \psi(\witness_1,\dots,\witness_{n-k}) &:= \varphi(\witness_1,\dots,\witness_{n-k},-\sum_{i=1}^{n-k}a_{1i}\witness_i,\dots,-\sum_{i=1}^{n-k}a_{ki}\witness_i)\,\text{ and}\\
+  (\statement_1',\dots,\statement_m')   &:= (\statement_1,\dots,\statement_m) - \varphi(0,\dots,0,b_1,\dots,b_k)\,.
+\end{align*}
+
+
 
 \subsection{Instantiations}\label{sec:instantiations}
 Let $\GG$ be a group over an elliptic curve with prime order $p$.
