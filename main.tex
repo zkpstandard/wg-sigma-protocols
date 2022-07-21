@@ -806,27 +806,6 @@ So-called DLEQ proofs prove equality of the discrete logarithm $w$ of $\statemen
     %   \end{tabular}
     % \end{protocol}
 
-
-
-
-
-\begin{remark}{Equivalent statements}{}
-  The DLEQ relation could be expressed in two ways:
-  \begin{itemize}
-    \item proving knowledge of $(\witness_0,\witness_1)\in\FF_p$ such that $\statement_0=\witness_0G$ and $\statement_1=\witness_1H$, and $\witness_0=\witness_1$.
-  Using the above notation, we have $\varphi: (\witness_0,\witness_1)\mapsto (\witness_0G,\witness_1H)$.
-  The linear system of equations $A(\witness_0,\witness_1)=b$ is given by $\witness_0-\witness_1=0$.
-
-  \item proving knowledge of $w$ such that $\statement_0 = wG$ and $\statement_1 = w H$. Then, the morphism is as above: $\varphi: w \mapsto (wG, wH)$.
-  \end{itemize}
-  The two protocols prove the same statement, but achieve this via different approaches.
-  The first protocol uses the more general framework of liner relations among witnesses introduced above.
-  Alternatively, as shown in the second protocol, the linear relation can also be realized by  directly incorporating the linear relation into the proof goal, thereby achieving a slightly shorter proof size (as the prover's last message consists of one element of $\FF_p$ less).
-
-  However, when proving inhomogeneous linear relations, incorporating the relation into the homomorphism also requires some additional computations in the target group, which in certain cases might compensate the advantage of a smaller proof size.
-\end{remark}
-
-
 \subsubsection{Diffie-Hellman}
 Let $\GG$ be a group over an elliptic curve with prime order $p$.
 Proving knowledge of the exponents of a valid Diffie-Hellman triple means proving knowledge of $\witness_1,\witness_2\in\FF_p$ such that $\statement_1=\witness_1G$, $\statement_2=\witness_2G$, and $\statement_3=\witness_1 \witness_2 G$.
