@@ -80,7 +80,7 @@ ring signatures~\cite{borromeansig}, blind signatures~\cite{CCS:PoiSte97}, multi
 
 For the purpose of this document, the following notation will be used:
 
-\begin{tabular}{r@{\hspace{1em}}p{13cm}}
+\begin{tabular}{r@{\hspace{1em}}p{11cm}}
     $\secpar$ & main security parameter\\
     $\CS$ & challenge set, corresponding to a vector of 32 bytes (octets).\\
     $\statement$ & the statement, i.e., the public information in a zero-knowledge proof \\
@@ -98,15 +98,15 @@ For the purpose of this document, the following notation will be used:
 \end{tabular}
 
 \subsection{Terminology}
-A \emph{binary relation} $\relation$ associates elements from a set $\Set{Y}$ with elements from a set $\Set{W}$ through pairs $(y,w)\in\Set{Y}\times\Set{W}$.
-For $(y,w)\in\relation$, we refer to $y$ as a \emph{statement}, and to $w$ as a \emph{witness} (for $y$).
-Note there may be multiple witnesses for a given $y$.
+A \emph{binary relation} $\relation$ associates elements from a set $\Set{Y}$ with elements from a set $\Set{W}$ through pairs $(\statement,\witness)\in\Set{Y}\times\Set{W}$.
+For $(\statement,\witness)\in\relation$, we refer to $\statement$ as a \emph{statement}, and to $\witness$ as a \emph{witness} (for $\statement$).
+Note there may be multiple witnesses for a given $\statement$.
 
 \begin{example}
   Let $\GG$ be a cyclic group of prime order $p$, and let $G$ and $H$ be generators of $\GG$.
 	Then the following relation $\relation$ contains as statements all pairs of elements having the same discrete logarithm with respect to $G$ and $H$, with the corresponding witness being their discrete logarithm:
   $$
-	  \relation_{DLEQ} = \set{\left((Y_1,Y_2),w)\right)~:~Y_1=wG ~\land~ Y_2=wH}\,.
+	  \relation_{DLEQ} = \set{\left((\statement_1,\statement_2),\witness)\right)~:~\statement_1=\witness G ~\land~ \statement_2=\witness H}\,.
 	$$
 \end{example}
 
@@ -114,7 +114,7 @@ Note there may be multiple witnesses for a given $y$.
   Let $\GG$ be a cyclic group of prime order $p$, and let $G$ and $H$ be generators of $\GG$.
 	Then the following relation $\relation$ contains as statements all valid Perdersen commitments, with the corresponding witnesses being their openings:
   $$
-	  \relation_{REP} = \set{\left(Y,(w_1,w_2))\right)~:~Y=w_1G + w_2H}\,.
+	  \relation_{REP} = \set{\left(\statement,(\witness_1,\witness_2))\right)~:~\statement=\witness_1G + \witness_2H}\,.
 	$$
 	Note that in this case, each statement has $p$ valid witnesses.
 \end{example}
@@ -596,7 +596,7 @@ In addition, we require the following functions:
 
 \minote{Add warning that affine points should be used for encoding and decoding}
 
-\subsection{Basic $\Sigma$-Protocols in prime-order groups}
+\subsection{Basic $\Sigma$-Protocols in prime-order groups}\label{sec:basic_sigma}
 
 The protocol presented in the following allow one to prove knowledge of a preimage under an arbitrary \emph{group homomorphism}, which is a mapping between two groups respecting the structure of the groups.
 In particular, as will be discussed in \cref{sec:instantiations}, many statements related to discrete logarithms or representations in groups of prime order, can be expressed as statements over group homomorphisms.
@@ -612,15 +612,32 @@ For an in-depth discussion of the underlying theory we refer to Cramer~\cite{cra
 \label{sec:sigma-dlog}
 We provide a generic template for all $\Sigma$-protocols for statements of the following form over DLOG groups:
 \[
-  \relation=\set{((\statement_1,\dots,\statement_m),(w_1,\dots,w_n)) : (\statement_1,\dots,\statement_m)=\varphi(w_1,\dots,w_n)}
+  \relation=\set{((\statement_1,\dots,\statement_m),(\witness_1,\dots,\witness_n)) : (\statement_1,\dots,\statement_m)=\varphi(\witness_1,\dots,\witness_n)}
 \]
 where $\varphi:\FF_p^n\to\GG^m$ is a group homomorphism.
+
+\begin{remark}{Selective disclosure of witnesses}{}
+  Note that in the following descriptions, all witnesses are assumed to be kept secret, i.e., none of the $\witness_i$ is disclosed to the verifier.
+	In case this is required, as is the case, e.g., in the context of attribute-based credential systems, the relation to be proven can be rewritten as follows:
+$$
+  \relation'=\set{
+	\begin{array}{r}
+	((\statement_1',\dots,\statement_m')),(\witness_1,\dots,\witness_{j-1},\witness_{j+1},\dots,\witness_n)) : ~~~~~~~~~~~~\\
+	(\statement_1',\dots,\statement_m')=\psi(\witness_1,\dots,\witness_{j-1},\witness_{j+1},\dots,\witness_n)
+	\end{array}
+	}
+$$
+  where
+	\begin{align*}
+    (\statement_1',\dots,\statement_m')                                   &:= (\statement_1,\dots,\statement_m)-\varphi(0,\dots,0,\witness_j,0,\dots,0)\,\text{ and}\\
+	  \psi(\witness_1,\dots,\witness_{j-1},\witness_{j+1},\dots,\witness_n) &:= \varphi(\witness_1,\dots,\witness_{j-1},0,\witness_{j+1},\dots,\witness_n)\,.
+	\end{align*}
+
+\end{remark}
 
 However, the following \emph{does not define neither the morphism nor the label associated to the protocol}.
 These will be defined later in the specific protocols.
 
-\minote{what if some of the $w$'s are publicly known}
-\stnote{let all $\witness$'s be secret for the time being}
  \stnote{which checks are necessary? which values need to be on the curve, etc.?}
 \minote{It's maybe dangerously unclear, but I as assuming that all private methods written here have valid elements in the curve, and that validation is up to serialization/deserialization...}
 \begin{itemize}
@@ -679,6 +696,8 @@ These will be defined later in the specific protocols.
 
 
 \subsection{Advanced: proving linear relations}\label{sec:linear_relations}
+
+
 \stnote{or rewrite the homomorphism?}
 \minote{We must add the linear relation as part of the label, but the morphism does not know about it right now}
   While the above protocol allows one to efficiently prove knowledge of a pre-image under a homomorphism, many protocols found in the literature require one to prove relations among witnesses.
@@ -716,7 +735,7 @@ That is, they prove knowledge of $w\in\FF_p$ such that $Y=wG$.
   \item $\varphi:\FF_p\to\GG:w\mapsto wG$
   \item $\schnorr.\morphismlabel()$: return:
   \[
-    \hash(\schnorrlabel \concat \curvectx \concat \serialize(G) \concat \serialize(Y))
+    \hash(\schnorrlabel \concat \curvectx \concat \serialize(G) \concat \serialize(\statement))
   \]
 \end{itemize}
 \stnote{stupid question: should the label (or the curve) have constant length to ensure that label-bits and curve-bits can be clearly seperated?}
@@ -785,9 +804,9 @@ So-called DLEQ proofs prove equality of the discrete logarithm $w$ of $\statemen
 \begin{remark}{Equivalent statements}{}
   The DLEQ relation could be expressed in two ways:
   \begin{itemize}
-    \item proving knowledge of $(w_0,w_1)\in\FF_p$ such that $\statement_0=w_0G$ and $\statement_1=w_1H$, and $w_0=w_1$.
-  Using the above notation, we have $\varphi: (w_0,w_1)\mapsto (w_0G,w_1H)$.
-  The linear system of equations $A(w_0,w_1)=b$ is given by $w_0-w_1=0$.
+    \item proving knowledge of $(\witness_0,\witness_1)\in\FF_p$ such that $\statement_0=\witness_0G$ and $\statement_1=\witness_1H$, and $\witness_0=\witness_1$.
+  Using the above notation, we have $\varphi: (\witness_0,\witness_1)\mapsto (\witness_0G,\witness_1H)$.
+  The linear system of equations $A(\witness_0,\witness_1)=b$ is given by $\witness_0-\witness_1=0$.
 
   \item proving knowledge of $w$ such that $\statement_0 = wG$ and $\statement_1 = w H$. Then, the morphism is as above: $\varphi: w \mapsto (wG, wH)$.
   \end{itemize}
@@ -801,12 +820,12 @@ So-called DLEQ proofs prove equality of the discrete logarithm $w$ of $\statemen
 
 \subsubsection{Diffie-Hellman}
 Let $\GG$ be a group over an elliptic curve with prime order $p$.
-Proving knowledge of the exponents of a valid Diffie-Hellman triple means proving knowledge of $w_1,w_2\in\FF_p$ such that $\statement_1=w_1G$, $\statement_2=w_2G$, and $\statement_3=w_1 w_2 G$.
-Yet, the mapping $\FF_p^2\to\GG^3:(w_1,w_2)\mapsto (w_1G,w_2G,w_1w_2G)$ is not a homomorphism, and consequently the basic protocol presented before cannot be deployed directly.
-However, the required multiplicative relation can be proven by observing that the proof goal is equivalent to $\statement_1=w_1G$, $\statement_2=w_2G$, and $\statement_3=w_2\statement_1$, leading the homomorphism
+Proving knowledge of the exponents of a valid Diffie-Hellman triple means proving knowledge of $\witness_1,\witness_2\in\FF_p$ such that $\statement_1=\witness_1G$, $\statement_2=\witness_2G$, and $\statement_3=\witness_1 \witness_2 G$.
+Yet, the mapping $\FF_p^2\to\GG^3:(\witness_1,\witness_2)\mapsto (\witness_1G,\witness_2G,\witness_1\witness_2G)$ is not a homomorphism, and consequently the basic protocol presented before cannot be deployed directly.
+However, the required multiplicative relation can be proven by observing that the proof goal is equivalent to $\statement_1=\witness_1G$, $\statement_2=\witness_2G$, and $\statement_3=\witness_2\statement_1$, leading the homomorphism
 
 \begin{itemize}
-  \item  $\varphi:\FF_p^2\to\GG^3:(w_1,w_2)\mapsto(w_1G,w_2G,w_2\statement_1)$
+  \item  $\varphi:\FF_p^2\to\GG^3:(\witness_1,\witness_2)\mapsto(\witness_1G,\witness_2G,\witness_2\statement_1)$
   \item $\dhtt.\morphismlabel()$ return:
   \[
     \hash(\dhlabel \concat \curvectx \concat \serialize(G) \concat \serialize(\statement_0) \concat \serialize(\statement_1))
@@ -815,7 +834,7 @@ However, the required multiplicative relation can be proven by observing that th
 
     % \begin{protocol}{Proving knowledge of representation.\\[-2.25em]}{fig:dh}{t}
     %   \begin{tabular}{@{}l@{\hspace{-3em}}c@{\hspace{-2em}}r@{}}
-    %     $\prover\left( (w_1,w_2),(\statement_1,\statement_2,\statement_3),G)\right)$ & & $\verifier\left((\statement_1,\statement_2,\statement_3),G \right)$  \\
+    %     $\prover\left( (\witness_1,\witness_2),(\statement_1,\statement_2,\statement_3),G)\right)$ & & $\verifier\left((\statement_1,\statement_2,\statement_3),G \right)$  \\
     %     \hline  \\
     %   % -----------------------------P1-------------------------------
     %     $ \randomness_1\sample\FF_p$ & &\\
@@ -828,8 +847,8 @@ However, the required multiplicative relation can be proven by observing that th
     %     & & $c \sample \FF_p$ \\
     %     & $\sendl{c}{100}$ & \\[2 ex]
     %   % -----------------------------P2-------------------------------
-    %     $ s_1 \defeq \randomness_1 + cw_1$\\
-    %     $ s_2 \defeq \randomness_2 + cw_2$\\
+    %     $ s_1 \defeq \randomness_1 + c\witness_1$\\
+    %     $ s_2 \defeq \randomness_2 + c\witness_2$\\
     %     & $\sendr{s_1,s_2}{100}$ \\[2 ex]
     %   % -----------------------------V-------------------------------
     %     & & Return $\accept$ iff \\
@@ -848,14 +867,14 @@ We refer, e.g., to Krenn~\cite{krenn12} for generic techniques.
 
 \subsubsection{Representation}
 Let $\GG$ be a group over an elliptic curve of prime order $p$.
-Proving knowledge of a valid opening of a Pedersen commitment means proving knowledge of $w_1,w_2, \dots, w_m\in\FF_p$ such that $Y=w_1G_1 + w_2G_2 + \dots + w_m G_m$.
+Proving knowledge of a valid opening of a Pedersen commitment means proving knowledge of $\witness_1,\witness_2, \dots, \witness_m\in\FF_p$ such that $Y=\witness_1G_1 + \witness_2G_2 + \dots + \witness_m G_m$.
 
 
 \begin{itemize}
-  \item $\varphi:\FF_p^m\to\GG:(w_1,w_2, \dots, w_m)\mapsto \sum_i w_iG_i$
+  \item $\varphi:\FF_p^m\to\GG:(\witness_1,\witness_2, \dots, \witness_m)\mapsto \sum_i \witness_iG_i$
   \item $\rep.\morphismlabel()$ returns
   \[
-    \hash(\replabel \concat \curvectx \concat \serialize(G_1) \concat \cdots \concat \serialize(G_m) \concat \serialize(Y))
+    \hash(\replabel \concat \curvectx \concat \serialize(G_1) \concat \cdots \concat \serialize(G_m) \concat \serialize(\statement))
   \]
   \minote{length is important to avoid generators swapped with statement}
 \end{itemize}
@@ -888,20 +907,20 @@ Proving knowledge of a valid opening of a Pedersen commitment means proving know
 The batchable form can take advantage of the following fact.
 Given the single verification equations of the form:
 \[
-   \commitment_i + c_i Y_i = \sum_j s_j G_{i,j}
+   \commitment_i + \challenge_i Y_i = \sum_j \response_j G_{i,j}
 \]
 for $i=1, \dots,\ell$,
 %(So, $T \in \GG^\ell$, $c \in \FF_p^\ell$ and $s \in \FF_p^{\ell \times m}$ and $\mat G \in \GG^{m \times \ell}$.)
 the verifier can sample a random vector of coefficients $\vec a \in \FF_p^\ell$ instead test that:
 \[
-  \left(\sum_{i=1}^{\ell} a_i \commitment_i\right) + \left(\sum_{i=1}^{\ell} a_i \cdot  c_i \statement_i \right) = \left(\sum_{i=1}^{\ell} a_i \cdot \sum_j \response_j G_{i,j}\right).
+  \left(\sum_{i=1}^{\ell} a_i \commitment_i\right) + \left(\sum_{i=1}^{\ell} a_i \cdot  \challenge_i \statement_i \right) = \left(\sum_{i=1}^{\ell} a_i \cdot \sum_j \response_j G_{i,j}\right).
 \]
 If the matrix $G_{i, j}$ of generators has identical rows, by linearity the right-hand side can be computed as a single scalar product.
 If the statements $\statement_i$'s have identical rows, by linearity the second term in the equation can be computed as a single scalar product.
 
 In any case, the test can be efficiently implemented as a single multiscalar multiplication, minimizing the number of group operations needed:
 \[
-  \left(\sum_{i=1}^{\ell} a_i \commitment_i\right) + \left(\sum_{i=1}^{\ell} (a_i \cdot  c_i) \statement_i \right) + \left(\sum_{i=1}^{\ell}\sum_j (-a_i \cdot  \response_j) G_{i,j}\right) = 0.
+  \left(\sum_{i=1}^{\ell} a_i \commitment_i\right) + \left(\sum_{i=1}^{\ell} (a_i \cdot  \challenge_i) \statement_i \right) + \left(\sum_{i=1}^{\ell}\sum_j (-a_i \cdot  \response_j) G_{i,j}\right) = 0.
 \]
 
 The random vector $\vec a$ can be \emph{deterministically} generated by fixing $a_1 \defeq 1$ and setting $(a_2, \dots, a_{\ell}) \defeq \prg(\hash(\challenge \concat \vec s))$~\cite{bip-schnorr}.
