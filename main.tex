@@ -131,12 +131,25 @@ A \emph{proof} is a sequence of bytes attesting that a witness is in some relati
 Proofs described in this spec are zero-knowledge and sound.
 Zero knowledge means that the protocol does not leak any information about the prover's witness beyond what the attacker may infer from the proven statement or from other sources~\cite[1.6.4]{zkproof-reference}.
 Soundness means that it is not possible to make the verifier accept for statements for which no valid witness exists~\cite[1.6.2]{zkproof-reference}.
-% If soundness relies on computational assumption, then we call the proof an \emph{argument}.
+
+
+%If soundness relies on computational assumption, then we call the proof an \emph{argument}.
+%In particular we will focus on non-malleable simulation-extractable proofs.
+%These protocols are proofs of knowledge~\cite{STOC:GolMicRac85,STOC:FeiFiaSha87,C:BelGol92} and are said to satisfy \emph{knowledge soundness}~\cite{damgard04}, which means that the prover must \emph{know} a witness in order to create a proof, mere \emph{existence} of a witness is not sufficient. 
+%In addition, \emph{non-malleability} means that proofs cannot be modified without knowledge of a witness (similar to how strongly secure digital signatures cannot be modified by third parties). 
+%Finally, \emph{simulation-extractability} means that when arguing about security, one can simultaneously, in the same argumentation, invoke the zero-knowledge property and the proof of knowledge property. 
+%It is similar to how for digital signatures, one can argue that an attacker cannot create create a new signature even if they have seen some signatures before. 
+
+
+\stnote{Add descriptions which protocols satisfy which security properties under which conditions}
+%\jannote{Actually, some of the protocols mentioned here are not non-malleable simulation-extractable (say I do a proof for $\varphi(w_1,w_2) = g^{w_1 + w_2}$, for any $t\in\mathbb{F}_p$, I can always just add $c\cdot t$ to $s_1$ and subtract $c\cdot t$ from $s_2$, changing the proof but keeping it valid). In other words, not all proofs here have (quasi)unique responses}
+%\jannote{Do security properties deserve their own section? Just throwing it out there. It may be interesting to talk about (1) under which circumstances proofs have non-malleability, what does it mean if they don't? (2) under what circumstances can I use these proofs (or do I need straight-line extractability for my application?). (3) What should I know about replay attacks? \\
+%Also, we're currently implicitly assuming some properties that are not specified (as far as I can see); for example, ZK only holds if the announcement space is large enough; soundness only holds for large challenge spaces (which is an issue for, say, MPCitH). But there is no place to mention these right now. \\
+%Such a section may be out of scope, I don't know, but it may be a good idea to warn people against doing stupid things. Alternatively, one could argue that one needs a trained cryptographer to design the proofs, anyway, and only focus on implementation aspects here.}
+
 In particular we will focus on non-malleable extractable proofs, that is, the the witness does not only exist but it really must be known by the prover.
 These protocols are also known as proofs of knowledge~\cite{STOC:GolMicRac85,STOC:FeiFiaSha87,C:BelGol92} and is said to satisfy \emph{knowledge soundness}~\cite{damgard04}. In addition, non-malleability means that the proof is secure against man-in-the middle attacks, and attackers that might change  then we call the proof \emph{simulation-extractable}.
 
-%All protocols defined here are simulation-extractable. A simulation-extractable proof is a proof of knowledge. A proof of knowledge is an argument.
-\stnote{Add descriptions which protocols satisfy which security properties under which conditions}
 
 \subsection{Scope of this document}
 
@@ -205,9 +218,15 @@ A $\sigmaprotocol$ consists of the following methods:
         \item $\commitment \gets \sigmaprotocol.\simcommitmenttt(\challenge, \response)$, denoting the second stage of the \emph{simulator}, returning a commitment that follows the same output distribution of the algorithm $\provercommitment$.
       \end{itemize}
       \stnote{are there any reasonable $\Sigma$-protocols where the simulator cannot be split like this? e.g., are there any protocols where $\challenge$ and $\response$ do not uniquely determine $\commitment$ (which would maybe mean that the short form of fiat-shamir does not work anyways)?}
+      \jannote{@Stephan: Afaik, pretty much every simulator can be split into \enquote{choose random $\response$, then choose (random) fitting $\commitment$}.
+      There \emph{are} notable examples where $\challenge, \response$ do not \emph{uniquely} determine $\commitment$ (and hence cannot do short-form Fiat-Shamir as it's defined right now).
+      (1) MPC in the head proofs (ZKBoo is cited in Section 4). (2) \cite[Fig 1]{EC:GroKoh15} (also cited in Section 4). (3) any send-randomized-signature-then-prove protocols like \cite[Section 6.2]{EPRINT:PoiSan15} or \cite[Fig 1]{AC:CamChaShe08}. \\
+      As noted in \cite[Observation 1]{EC:GGHK22}, one can force the unique-announcement property by including the announcement in the response, though that clearly negates the benefits of short-form FS.
+      To suggest a way out: in our implementation \cite{EPRINT:BEHF21}, to enable short-form FS for all Sigma protocols, we add compress/decompress methods to the Sigma protocol interface. 
+      %https://github.com/cryptimeleon/craco/blob/489448105453940d686f5fa159832d35d74af19f/src/main/java/org/cryptimeleon/craco/protocols/arguments/sigma/SigmaProtocol.java#L111
+      Compress takes a transcript $(\commitment, \challenge, \response)$ and outputs a shorter version of it (e.g., just $\response$ or something like $(\sigma, \response)$ if the announcement contains some part $\sigma$ that cannot be uniquely recomputed from $(\challenge, \response)$). Decompress takes the compressed transcript and a challenge and outputs an error or the unique accepting full transcript. Then short-form FS becomes $(\challenge, \mathit{compressed\ transcript})$.}
       \minote{there are some invariants that these protocols should satisfy:
       checking the output distribution might be hard, but trivially all simulated transcripts (as well as honest transcripts) should verify! }
-
     % \begin{protocol}{Generic flow of a $\Sigma$-protocol.\\[-2.25em]}{fig:generic}{t}
     %   \begin{tabular}{@{}l@{\hspace{-2em}}c@{\hspace{-2em}}r@{}}
     %     & $\sigmaprotocol.\new(\statement)$  \\
@@ -508,8 +527,10 @@ $c \gets \sigmaprotocol.\challengett(\ctx, \msg,\commitment)$
 \item
    $\response\gets\sigmaprotocol.\proverresponse(\proverstatett,  \challenge)$.
    \item Check that the witness is valid. This can (for instance) be done running \[\sigmaprotocol.\verifiertt(\commitment, \challenge, \response)\]
+\jannote{I'd caution against formally requiring a witness-check in the prover algorithm. From experience, this absolutely kills prover performance (basically doubles computation time) and in most scenarios, you trivially get witness-correctness from the larger application (say, I'm just using my Schnorr signature key as always, it won't suddenly become invalid). Maybe that's what you mean with \enquote{for instance}, in which case please clarify for the reader.}
    \item
   Return $\serialize(\commitment) \concat \serialize(\vec \response)$
+  \jannote{This concatenation-without-separator seems a bit iffy (is it clear where to separate the concatenated bit string again?). I also feel like it's inconsistent that the prover outputs the concatenation of two serialized objects but the verifier takes as input \enquote{$(\commitment, s)$}. Either establish $(\commitment, s)$-notation (and explain how to serialize tuples somewhere else) or have everyone input/output opaque bit strings}
 \end{enumerate}
 \item[Verifier algorithm.] The verifier's algorithm $\sigmaprotocol.\batchverifier((\commitment,s), \ctx, \msg)$ works as follows:
 \begin{enumerate}
@@ -521,6 +542,12 @@ $c \gets \sigmaprotocol.\challengett(\ctx, \msg,\commitment)$
 \begin{remark}{Input validation}{}
 The case of batched verification must include a point verification sub-routine that asserts the statement and commitments are in question. Failure to properly check that a commitment is in the group could lead to subgroup attacks~\cite{EC:VanWie96,C:LimLee97} or invalid curve attacks~\cite{C:BieMeyMul00,RSA:BBPV12}.
 \end{remark}
+\jannote{I might be completely wrong here, but \dots is this remark actually true? Do we need to check that the commitment $\commitment$ is in the right subgroup?
+This is a verifier check, so it doesn't impact ZK. 
+For soundness, let's say we check that $\commitment$ is on curve (I'd never omit that check), but in the wrong subgroup. Say everything else ($\varphi(\cdot), \statement$) in the right subgroup.
+But then the verifier checks $\commitment+c\statement = \varphi(\response)$. If that check is true, then multiplying the equation with $z = \mathit{cofactor}\cdot (\mathit{cofactor}^{-1}\bmod p)$ gives us that $z\cdot \commitment$, which lives in the right subgroup, fulfills the verification equation, too. This generalizes to batch verification.
+So it seems like (though I may be overlooking something!?), in soundness proofs, we could just project commitments into the right subgroup and everything would still just work, even if the actual verifier works with elements of the wrong subgroup.
+That seems like a significant performance boost not to have to check subgroups for all the $\commitment_i$ in batch verification, but I'm not sure if you want to complicate things.}
 \end{description}
 
 \subsubsection{Short Proofs}
@@ -648,6 +675,7 @@ These will be defined later in the specific protocols.
  \stnote{which checks are necessary? which values need to be on the curve, etc.?}
 \minote{It's maybe dangerously unclear, but I as assuming that all private methods written here have valid elements in the curve, and that validation is up to serialization/deserialization...}
 \begin{itemize}
+  \item $\dlogsigmaprotocol.\new(\vec\statement)$ internally stores $\vec\statement$.
   \item\label{item:basic:p1}
    $(\vec \commitment, \proverstatett) \gets \dlogsigmaprotocol.\provercommitment(\vec \witness)$ consists of the following steps:
     \begin{enumerate}
@@ -700,10 +728,9 @@ These will be defined later in the specific protocols.
     \end{enumerate}
 \end{itemize}
 
-\stnote{TODO: example: bit decomposition and range proof}
-
 \subsection{Advanced: proving linear relations}\label{sec:linear_relations}
-  While the above protocol allows one to efficiently prove knowledge of a pre-image under a homomorphism, many protocols found in the literature require one to prove relations among witnesses.
+
+While the above protocol allows one to efficiently prove knowledge of a pre-image under a homomorphism, many protocols found in the literature require one to prove relations among witnesses.
   Specifically, they require to prove relations like the following:
 \begin{equation*}
 \relation=\set{((\statement_1,\dots,\statement_m),(\witness_1,\dots,\witness_n)) :
