@@ -37,6 +37,8 @@
     breaklinks,colorlinks,citecolor=blue,linkcolor=blue,urlcolor=blue
    ]{hyperref}
 \usepackage[capitalize,nameinlink,sort]{cleveref}
+\crefformat{equation}{(#2#1#3)}
+
 \usepackage{booktabs}
 \usepackage{graphicx}
 \usepackage{pifont}
@@ -51,7 +53,11 @@
     colframe=green!35!black,
     fonttitle=\bfseries}{th}
 
-\newtheorem{example}{Example}
+\newtcbtheorem{example}{Example}{
+    colback=blue!5,
+    colframe=blue!35!black,
+    fonttitle=\bfseries}{th}
+
 
 \title{A spec for $\Sigma$-protocols}
 %
@@ -102,7 +108,7 @@ A \emph{binary relation} $\relation$ associates elements from a set $\Set{Y}$ wi
 For $(\statement,\witness)\in\relation$, we refer to $\statement$ as a \emph{statement}, and to $\witness$ as a \emph{witness} (for $\statement$).
 Note there may be multiple witnesses for a given $\statement$.
 
-\begin{example}
+\begin{example}{Discrete logarithm equality}{}
   Let $\GG$ be a cyclic group of prime order $p$, and let $G$ and $H$ be generators of $\GG$.
 	Then the following relation $\relation$ contains as statements all pairs of elements having the same discrete logarithm with respect to $G$ and $H$, with the corresponding witness being their discrete logarithm:
   $$
@@ -110,7 +116,7 @@ Note there may be multiple witnesses for a given $\statement$.
 	$$
 \end{example}
 
-\begin{example}
+\begin{example}{Representation}{}
   Let $\GG$ be a cyclic group of prime order $p$, and let $G$ and $H$ be generators of $\GG$.
 	Then the following relation $\relation$ contains as statements all valid Perdersen commitments, with the corresponding witnesses being their openings:
   $$
@@ -129,7 +135,8 @@ Soundness means that it is not possible to make the verifier accept for statemen
 In particular we will focus on non-malleable extractable proofs, that is, the the witness does not only exist but it really must be known by the prover.
 These protocols are also known as proofs of knowledge~\cite{STOC:GolMicRac85,STOC:FeiFiaSha87,C:BelGol92} and is said to satisfy \emph{knowledge soundness}~\cite{damgard04}. In addition, non-malleability means that the proof is secure against man-in-the middle attacks, and attackers that might change  then we call the proof \emph{simulation-extractable}.
 
-All protocols defined here are simulation-extractable. A simulation-extractable proof is a proof of knowledge. A proof of knowledge is an argument.
+%All protocols defined here are simulation-extractable. A simulation-extractable proof is a proof of knowledge. A proof of knowledge is an argument.
+\stnote{Add descriptions which protocols satisfy which security properties under which conditions}
 
 \subsection{Scope of this document}
 
@@ -617,8 +624,8 @@ We provide a generic template for all $\Sigma$-protocols for statements of the f
 where $\varphi:\FF_p^n\to\GG^m$ is a group homomorphism.
 
 \begin{remark}{Selective disclosure of witnesses}{}
-  Note that in the following descriptions, all witnesses are assumed to be kept secret, i.e., none of the $\witness_i$ is disclosed to the verifier.
-	In case this is required, as is the case, e.g., in the context of attribute-based credential systems, the relation to be proven can be rewritten as follows:
+  Note that in the following descriptions, all witnesses are assumed to be kept secret, i.e., none of them is disclosed to the verifier.
+	In case it is required to disclose $\witness_j$, as is the case, e.g., in the context of attribute-based credential systems, the relation to be proven can be rewritten as follows:
 $$
   \relation'=\set{
 	\begin{array}{r}
@@ -732,11 +739,10 @@ where
 \end{align*}
 
 
-
 \subsection{Instantiations}\label{sec:instantiations}
 Let $\GG$ be a group over an elliptic curve with prime order $p$.
 
-\subsubsection{Schnorr signatures}
+\subsubsection{Schnorr signatures}\label{sec:instantiations:schnorr}
 Schnorr signatures, also known as Schnorr proofs or DLOG proofs, prove knowledge of the discrete logarithm $w$ of a point $Y$ in base $G$.
 That is, they prove knowledge of $w\in\FF_p$ such that $Y=wG$.
 
@@ -850,10 +856,10 @@ However, the required multiplicative relation can be proven by observing that th
 % It then outputs the simulated transcript $((\commitment_1,\commitment_2,\commitment_3),\challenge,(s_1,s_2))$.
 
 As shown in this example, and in contrast to linear relations, multiplicative relations among witnesses typically require a reformulation of the proof goal in order to be compatible with the generic protocol presented above.
-We refer, e.g., to Krenn~\cite{krenn12} for generic techniques.
+%We refer, e.g., to Krenn~\cite{krenn12} for generic techniques.
 
 
-\subsubsection{Representation}
+\subsubsection{Representation}\label{sec:instantiations:representation}
 Let $\GG$ be a group over an elliptic curve of prime order $p$.
 Proving knowledge of a valid opening of a Pedersen commitment means proving knowledge of $\witness_1,\witness_2, \dots, \witness_m\in\FF_p$ such that $Y=\witness_1G_1 + \witness_2G_2 + \dots + \witness_m G_m$.
 
@@ -889,6 +895,32 @@ Proving knowledge of a valid opening of a Pedersen commitment means proving know
     % \end{protocol}
 
 
+\begin{example}{Range proofs via bit decomposition}{}
+  Let $\GG$ be a cyclic group of prime order $p$, and let $G$ and $H$ be generators of $\GG$, and let $\ell$ be a non-negative integer satisfying $\ell<\log_2 p$.
+	Consider the following relation:
+  $$
+	  \relation_{RANGE} = \set{\left(\statement,(\witness_1,\witness_2))\right)~:~\statement=\witness_1 G +\witness_2 H ~\land~ \witness_1\in[0,2^\ell)}\,.
+	$$
+	Multiple techniques for proving that a secret witness lies within a certain range, cf. Morais et al.~\cite{range-proof-survey} for a survey.
+	We will use the so-called \emph{bit decomposition} approach.
+
+	To do so, the prover computes $\witness_1^{(i)}\in\set{0,1}$ for $i=0,\dots,\ell-1$ such that $\witness_1=\sum_{i=0}^{\ell-1}2^i\witness_1^{(i)}$, and computes commitments to those individual bits, i.e., $\statement^{(i)}=\witness_1^{(i)}G+\witness_2^{(i)}H$ for $\witness_2^{(i)}\sample\FF_p$.
+	Furthermore, it sets $\witness^*=\witness_2-\sum_{i=0}^{\ell-1}2^i\witness_2^{(i)}$.
+
+  Assuming that the discrete logarithm problem is hard in $\GG$, the above relation is now equivalent to the following relation:
+  \begin{align}
+	  \relation_{RANGE}' = \bigg\{\left((\statement,(\statement^{(i)})_{i=0}^{\ell-1}),(\witness_1,\witness_2,(\witness_2^{(i)})_{i=0}^{\ell-1}),\witness^*)\right)~:~ 		\statement=\witness_1 G +\witness_2 H ~\land~ \label{ex:range:preimage}\\
+		\statement-\sum_{i=0}^{\ell-1} 2^i\statement^{(i)} = \witness^* H ~\land~  \label{ex:range:equality}\\
+		\bigwedge_{i=0}^{\ell-1} \left(\statement^{(i)}=\witness_2^{(i)}H ~\lor~ \statement^{(i)}-G=\witness_2^{(i)}H\right)\bigg\}\,.\label{ex:range:bits}
+	\end{align}
+	
+	It can now be seen that \cref{ex:range:preimage} ensures knowledge of the witnesses $\witness_1$ hidden within $\statement$.
+	Furthermore, \cref{ex:range:equality} guarantees that the values hidden within $\statement^{(i)}$ correctly add up to $\witness_1$, i.e., that $\witness_1-\sum_{i=0}^{\ell-1}2^i\witness_1^{(i)}=0$.
+  Finally, the two clauses in \cref{ex:range:bits} ensure that each $\statement^{(i)}$ is a commitment to either $0$ or $1$, thus implying the bound on $\witness_1$.
+	
+	While \cref{ex:range:preimage} can be proven using the protocol from \cref{sec:instantiations:representation}, \cref{ex:range:equality} and \cref{ex:range:bits} can be proven using those from \cref{sec:instantiations:schnorr}.
+	The different clauses can finally be composed using nested protocol compositions from \cref{sec:composition}.	
+\end{example}
 
 \subsection{Batch verification}
 
