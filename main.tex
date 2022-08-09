@@ -112,7 +112,7 @@ Note there may be multiple witnesses for a given $\statement$.
   Let $\GG$ be a cyclic group of prime order $p$, and let $G$ and $H$ be generators of $\GG$.
 	Then the following relation $\relation$ contains as statements all pairs of elements having the same discrete logarithm with respect to $G$ and $H$, with the corresponding witness being their discrete logarithm:
   $$
-	  \relation_{DLEQ} = \set{\left((\statement_1,\statement_2),\witness)\right)~:~\statement_1=\witness G ~\land~ \statement_2=\witness H}\,.
+	  \relation_{\operatorname{DLEQ}} = \set{\left((\statement_1,\statement_2),\witness)\right)~:~\statement_1=\witness G ~\land~ \statement_2=\witness H}\,.
 	$$
 \end{example}
 
@@ -120,7 +120,7 @@ Note there may be multiple witnesses for a given $\statement$.
   Let $\GG$ be a cyclic group of prime order $p$, and let $G$ and $H$ be generators of $\GG$.
 	Then the following relation $\relation$ contains as statements all valid Perdersen commitments, with the corresponding witnesses being their openings:
   $$
-	  \relation_{REP} = \set{\left(\statement,(\witness_1,\witness_2))\right)~:~\statement=\witness_1G + \witness_2H}\,.
+	  \relation_{\operatorname{REP}} = \set{\left(\statement,(\witness_1,\witness_2))\right)~:~\statement=\witness_1G + \witness_2H}\,.
 	$$
 	Note that in this case, each statement has $p$ valid witnesses.
 \end{example}
@@ -271,7 +271,7 @@ A $\sigmaprotocol$ consists of the following methods:
   \end{verbatim}
 
 The dots \texttt{[...]} denote optional, specific $\Sigma$ protocol instantiations that will be covered in \cref{sec:sigma-dlog}.
-  Without loss of generality, the techniques presented in the following focus on the composition of two protocols. 
+  Without loss of generality, the techniques presented in the following focus on the composition of two protocols.
   Composition of multiple protocols (e.g., proving knowledge of a witness for one out of many statements) can be achieved by recursively applying composition of two protocols.
 
   \subsubsection{AND Composition}
