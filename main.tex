@@ -25,7 +25,7 @@
 \usepackage{mathtools}
 \usepackage{todonotes}
 \usepackage{csquotes}
-\usepackage{tcolorbox}
+\usepackage[most]{tcolorbox}
 \usepackage[binary-units]{siunitx}
 \tcbuselibrary{theorems}
 
@@ -48,15 +48,21 @@
 \newtheorem{definition}{Definition}
 \newtheorem{theorem}{Theorem}
 
-\newtcbtheorem{remark}{Remark}{
-    colback=green!5,
+\newtcbtheorem[auto counter, number within = section,
+  crefname={Remark}{Remark},
+  Crefname={Remark}{Remark}]{remark}{Remark}{
+    breakable,
+		colback=green!5,
     colframe=green!35!black,
-    fonttitle=\bfseries}{th}
+    fonttitle=\bfseries}{rem} %cite as \cref{rem:<label>}
 
-\newtcbtheorem{example}{Example}{
+\newtcbtheorem[auto counter, number within = section,
+  crefname={Example}{Example},
+  Crefname={Example}{Example}]{example}{Example}{
+    breakable,
     colback=blue!5,
     colframe=blue!35!black,
-    fonttitle=\bfseries}{th}
+    fonttitle=\bfseries}{exa} %cite as \cref{exa:<label>}
 
 
 \title{A spec for $\Sigma$-protocols}
@@ -108,7 +114,7 @@ A \emph{binary relation} $\relation$ associates elements from a set $\Set{Y}$ wi
 For $(\statement,\witness)\in\relation$, we refer to $\statement$ as a \emph{statement}, and to $\witness$ as a \emph{witness} (for $\statement$).
 Note there may be multiple witnesses for a given $\statement$.
 
-\begin{example}{Discrete logarithm equality}{}
+\begin{example}{Discrete logarithm equality}{R_DLOG}
   Let $\GG$ be a cyclic group of prime order $p$, and let $G$ and $H$ be generators of $\GG$.
 	Then the following relation $\relation$ contains as statements all pairs of elements having the same discrete logarithm with respect to $G$ and $H$, with the corresponding witness being their discrete logarithm:
   $$
@@ -116,7 +122,7 @@ Note there may be multiple witnesses for a given $\statement$.
 	$$
 \end{example}
 
-\begin{example}{Representation}{}
+\begin{example}{Representation}{R_REP}
   Let $\GG$ be a cyclic group of prime order $p$, and let $G$ and $H$ be generators of $\GG$.
 	Then the following relation $\relation$ contains as statements all valid Perdersen commitments, with the corresponding witnesses being their openings:
   $$
@@ -643,7 +649,25 @@ For an in-depth discussion of the underlying theory we refer to Cramer~\cite{cra
   For two groups $\GG_1,\GG_2$, a function $\varphi:\GG_1\to\GG_2:x\mapsto\varphi(x)$ is a \emph{(group) homomorphism}, if and only if for all $a,b\in\GG_1$ it holds that $\varphi(a+b)=\varphi(a)+\varphi(b)$.
 \end{definition}
 
-\stnote{mention that $\GG_i$ be products of different groups}
+\begin{example}{Discrete logarithm equality}{phi_DLOG}
+  Looking at the relation from \cref{exa:R_DLOG}, the relevant homomorphism is given by:
+	$$
+	  \varphi_{\operatorname{DLOG}} : \ZZ_p\to\GG^2 : \witness\mapsto (\witness G,\witness H)\,.
+	$$
+	If equality of discrete logarithms within \emph{different} groups of the same prime order $p$ is to be proven, the homomorphism to be considered would be:
+	$$
+	  \varphi_{\operatorname{DLOG}}' : \ZZ_p\to\GG_1\times\GG_2 : \witness\mapsto (\witness G,\witness H)\,,
+	$$
+	where $G$ and $H$ would now be generators for $\GG_1$ and $\GG_2$, respectively.
+	All the techniques discussed in the remainder of this spec equally apply to both cases.
+\end{example}
+
+\begin{example}{Representation}{phi_REP}
+  Looking at the relation from \cref{exa:R_REP}, the relevant homomorphism is given by:
+	$$
+	  \varphi_{\operatorname{REP}} : \ZZ_p^2\to\GG : (\witness_1,\witness_2)\mapsto \witness_1 G + \witness_2 H\,.
+	$$
+\end{example}
 
 
 \label{sec:sigma-dlog}
