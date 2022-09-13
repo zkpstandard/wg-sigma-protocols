@@ -141,10 +141,10 @@ Soundness means that it is not possible to make the verifier accept for statemen
 
 %If soundness relies on computational assumption, then we call the proof an \emph{argument}.
 %In particular we will focus on non-malleable simulation-extractable proofs.
-%These protocols are proofs of knowledge~\cite{STOC:GolMicRac85,STOC:FeiFiaSha87,C:BelGol92} and are said to satisfy \emph{knowledge soundness}~\cite{damgard04}, which means that the prover must \emph{know} a witness in order to create a proof, mere \emph{existence} of a witness is not sufficient. 
-%In addition, \emph{non-malleability} means that proofs cannot be modified without knowledge of a witness (similar to how strongly secure digital signatures cannot be modified by third parties). 
-%Finally, \emph{simulation-extractability} means that when arguing about security, one can simultaneously, in the same argumentation, invoke the zero-knowledge property and the proof of knowledge property. 
-%It is similar to how for digital signatures, one can argue that an attacker cannot create create a new signature even if they have seen some signatures before. 
+%These protocols are proofs of knowledge~\cite{STOC:GolMicRac85,STOC:FeiFiaSha87,C:BelGol92} and are said to satisfy \emph{knowledge soundness}~\cite{damgard04}, which means that the prover must \emph{know} a witness in order to create a proof, mere \emph{existence} of a witness is not sufficient.
+%In addition, \emph{non-malleability} means that proofs cannot be modified without knowledge of a witness (similar to how strongly secure digital signatures cannot be modified by third parties).
+%Finally, \emph{simulation-extractability} means that when arguing about security, one can simultaneously, in the same argumentation, invoke the zero-knowledge property and the proof of knowledge property.
+%It is similar to how for digital signatures, one can argue that an attacker cannot create create a new signature even if they have seen some signatures before.
 
 
 \stnote{Add descriptions which protocols satisfy which security properties under which conditions}
@@ -176,12 +176,17 @@ Such protocols can be used to prove that, for some binary relation $\relation$ a
 Basic statements include proofs of knowledge of a secret key, openings of commitments, and more in general of representations.
 The type of these elements depends on the specific relation being implemented.
 
-All $\Sigma$-protocols involve three messages: a commitment, denoted $\commitment$; a challenge, denoted $\challenge$; a response, denoted $\response$.
-In this document, the challenge is fixed to be a bitstring of $\seedlen$,
-while the commitment and the response will depend on the specific protocol instantiation.
-
 An important property of $\Sigma$-protocols is that they are composable: it is possible to prove conjunction and disjunctions of statements in zero-knowledge.
 Composition of $\Sigma$-protocols is dealt in details in \cref{sec:composition}; for an in-depth discussion of the underlying theory we refer to Cramer~\cite{cramer97}.
+
+\subsection{Overview}
+A $\Sigma$-protocol, in abstract, follows the following steps:
+\begin{itemize}
+  \item the prover computes a fresh \textbf{commitment}, denoted $\commitment$. This element is sometimes also called \emph{nonce}.
+  \item the prover computes, using the so-called Fiat-Shamir transform, a random \textbf{challenge}, denoted $\challenge$. In practice, this step will always computed by applying the challenge will be fixed to be a bitstring of $\seedlen$, independently form the specific protocol instantiation.
+  \item the prover computes a \textbf{response}, denoted $\response$, that depends on the commitment and the challenge.
+\end{itemize}
+The final proofs is constituted of the three-elements above, and is also referred to as the \emph{protocol transcript}.
 
 \subsection{An abstract class for generic $\Sigma$-protocols}
 The following formally describes the class of $\Sigma$-protocols, which covers all protocols considered in the remainder of this document.
@@ -228,7 +233,7 @@ A $\sigmaprotocol$ consists of the following methods:
       There \emph{are} notable examples where $\challenge, \response$ do not \emph{uniquely} determine $\commitment$ (and hence cannot do short-form Fiat-Shamir as it's defined right now).
       (1) MPC in the head proofs (ZKBoo is cited in Section 4). (2) \cite[Fig 1]{EC:GroKoh15} (also cited in Section 4). (3) any send-randomized-signature-then-prove protocols like \cite[Section 6.2]{EPRINT:PoiSan15} or \cite[Fig 1]{AC:CamChaShe08}. \\
       As noted in \cite[Observation 1]{EC:GGHK22}, one can force the unique-announcement property by including the announcement in the response, though that clearly negates the benefits of short-form FS.
-      To suggest a way out: in our implementation \cite{EPRINT:BEHF21}, to enable short-form FS for all Sigma protocols, we add compress/decompress methods to the Sigma protocol interface. 
+      To suggest a way out: in our implementation \cite{EPRINT:BEHF21}, to enable short-form FS for all Sigma protocols, we add compress/decompress methods to the Sigma protocol interface.
       %https://github.com/cryptimeleon/craco/blob/489448105453940d686f5fa159832d35d74af19f/src/main/java/org/cryptimeleon/craco/protocols/arguments/sigma/SigmaProtocol.java#L111
       Compress takes a transcript $(\commitment, \challenge, \response)$ and outputs a shorter version of it (e.g., just $\response$ or something like $(\sigma, \response)$ if the announcement contains some part $\sigma$ that cannot be uniquely recomputed from $(\challenge, \response)$). Decompress takes the compressed transcript and a challenge and outputs an error or the unique accepting full transcript. Then short-form FS becomes $(\challenge, \mathit{compressed\ transcript})$.}
 \stnote{maybe only support short form if there is only (at most) one $T$}
@@ -464,23 +469,32 @@ Fiat and Shamir heuristic~\cite{C:FiaSha86} and subsequent work, e.g., by Bernha
 
 The underlying idea is to replace the verifier with a cryptographically secure hash function, hashing the context from the protocol and the previous message sent by the prover.
 
-\begin{remark}{Interactive $\Sigma$-protocols}{} The interactive version of $\Sigma$-protocols presented in this paper is unfit for practical applications.
+\begin{remark}{Interactive $\Sigma$-protocols}{} $\Sigma$-protocols illustrated in this spec \textbf{must not} be used interactively.
 \end{remark}
 
+\subsection{Syntax}
+
+When using a hash function we will employ comma-separated values to indicate values that are concatenated.
+To prevent side-channel attacks and allow for possible optimizations we also separate values with semi-columns
+to indicate that they must appear in a subsequent block.
+\minote{}
+\minote{is this all there is?}
 \subsubsection{Hash Registry}
 \label{sec:hash-registry}.
 
-We support all of the following hash functions that takes as input a sequence of bytes of arbitrary length and output $\seedlen$ of entropy.
+The set of supported hash functions must  all of the following hash functions that takes as input a sequence of bytes of arbitrary length and output $\seedlen$ of entropy.
 
-\begin{center}
-  \begin{tabular}{lll}
-  Hash & Security Level & Source \\
+\begin{table}[b]
+  \centering
+  \begin{tabular}{lllcc}
+  Hash & Security Level & Source & $\blocklen$ & $\digestlen$ \\
   \hline
   Blake2 \\
   Keccak & \\
   \unsure{Poseidon} &\\
   \end{tabular}
-\end{center}
+  \caption{Registry of supported hash functions.}
+\end{table}
 \minote{The output of poseidon are not bytes. How do make this work in the bigger picture?}
 \minote{Randomness for the commitment: we can choose to rely on the operating system's entropy. For fault attacks, it does not seem ideal either to have a prf sqeezing all the entropy.}
 \subsubsection{Computing the challenge}
@@ -536,7 +550,7 @@ $c \gets \sigmaprotocol.\challengett(\ctx, \msg,\commitment)$
    \item Check that the witness is valid. This can (for instance) be done running \[\sigmaprotocol.\verifiertt(\commitment, \challenge, \response)\]
 \jannote{I'd caution against formally requiring a witness-check in the prover algorithm. From experience, this absolutely kills prover performance (basically doubles computation time) and in most scenarios, you trivially get witness-correctness from the larger application (say, I'm just using my Schnorr signature key as always, it won't suddenly become invalid). Maybe that's what you mean with \enquote{for instance}, in which case please clarify for the reader.}
 \stnote{just say that this is important. but it's up to the developer to make sure how this is done}
-   \item
+\minote{Yes we mean that it can be checked. also: fault attacks? they can be prevented this way}
   Return $\serialize(\commitment) \concat \serialize(\vec \response)$
   \jannote{This concatenation-without-separator seems a bit iffy (is it clear where to separate the concatenated bit string again?). I also feel like it's inconsistent that the prover outputs the concatenation of two serialized objects but the verifier takes as input \enquote{$(\commitment, s)$}. Either establish $(\commitment, s)$-notation (and explain how to serialize tuples somewhere else) or have everyone input/output opaque bit strings}
 \stnote{void, everything has fixed length in our case}
@@ -552,7 +566,7 @@ $c \gets \sigmaprotocol.\challengett(\ctx, \msg,\commitment)$
 The case of batched verification must include a point verification sub-routine that asserts the statement and commitments are in question. Failure to properly check that a commitment is in the group could lead to subgroup attacks~\cite{EC:VanWie96,C:LimLee97} or invalid curve attacks~\cite{C:BieMeyMul00,RSA:BBPV12}.
 \end{remark}
 \jannote{I might be completely wrong here, but \dots is this remark actually true? Do we need to check that the commitment $\commitment$ is in the right subgroup?
-This is a verifier check, so it doesn't impact ZK. 
+This is a verifier check, so it doesn't impact ZK.
 For soundness, let's say we check that $\commitment$ is on curve (I'd never omit that check), but in the wrong subgroup. Say everything else ($\varphi(\cdot), \statement$) in the right subgroup.
 But then the verifier checks $\commitment+c\statement = \varphi(\response)$. If that check is true, then multiplying the equation with $z = \mathit{cofactor}\cdot (\mathit{cofactor}^{-1}\bmod p)$ gives us that $z\cdot \commitment$, which lives in the right subgroup, fulfills the verification equation, too. This generalizes to batch verification.
 So it seems like (though I may be overlooking something!?), in soundness proofs, we could just project commitments into the right subgroup and everything would still just work, even if the actual verifier works with elements of the wrong subgroup.
@@ -677,7 +691,7 @@ We provide a generic template for all $\Sigma$-protocols for statements of the f
 \]
 where $\varphi:\FF_p^n\to\GG^m$ is a group homomorphism.
 
-\begin{remark}{Selective disclosure of witnesses}{}
+\begin{example}{Selective disclosure of witnesses}{}
   Note that in the following descriptions, all witnesses are assumed to be kept secret, i.e., none of them is disclosed to the verifier.
 	In case it is required to disclose $\witness_j$, as is the case, e.g., in the context of attribute-based credential systems, the relation to be proven can be rewritten as follows:
 $$
@@ -694,7 +708,7 @@ $$
 	  \psi(\witness_1,\dots,\witness_{j-1},\witness_{j+1},\dots,\witness_n) &:= \varphi(\witness_1,\dots,\witness_{j-1},0,\witness_{j+1},\dots,\witness_n)\,.
 	\end{align*}
 
-\end{remark}
+\end{example}
 
 However, the following \emph{does not define neither the morphism nor the label associated to the protocol}.
 These will be defined later in the specific protocols.
@@ -953,7 +967,7 @@ Proving knowledge of a valid opening of a Pedersen commitment means proving know
   Let $\GG$ be a cyclic group of prime order $p$, and let $G$ and $H$ be generators of $\GG$, and let $\ell$ be a non-negative integer satisfying $\ell<\log_2 p$.
 	Consider the following relation:
   $$
-	  \relation_{RANGE} = \set{\left(\statement,(\witness_1,\witness_2))\right)~:~\statement=\witness_1 G +\witness_2 H ~\land~ \witness_1\in[0,2^\ell)}\,.
+	  \rangerelation = \set{\left(\statement,(\witness_1,\witness_2))\right)~:~\statement=\witness_1 G +\witness_2 H ~\land~ \witness_1\in[0,2^\ell)}\,.
 	$$
 	Multiple techniques for proving that a secret witness lies within a certain range, cf. Morais et al.~\cite{range-proof-survey} for a survey.
 	We will use the so-called \emph{bit decomposition} approach.
@@ -963,17 +977,17 @@ Proving knowledge of a valid opening of a Pedersen commitment means proving know
 
   Assuming that the discrete logarithm problem is hard in $\GG$, the above relation is now equivalent to the following relation:
   \begin{align}
-	  \relation_{RANGE}' = \bigg\{\left((\statement,(\statement^{(i)})_{i=0}^{\ell-1}),(\witness_1,\witness_2,(\witness_2^{(i)})_{i=0}^{\ell-1}),\witness^*)\right)~:~ 		\statement=\witness_1 G +\witness_2 H ~\land~ \label{ex:range:preimage}\\
+	  \rangerelation' = \bigg\{\left((\statement,(\statement^{(i)})_{i=0}^{\ell-1}),(\witness_1,\witness_2,(\witness_2^{(i)})_{i=0}^{\ell-1}),\witness^*)\right)~:~ 		\statement=\witness_1 G +\witness_2 H ~\land~ \label{ex:range:preimage}\\
 		\statement-\sum_{i=0}^{\ell-1} 2^i\statement^{(i)} = \witness^* H ~\land~  \label{ex:range:equality}\\
 		\bigwedge_{i=0}^{\ell-1} \left(\statement^{(i)}=\witness_2^{(i)}H ~\lor~ \statement^{(i)}-G=\witness_2^{(i)}H\right)\bigg\}\,.\label{ex:range:bits}
 	\end{align}
-	
+
 	It can now be seen that \cref{ex:range:preimage} ensures knowledge of the witnesses $\witness_1$ hidden within $\statement$.
 	Furthermore, \cref{ex:range:equality} guarantees that the values hidden within $\statement^{(i)}$ correctly add up to $\witness_1$, i.e., that $\witness_1-\sum_{i=0}^{\ell-1}2^i\witness_1^{(i)}=0$.
   Finally, the two clauses in \cref{ex:range:bits} ensure that each $\statement^{(i)}$ is a commitment to either $0$ or $1$, thus implying the bound on $\witness_1$.
-	
+
 	While \cref{ex:range:preimage} can be proven using the protocol from \cref{sec:instantiations:representation}, \cref{ex:range:equality} and \cref{ex:range:bits} can be proven using those from \cref{sec:instantiations:schnorr}.
-	The different clauses can finally be composed using nested protocol compositions from \cref{sec:composition}.	
+	The different clauses can finally be composed using nested protocol compositions from \cref{sec:composition}.
 \end{example}
 
 \subsection{Batch verification}
