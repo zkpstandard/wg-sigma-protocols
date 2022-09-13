@@ -118,7 +118,7 @@ Note there may be multiple witnesses for a given $\statement$.
   Let $\GG$ be a cyclic group of prime order $p$, and let $G$ and $H$ be generators of $\GG$.
 	Then the following relation $\relation$ contains as statements all pairs of elements having the same discrete logarithm with respect to $G$ and $H$, with the corresponding witness being their discrete logarithm:
   $$
-	  \relation_{\operatorname{DLEQ}} = \set{\left((\statement_1,\statement_2),\witness)\right)~:~\statement_1=\witness G ~\land~ \statement_2=\witness H}\,.
+	  \dleqrelation = \set{\left((\statement_1,\statement_2),\witness)\right)~:~\statement_1=\witness G ~\land~ \statement_2=\witness H}\,.
 	$$
 \end{example}
 
@@ -126,7 +126,7 @@ Note there may be multiple witnesses for a given $\statement$.
   Let $\GG$ be a cyclic group of prime order $p$, and let $G$ and $H$ be generators of $\GG$.
 	Then the following relation $\relation$ contains as statements all valid Perdersen commitments, with the corresponding witnesses being their openings:
   $$
-	  \relation_{\operatorname{REP}} = \set{\left(\statement,(\witness_1,\witness_2))\right)~:~\statement=\witness_1G + \witness_2H}\,.
+	  \reprelation = \set{\left(\statement,(\witness_1,\witness_2))\right)~:~\statement=\witness_1G + \witness_2H}\,.
 	$$
 	Note that in this case, each statement has $p$ valid witnesses.
 \end{example}
@@ -138,25 +138,13 @@ Proofs described in this spec are zero-knowledge and sound.
 Zero knowledge means that the protocol does not leak any information about the prover's witness beyond what the attacker may infer from the proven statement or from other sources~\cite[1.6.4]{zkproof-reference}.
 Soundness means that it is not possible to make the verifier accept for statements for which no valid witness exists~\cite[1.6.2]{zkproof-reference}.
 
-
-%If soundness relies on computational assumption, then we call the proof an \emph{argument}.
-%In particular we will focus on non-malleable simulation-extractable proofs.
-%These protocols are proofs of knowledge~\cite{STOC:GolMicRac85,STOC:FeiFiaSha87,C:BelGol92} and are said to satisfy \emph{knowledge soundness}~\cite{damgard04}, which means that the prover must \emph{know} a witness in order to create a proof, mere \emph{existence} of a witness is not sufficient.
-%In addition, \emph{non-malleability} means that proofs cannot be modified without knowledge of a witness (similar to how strongly secure digital signatures cannot be modified by third parties).
-%Finally, \emph{simulation-extractability} means that when arguing about security, one can simultaneously, in the same argumentation, invoke the zero-knowledge property and the proof of knowledge property.
-%It is similar to how for digital signatures, one can argue that an attacker cannot create create a new signature even if they have seen some signatures before.
-
-
-\stnote{Add descriptions which protocols satisfy which security properties under which conditions}
-%\jannote{Actually, some of the protocols mentioned here are not non-malleable simulation-extractable (say I do a proof for $\varphi(w_1,w_2) = g^{w_1 + w_2}$, for any $t\in\mathbb{F}_p$, I can always just add $c\cdot t$ to $s_1$ and subtract $c\cdot t$ from $s_2$, changing the proof but keeping it valid). In other words, not all proofs here have (quasi)unique responses}
-%\jannote{Do security properties deserve their own section? Just throwing it out there. It may be interesting to talk about (1) under which circumstances proofs have non-malleability, what does it mean if they don't? (2) under what circumstances can I use these proofs (or do I need straight-line extractability for my application?). (3) What should I know about replay attacks? \\
-%Also, we're currently implicitly assuming some properties that are not specified (as far as I can see); for example, ZK only holds if the announcement space is large enough; soundness only holds for large challenge spaces (which is an issue for, say, MPCitH). But there is no place to mention these right now. \\
-%Such a section may be out of scope, I don't know, but it may be a good idea to warn people against doing stupid things. Alternatively, one could argue that one needs a trained cryptographer to design the proofs, anyway, and only focus on implementation aspects here.}
-
 In particular we will focus on non-malleable extractable proofs, that is, the the witness does not only exist but it really must be known by the prover.
 These protocols are also known as proofs of knowledge~\cite{STOC:GolMicRac85,STOC:FeiFiaSha87,C:BelGol92} and is said to satisfy \emph{knowledge soundness}~\cite{damgard04}. In addition, non-malleability means that the proof is secure against man-in-the middle attacks, and attackers that might change  then we call the proof \emph{simulation-extractable}.
 
 
+\subsection{Guarantees}
+\stnote{with OR-composition you lose simulation-extractability}
+\minote{It is not immediate to build OR composition in  constant-time. It is possible to double the cost and run prover and simulator for each branch, but at the end we still need the ternary operator to select the correct transcirpt. This is the only place where we are incurring in non non-constant-time operations assuming the algebraic operations are already solved. }
 \subsection{Scope of this document}
 
 This document provides guidelines for secure implementations of $\Sigma$-protocols and is meant to facilitate adoption and the development of reference implementations.
@@ -168,8 +156,10 @@ entropy source well-suited for crypto\-graphic purposes.
 We will not talk about implementation of cryptographic primitives such as hash functions, or elliptic-curve algebra, but we will provide references to the algorithms.
 We won't provide any guidance for securely storing secrets or producing constant-time code.
 
-\minote{The problem of constant-time is for the most part in the OR composition}
 \minote{People interested in the development of a specific $\Sigma$ protocol should implement the template from 2 using the algorithm from XX and XX and then refer to section XX}
+
+
+
 \section{Generic $\Sigma$-Protocols}
 In the following, we describe the class of $\Sigma$-protocols.
 Such protocols can be used to prove that, for some binary relation $\relation$ and a public value $\statement$, a witness $\witness$ such that $(\statement,\witness)\in\relation$ is known.
@@ -194,7 +184,6 @@ The following formally describes the class of $\Sigma$-protocols, which covers a
 Protocols studied in the remainder of this document will follow the same template class $\sigmaprotocol$, that will internally describe the relation being proven. These functions should be considered \emph{private} and \emph{should not} exposed externally.
 Instances of $\sigmaprotocol$ are initialized via the $\new$ function, taking as input the statement $\statement$, while all other functions are to considered methods that acting on a particular $\sigmaprotocol$ instance.
 A $\sigmaprotocol$ consists of the following methods:
-\minote{I am not returning anything for elements that do not have a metavariable associated}
       \begin{itemize}
         \item $\sigmaprotocol.\new(\statement)$,
         denoting the initialization function. This function takes as input the statement $\statement$ shared during the execution of the protocol between prover and verifier.
@@ -205,18 +194,16 @@ A $\sigmaprotocol$ consists of the following methods:
           This step generally requires access to a high-quality entropy source.
           Leakage of even just of a few bits of the nonce could allow for the complete recovery of the witness~\cite{lattice-attack,bleichenbacher,CCS:ANTTY20}.
 					The value $\commitment$ is meant to be shared, while $\proverstatett$ must be kept secret.
-          \minote{Why introduce the witness in this step? Because preprocessing the commitments before knowing the witness is not a great idea (where do you store them? Groth-Shoup attacks?) plus
-          for dlog linear relations it seems helpful to have it around.}
         \item
           $\response \gets \sigmaprotocol.\proverresponse(\proverstatett, \challenge)$,
           denoting the \emph{response phase}, that is, the computation of the second message sent by the prover, depending on the witness, the statement, the challenge received from the verifier, and the internal state generated by $\provercommitment$.
           The value $\response$ is meant to be shared.
-        \item $\sigmaprotocol.\verifiertt(\commitment, \challenge, \response)$,
+        \item $\texttt{yesno} \gets \sigmaprotocol.\verifiertt(\commitment, \challenge, \response)$,
           denoting the \emph{verifier algorithm}. This method checks that
           the \emph{protocol transcript} is valid for the given statement.
           The verifier algorithm outputs nothing if verification succeeds,
           or an error if verification fails.
-          \item $\sigmaprotocol.\labeltt()$,
+          \item $\texttt{label} \gets\sigmaprotocol.\labeltt()$,
           returning a string of $\seedlen$ uniquely identifying the relation being proven.
           Implementing correctly this function is vital security, and one \emph{must} carefully follow the directives written in the relative instantiations. It is crucial for security that the label includes all data available in the statement, including the parameters and the relation being proven.
 
@@ -234,11 +221,9 @@ A $\sigmaprotocol$ consists of the following methods:
       (1) MPC in the head proofs (ZKBoo is cited in Section 4). (2) \cite[Fig 1]{EC:GroKoh15} (also cited in Section 4). (3) any send-randomized-signature-then-prove protocols like \cite[Section 6.2]{EPRINT:PoiSan15} or \cite[Fig 1]{AC:CamChaShe08}. \\
       As noted in \cite[Observation 1]{EC:GGHK22}, one can force the unique-announcement property by including the announcement in the response, though that clearly negates the benefits of short-form FS.
       To suggest a way out: in our implementation \cite{EPRINT:BEHF21}, to enable short-form FS for all Sigma protocols, we add compress/decompress methods to the Sigma protocol interface.
-      %https://github.com/cryptimeleon/craco/blob/489448105453940d686f5fa159832d35d74af19f/src/main/java/org/cryptimeleon/craco/protocols/arguments/sigma/SigmaProtocol.java#L111
       Compress takes a transcript $(\commitment, \challenge, \response)$ and outputs a shorter version of it (e.g., just $\response$ or something like $(\sigma, \response)$ if the announcement contains some part $\sigma$ that cannot be uniquely recomputed from $(\challenge, \response)$). Decompress takes the compressed transcript and a challenge and outputs an error or the unique accepting full transcript. Then short-form FS becomes $(\challenge, \mathit{compressed\ transcript})$.}
 \stnote{maybe only support short form if there is only (at most) one $T$}
-      \minote{there are some invariants that these protocols should satisfy:
-      checking the output distribution might be hard, but trivially all simulated transcripts (as well as honest transcripts) should verify! }
+
     % \begin{protocol}{Generic flow of a $\Sigma$-protocol.\\[-2.25em]}{fig:generic}{t}
     %   \begin{tabular}{@{}l@{\hspace{-2em}}c@{\hspace{-2em}}r@{}}
     %     & $\sigmaprotocol.\new(\statement)$  \\
@@ -290,7 +275,7 @@ The dots \texttt{[...]} denote optional, specific $\Sigma$ protocol instantiatio
   In the following we explain how to construct a $\Sigma$-protocol proving knowledge of multiple independent witnesses, e.g., knowledge of multiple secret keys, or openings to multiple commitments.
   That is, the algorithms specified below constitute a $\Sigma$-protocol for the following relation:
 \[
-  \relation^\land = \set{
+  \andrelation = \set{
     ((\statement^0,\statement^1),(\witness^0,\witness^1) : (\statement^0,\witness^0)\in \relation^0 ~\land~ (\statement^1,\witness^1)\in\relation^1}
 \]
 For the rest of this section, the witness $\witness$ for the $\Sigma$-protocol will now be a pair $(\witness^0, \witness^1)$ of witnesses, and the associated statement $\statement$ will be a pair $(\statement^0, \statement^1)$ of statements, where $\witness^0$ is the witness for the statement $\statement^0$, and $\witness^1$ is the witness for $\statement^1$.
@@ -370,11 +355,11 @@ The main procedures of the resulting $\Sigma$-protocol are specified by the foll
 
 
 \subsubsection{OR Composition}
-\minote{It is not immediate to build OR composition in  constant-time. It is possible to double the cost and run prover and simulator for each branch, but at the end we still need the ternary operator to select the correct transcirpt. This is the only place where we are incurring in non non-constant-time operations assuming the algebraic operations are already solved. }
+
   In the following we explain how to construct a $\Sigma$-protocol proving knowledge of one out of a set of witnesses, e.g., one of a set of secret keys in the case of ring signatures.
   That is, the algorithms specified below constitute a $\Sigma$-protocol for the following relation:
 \[
-  \relation^\lor = \set{
+  \orrelation = \set{
     ((\statement^0,\statement^1),(\witness^0,\witness^1) :
     (\statement^0,\witness^0)\in \relation^0 ~\lor~ (\statement^1,\witness^1)\in\relation^1}\,.
 \]
@@ -524,6 +509,10 @@ In the above:
 We note that the chosen hash functions allow for preprocessing: it is possible to store the partial state and process the commitment.
 
 
+\subsubsection{Computing the commitment}
+\minote{define an aux function that takes as input the statement etc and then returns 32B of randomness to be used for the generation of the commtiment. Explain how the hash function is invoked}
+\stnote{once you have this seed, how do you expand it for long commitments}
+
 \subsubsection{Non-interactive proofs}
 
 In a non-interactive protocol, since challenge is computed deterministically from the commitment and the statement, it is not necessary to include it within a proof as it can be deduced in the verification phase.
@@ -571,6 +560,8 @@ For soundness, let's say we check that $\commitment$ is on curve (I'd never omit
 But then the verifier checks $\commitment+c\statement = \varphi(\response)$. If that check is true, then multiplying the equation with $z = \mathit{cofactor}\cdot (\mathit{cofactor}^{-1}\bmod p)$ gives us that $z\cdot \commitment$, which lives in the right subgroup, fulfills the verification equation, too. This generalizes to batch verification.
 So it seems like (though I may be overlooking something!?), in soundness proofs, we could just project commitments into the right subgroup and everything would still just work, even if the actual verifier works with elements of the wrong subgroup.
 That seems like a significant performance boost not to have to check subgroups for all the $\commitment_i$ in batch verification, but I'm not sure if you want to complicate things.}
+\minote{Add de-serialization sub-procedures that may fail}
+
 \end{description}
 
 \subsubsection{Short Proofs}
@@ -597,7 +588,6 @@ A new proof $\sigmaprotocol.\shortproof(\witness,\ctx, \msg)$ is built as follow
   Output $\accept$ if this is the case, and $\reject$ otherwise.
 \end{enumerate}
 \end{description}
-\minote{Add de-serialization sub-procedures that may fail}
 \minote{Check the inputs to the sub-procedures, like the simulator is not having enough information for recomputing the challenge}
 
 If input parsing fails, an exception should be raised.
@@ -611,10 +601,6 @@ Otherwise, the verifier outputs $\pctrue$. Optionally, the implementation can ch
 \section{$\Sigma$-protocols on elliptic curves}
 \label{sec:instantiation}
 
-\minote{
-The $\Sigma$-protocols of this section provide the following guarantees}
-
-\minote{notation for elliptic curves}
 The following section now presents concrete instantiations for of $\Sigma$-protocols over elliptic curves.
 
 \begin{remark}{Protocols for residue classes}{}
@@ -666,11 +652,11 @@ For an in-depth discussion of the underlying theory we refer to Cramer~\cite{cra
 \begin{example}{Discrete logarithm equality}{phi_DLOG}
   Looking at the relation from \cref{exa:R_DLOG}, the relevant homomorphism is given by:
 	$$
-	  \varphi_{\operatorname{DLOG}} : \ZZ_p\to\GG^2 : \witness\mapsto (\witness G,\witness H)\,.
+	  \varphi_{\operatorname{dlog}} : \ZZ_p\to\GG^2 : \witness\mapsto (\witness G,\witness H)\,.
 	$$
 	If equality of discrete logarithms within \emph{different} groups of the same prime order $p$ is to be proven, the homomorphism to be considered would be:
 	$$
-	  \varphi_{\operatorname{DLOG}}' : \ZZ_p\to\GG_1\times\GG_2 : \witness\mapsto (\witness G,\witness H)\,,
+	  \varphi_{\operatorname{dlog}}' : \ZZ_p\to\GG_1\times\GG_2 : \witness\mapsto (\witness G,\witness H)\,,
 	$$
 	where $G$ and $H$ would now be generators for $\GG_1$ and $\GG_2$, respectively.
 	All the techniques discussed in the remainder of this spec equally apply to both cases.
@@ -679,7 +665,7 @@ For an in-depth discussion of the underlying theory we refer to Cramer~\cite{cra
 \begin{example}{Representation}{phi_REP}
   Looking at the relation from \cref{exa:R_REP}, the relevant homomorphism is given by:
 	$$
-	  \varphi_{\operatorname{REP}} : \ZZ_p^2\to\GG : (\witness_1,\witness_2)\mapsto \witness_1 G + \witness_2 H\,.
+	  \varphi_{\operatorname{rep}} : \ZZ_p^2\to\GG : (\witness_1,\witness_2)\mapsto \witness_1 G + \witness_2 H\,.
 	$$
 \end{example}
 
@@ -709,6 +695,7 @@ $$
 	\end{align*}
 
 \end{example}
+\minote{relation name like before?}
 
 However, the following \emph{does not define neither the morphism nor the label associated to the protocol}.
 These will be defined later in the specific protocols.
