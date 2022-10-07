@@ -79,8 +79,9 @@
 \section{Introduction}
 
 Zero-knowledge~\cite{GolMicRac89} proofs of knowledge~\cite{C:BelGol92} allow a prover to convince a verifier that he knows a secret piece of information, without revealing anything else that what is already revealed by the claim itself.
-Many practically relevant proof goals can be realized using so-called $\Sigma$-protocols, or their non-interactive counterparts, which can be proven secure in the random oracle model. %without the need for a common reference string.
-Introduced by Schnorr~\cite{JC:Schnorr91} over 30 years ago, play an essential component in the building of a number of cryptographic
+Many practically relevant proof goals can be realized using so-called $\Sigma$-protocols.
+%, or their non-interactive counterparts, which can be proven secure in the random oracle model. %without the need for a common reference string.
+Introduced by Schnorr~\cite{JC:Schnorr91} over 30 years ago, they play an essential component in the building of a number of cryptographic
 constructions,
 such as anonymous credentials~\cite{CCS:ChaMeiZav14}, password-authenticated key exchange~\cite{jpake}, signatures~\cite{C:Schnorr89},
 ring signatures~\cite{borromeansig}, blind signatures~\cite{CCS:PoiSte97}, multi signatures~\cite{CCS:NRSW20}, threshold signatures~\cite{EPRINT:KomGol20} and more. This spec, initially proposed by Orrù and Krenn~\cite{sigma-proposal}, specifies guidelines for correctly implementing $\Sigma$-protocols.
@@ -905,7 +906,7 @@ However, the required multiplicative relation can be proven by observing that th
   \item  $\varphi:\FF_p^2\to\GG^3:(\witness_1,\witness_2)\mapsto(\witness_1G,\witness_2G,\witness_2\statement_1)$
   \item $\dhtt.\morphismlabel()$ return:
   \[
-    \hash(\dhlabel \concat \curvectx \concat \serialize(G) \concat \serialize(\statement_0) \concat \serialize(\statement_1))
+    \hash(\dhlabel \concatblock \curvectx \concat \serialize(G) \concat \serialize(\statement_0) \concat \serialize(\statement_1))
   \]
 \end{itemize}
 
