@@ -79,10 +79,8 @@
 \section{Introduction}
 
 Zero-knowledge~\cite{GolMicRac89} proofs of knowledge~\cite{C:BelGol92} allow a prover to convince a verifier that he knows a secret piece of information, without revealing anything else that what is already revealed by the claim itself.
-Many practically relevant proof goals can be realized using so-called $\Sigma$-protocols, or their non-interactive counterparts, which can be proven secure in the random oracle model without the need for a common reference string.
-Introduced by Schnorr~\cite{JC:Schnorr91} over 30 years ago, they are now widely used  in practice because of their simplicity, maturity, and versatility.
-
-$\Sigma$-protocols played an essential component in the building of a number of cryptographic
+Many practically relevant proof goals can be realized using so-called $\Sigma$-protocols, or their non-interactive counterparts, which can be proven secure in the random oracle model. %without the need for a common reference string.
+Introduced by Schnorr~\cite{JC:Schnorr91} over 30 years ago, play an essential component in the building of a number of cryptographic
 constructions,
 such as anonymous credentials~\cite{CCS:ChaMeiZav14}, password-authenticated key exchange~\cite{jpake}, signatures~\cite{C:Schnorr89},
 ring signatures~\cite{borromeansig}, blind signatures~\cite{CCS:PoiSte97}, multi signatures~\cite{CCS:NRSW20}, threshold signatures~\cite{EPRINT:KomGol20} and more. This spec, initially proposed by Orrù and Krenn~\cite{sigma-proposal}, specifies guidelines for correctly implementing $\Sigma$-protocols.
@@ -109,14 +107,18 @@ For the purpose of this document, the following notation will be used:
 %    $\NN,\ZZ$ & non-negative natural numbers and integers, respectively
 \end{tabular}
 
+Additional notation will be introduced when describing specific algebraic objects.
 \subsection{Terminology}
-A \emph{binary relation} $\relation$ associates elements from a set $\Set{Y}$ with elements from a set $\Set{W}$ through pairs $(\statement,\witness)\in\Set{Y}\times\Set{W}$.
+Given sets $\Set{Y}$ and $\Set{W}$,
+a \emph{binary relation} $\relation \subseteq \Set{Y} \times \Set{W}$ associates elements from $\Set{Y}$ with elements from $\Set{W}$
 For $(\statement,\witness)\in\relation$, we refer to $\statement$ as a \emph{statement}, and to $\witness$ as a \emph{witness} (for $\statement$).
+The statement is public information shared between prover and verifier.
+The witness is secret information solely known by the prover.
 Note there may be multiple witnesses for a given $\statement$.
 
 \begin{example}{Discrete logarithm equality}{R_DLOG}
   Let $\GG$ be a cyclic group of prime order $p$, and let $G$ and $H$ be generators of $\GG$.
-	Then the following relation $\relation$ contains as statements all pairs of elements having the same discrete logarithm with respect to $G$ and $H$, with the corresponding witness being their discrete logarithm:
+	Then the following relation $\dleqrelation$ contains as statements all pairs of elements having the same discrete logarithm with respect to $G$ and $H$, with the corresponding witness being their discrete logarithm:
   $$
 	  \dleqrelation = \set{\left((\statement_1,\statement_2),\witness)\right)~:~\statement_1=\witness G ~\land~ \statement_2=\witness H}\,.
 	$$
@@ -124,7 +126,7 @@ Note there may be multiple witnesses for a given $\statement$.
 
 \begin{example}{Representation}{R_REP}
   Let $\GG$ be a cyclic group of prime order $p$, and let $G$ and $H$ be generators of $\GG$.
-	Then the following relation $\relation$ contains as statements all valid Perdersen commitments, with the corresponding witnesses being their openings:
+	Then the following relation $\reprelation$ contains as statements all valid Perdersen commitments, with the corresponding witnesses being their openings:
   $$
 	  \reprelation = \set{\left(\statement,(\witness_1,\witness_2))\right)~:~\statement=\witness_1G + \witness_2H}\,.
 	$$
@@ -132,14 +134,14 @@ Note there may be multiple witnesses for a given $\statement$.
 \end{example}
 
 In a zero-knowledge proof, the \emph{witness} is secret information, while the statement is public.
-A \emph{proof} is a sequence of bytes attesting that a witness is in some relation with the statement.
+A \emph{proof} is a sequence of bytes\footnote{Throughout this work, a byte is defined as a vector of 8 bits.} attesting that a witness is in some relation with the statement.
 
 Proofs described in this spec are zero-knowledge and sound.
 Zero knowledge means that the protocol does not leak any information about the prover's witness beyond what the attacker may infer from the proven statement or from other sources~\cite[1.6.4]{zkproof-reference}.
 Soundness means that it is not possible to make the verifier accept for statements for which no valid witness exists~\cite[1.6.2]{zkproof-reference}.
 
-In particular we will focus on non-malleable extractable proofs, that is, the the witness does not only exist but it really must be known by the prover.
-These protocols are also known as proofs of knowledge~\cite{STOC:GolMicRac85,STOC:FeiFiaSha87,C:BelGol92} and is said to satisfy \emph{knowledge soundness}~\cite{damgard04}. In addition, non-malleability means that the proof is secure against man-in-the middle attacks, and attackers that might change  then we call the proof \emph{simulation-extractable}.
+In particular we will focus on non-malleable extractable proofs, that is, proofs where the the witness does not only exist but it really must be known by the prover.
+These protocols are also known as proofs of knowledge~\cite{STOC:GolMicRac85,STOC:FeiFiaSha87,C:BelGol92} and are said to satisfy \emph{knowledge soundness}~\cite{damgard04}. Non-malleability means that in addition the proof is secure against man-in-the middle attacks, and attackers that might change  then we call the proof \emph{simulation-extractable}.
 
 
 \subsection{Guarantees}
@@ -147,13 +149,12 @@ These protocols are also known as proofs of knowledge~\cite{STOC:GolMicRac85,STO
 \minote{It is not immediate to build OR composition in  constant-time. It is possible to double the cost and run prover and simulator for each branch, but at the end we still need the ternary operator to select the correct transcirpt. This is the only place where we are incurring in non non-constant-time operations assuming the algebraic operations are already solved. }
 \subsection{Scope of this document}
 
-This document provides guidelines for secure implementations of $\Sigma$-protocols and is meant to facilitate adoption and the development of reference implementations.
-This document is addressed to applied cryptographers and cryptographic engineers that are looking to implement a generic
+This document provides guidelines for secure implementations of $\Sigma$-protocols and is addressed to applied cryptographers and cryptographic engineers that are looking to implement a generic
 $\Sigma$-protocol or provide an ad-hoc instantiation as part of a larger protocols.
 
 We consider outside of this document the problem of having a high-quality
 entropy source well-suited for crypto\-graphic purposes.
-We will not talk about implementation of cryptographic primitives such as hash functions, or elliptic-curve algebra, but we will provide references to the algorithms.
+We will not talk about implementation of cryptographic primitives such as hash functions, or elliptic-curve algebra, but we will provide references for where to find them.
 We won't provide any guidance for securely storing secrets or producing constant-time code.
 
 \minote{People interested in the development of a specific $\Sigma$ protocol should implement the template from 2 using the algorithm from XX and XX and then refer to section XX}
@@ -161,7 +162,7 @@ We won't provide any guidance for securely storing secrets or producing constant
 
 
 \section{Generic $\Sigma$-Protocols}
-In the following, we describe the class of $\Sigma$-protocols.
+In the following, we describe a generic interface for $\Sigma$-protocols.
 Such protocols can be used to prove that, for some binary relation $\relation$ and a public value $\statement$, a witness $\witness$ such that $(\statement,\witness)\in\relation$ is known.
 Basic statements include proofs of knowledge of a secret key, openings of commitments, and more in general of representations.
 The type of these elements depends on the specific relation being implemented.
@@ -173,20 +174,33 @@ Composition of $\Sigma$-protocols is dealt in details in \cref{sec:composition};
 A $\Sigma$-protocol, in abstract, follows the following steps:
 \begin{itemize}
   \item the prover computes a fresh \textbf{commitment}, denoted $\commitment$. This element is sometimes also called \emph{nonce}.
-  \item the prover computes, using the so-called Fiat-Shamir transform, a random \textbf{challenge}, denoted $\challenge$. In practice, this step will always computed by applying the challenge will be fixed to be a bitstring of $\seedlen$, independently form the specific protocol instantiation.
+  \item the prover computes, using the so-called Fiat-Shamir transform (cf.~\cref{sec:fs}), a random \textbf{challenge}, denoted $\challenge$.
   \item the prover computes a \textbf{response}, denoted $\response$, that depends on the commitment and the challenge.
 \end{itemize}
-The final proofs is constituted of the three-elements above, and is also referred to as the \emph{protocol transcript}.
+The final proof is constituted of the three-elements above $(\commitment, \challenge, \response)$, and is also referred to as the \textbf{transcript}.
+
+\begin{figure}
+  \begin{tcolorbox}
+    \centering
+    \procedure{}{
+      \textbf{Prover} \< \< \textbf{Verifier} \\[1em]
+    \textbf{commitment} \< \sendmessageright*[20em]{\commitment} \< \\
+    \< \sendmessageleft*[20em]{\challenge}  \< \textbf{challenge}\\
+    \textbf{response} \< \sendmessageright*[20em]{\response} \\
+    }
+  \end{tcolorbox}
+  \caption{Overview of the steps composing a generic $\Sigma$-protocol.}
+\end{figure}
+
 
 \subsection{An abstract class for generic $\Sigma$-protocols}
-The following formally describes the class of $\Sigma$-protocols, which covers all protocols considered in the remainder of this document.
-
-Protocols studied in the remainder of this document will follow the same template class $\sigmaprotocol$, that will internally describe the relation being proven. These functions should be considered \emph{private} and \emph{should not} exposed externally.
-Instances of $\sigmaprotocol$ are initialized via the $\new$ function, taking as input the statement $\statement$, while all other functions are to considered methods that acting on a particular $\sigmaprotocol$ instance.
+The following formally provide a template class for $\Sigma$-protocols denoted $\sigmaprotocol$. This is the basic interface that will be implemented remainder of this document.
+These methods should be considered \emph{private} and \emph{should not} exposed externally.
+Instances are created via the $\new$ function, which is a class method, while all other functions are methods that acting on a particular instance.
 A $\sigmaprotocol$ consists of the following methods:
       \begin{itemize}
-        \item $\sigmaprotocol.\new(\statement)$,
-        denoting the initialization function. This function takes as input the statement $\statement$ shared during the execution of the protocol between prover and verifier.
+        \item $\sigmaprotocol.\new(\ctx, \statement)$,
+        denoting the initialization function. This function takes as input a label identifying local context information $\ctx$ (such as: session identifiers, to avoid replay attacks; protocol metadata, to avoid hijacking; optionally, a timestamp and some pre-shared randomness, to guarantee freshness of the proof) and a statement $\statement$,  the public information shared between prover and verifier.
         This function may pre-compute parts of the statement, or initialize the state of the hash function.
         \item
           $(\commitment, \proverstatett)\gets \sigmaprotocol.\provercommitment(\witness)$,
@@ -194,6 +208,7 @@ A $\sigmaprotocol$ consists of the following methods:
           This step generally requires access to a high-quality entropy source.
           Leakage of even just of a few bits of the nonce could allow for the complete recovery of the witness~\cite{lattice-attack,bleichenbacher,CCS:ANTTY20}.
 					The value $\commitment$ is meant to be shared, while $\proverstatett$ must be kept secret.
+          In particular, we assume that there exists a function $\serialize(\commitment)$ that serializes the commitment $\commitment$ and that its size is fixed known $\statement$.
         \item
           $\response \gets \sigmaprotocol.\proverresponse(\proverstatett, \challenge)$,
           denoting the \emph{response phase}, that is, the computation of the second message sent by the prover, depending on the witness, the statement, the challenge received from the verifier, and the internal state generated by $\provercommitment$.
@@ -205,12 +220,16 @@ A $\sigmaprotocol$ consists of the following methods:
           or an error if verification fails.
           \item $\texttt{label} \gets\sigmaprotocol.\labeltt()$,
           returning a string of $\seedlen$ uniquely identifying the relation being proven.
-          Implementing correctly this function is vital security, and one \emph{must} carefully follow the directives written in the relative instantiations. It is crucial for security that the label includes all data available in the statement, including the parameters and the relation being proven.
+          Implementing correctly this function is vital security, and will be used for computing the challenge in the Fiat-Shamir transform~\cref{sec:fs}.
+          One \emph{must} carefully follow the directives written in the relative instantiations. It is crucial for security that the label includes all data available in the statement, including the parameters and the relation being proven.
 
           More precisely, if the label is \emph{not} tied to the relation, then it may be possible to produce another proof for a different relation without knowing its witness.
-          Similarly, if the statement is not tied to the statement, then it might be possible to produce proofs
+          Similarly, if the statement is not tied to the witness, then it might be possible to produce proofs
           for another statement whose witness is related to the original proof.
-
+      \end{itemize}
+      The final two algorithm describe the \emph{zero-knowledge simulator}.
+      The simulator is primarily an efficient algorithm for proving zero-knowledge in a theoretical constriction, but it is also needed for verifying short proofs (cf.~\cref{sec:shortproof}) and for or-composition (cf.~\cref{sec:or-comp}), where a witness is not known and thus has to be simulated.
+      \begin{itemize}
         \item $\response \gets \sigmaprotocol.\simresponsett()$,
         denoting the first stage of the \emph{simulator}. It is an algorithm drawing a random response that follows the same output distribution of the algorithm $\proverresponse$.
         \item $\commitment \gets \sigmaprotocol.\simcommitmenttt(\challenge, \response)$, denoting the second stage of the \emph{simulator}, returning a commitment that follows the same output distribution of the algorithm $\provercommitment$.
@@ -224,40 +243,200 @@ A $\sigmaprotocol$ consists of the following methods:
       Compress takes a transcript $(\commitment, \challenge, \response)$ and outputs a shorter version of it (e.g., just $\response$ or something like $(\sigma, \response)$ if the announcement contains some part $\sigma$ that cannot be uniquely recomputed from $(\challenge, \response)$). Decompress takes the compressed transcript and a challenge and outputs an error or the unique accepting full transcript. Then short-form FS becomes $(\challenge, \mathit{compressed\ transcript})$.}
 \stnote{maybe only support short form if there is only (at most) one $T$}
 
-    % \begin{protocol}{Generic flow of a $\Sigma$-protocol.\\[-2.25em]}{fig:generic}{t}
-    %   \begin{tabular}{@{}l@{\hspace{-2em}}c@{\hspace{-2em}}r@{}}
-    %     & $\sigmaprotocol.\new(\statement)$  \\
-    %     \hline  \\
-    %   % -----------------------------P1-------------------------------
-    %     $(\commitment,\proverstatett) \gets \provercommitment()$\\
-    %     & $\sendr{\commitment}{100}$ \\[2 ex]
-    %   % -----------------------------CHALLENGE-------------------------------
-    %     & & $\challenge \sample \CS$ \\
-    %     & $\sendl{\challenge}{100}$ & \\[2 ex]
-    %   % -----------------------------P2-------------------------------
-    %     $ s \gets \proverresponse(\proverstatett,\challenge)$\\
-    %     & $\sendr{\response}{100}$ \\[2 ex]
-    %   % -----------------------------V-------------------------------
-    %     & & $\accept/\reject \gets \verifiertt(\commitment,\challenge,\response)$ \\
-    %   \end{tabular}
-    % \end{protocol}
 
+\subsection{The Fiat-Shamir Transform}\label{sec:fs}
 
+The interactive versions of the $\Sigma$-protocols presented in this document are not fit for practical applications, due to subtle yet impactful details in their security guarantees.
+In practice, public-coin protocols such as $\Sigma$-protocols can be converted into non-interactive ones through the
+Fiat and Shamir heuristic~\cite{C:FiaSha86} and subsequent work, e.g., by Bernhard, Pereira and Warinschi~\cite{AC:BerPerWar12}.
 
-\begin{remark}{Computing the challenge}{}
-  The interactive versions of the $\Sigma$-protocols presented in this document are not fit for practical applications, due to subtle yet impactful details in their security guarantees.
-%git For those applications where latency is not a problem, we direct the reader towards~\cref{XXX} for general techniques.
- For practical applications, their non-interactive versions---as described in \cref{sec:fs}---shall be used.
+The underlying idea is to replace the verifier with a cryptographically secure hash function, hashing the context from the protocol and the previous message sent by the prover.
+
+\begin{remark}{Interactive $\Sigma$-protocols}{} $\Sigma$-protocols illustrated in this spec \textbf{must not} be used interactively.
 \end{remark}
+
+\subsection{Syntax}
+
+When using a hash function we will employ comma-separated values to indicate values that are concatenated.
+To mitigate attacks and allow for state cloning, we also separate values with semi-columns
+to indicate that they must appear in a subsequent block.
+
+\paragraph{Constants.} Different hash functions may compress inputs with different block length and produce outputs of different length. We define some constants to be used throughout this spec, when hashing values.
+
+\begin{center}
+\begin{tabular}{cl}
+  Const name & Notes \\
+  \hline
+  $\domsep$ & Domain separator for this standard. Fixed to $\domsepctx$.   \\
+  % $\ctx$ & Application name, as provided by the application layer. \\
+  $\blocklen$ & Length of a hash block \\
+  $\digestlen$ & Digest length
+\end{tabular}
+\end{center}
+\minote{digest len and block len do not seem to be useful?}\minote{The output of poseidon are not bytes. How do make this work in the bigger picture?}
+
+
+\subsubsection{Hash Registry}
+\label{sec:hash-registry}.
+
+The set of supported hash functions must  all of the following hash functions that takes as input a sequence of bytes of arbitrary length and output $\seedlen$ of entropy.
+
+\begin{center}
+  \begin{tabular}{lllcc}
+  Hash  & Source & $\blocklen$ & $\digestlen$ \\
+  \hline
+  Blake2 &  \cite{ACNS:ANWW13}\\
+  Keccak & \cite{EC:BDPA13} \\
+  \unsure{Poseidon} &  \cite{EPRINT:GKKRRS19}\\
+  \end{tabular}
+\end{center}
+\minote{double-check table}
+\subsubsection{Computing the challenge and seeding the commitment}
+\label{sec:fs-challenge}
+
+Relying on a hash function allows us to both compute the challenge and generate securely the commitment.
+We define the following auxiliary variables that may be pre-computed during the call of $\sigmaprotocol.\new$. All variables will have fixed length $\digestlen$ so to avoid
+canonicalization attacks.
+
+\[
+  \begin{aligned}
+   & \hd \defeq \hash(\domsep) \\
+   & \hstatement \defeq \sigmaprotocol.\labeltt() \\
+   & \hctx \defeq \hash(\ctx)
+  \end{aligned}
+\]
+\paragraph{Seeding the commitment.} The method $\sigmaprotocol.\provercommitment()$ is a randomized function that generates a random element, unique per each execution. The entropy for the commitment be seeded as follows:
+\[
+    \begin{aligned}
+     & \hz \defeq \randombytes(32) \\
+    & \pcreturn  \hash(\hd \concat \hctx \concat \hstatement \concatblock \hz, \witness).
+    \end{aligned}
+    \]
+The above seed can be expanded to obtain arbitrary-length commitments.
+\paragraph{Computing the challenge.}
+The method $\sigmaprotocol.\challengett(\msg, \commitment)$ is implemented as follows in order to produce a random challenge.
+
+  \[
+    \begin{aligned}
+     & \hmsg \defeq \hash(\msg) \\
+    & \pcreturn  \hash(\hd \concat \hctx \concat \hstatement \concatblock \hmsg \concatblock  \serialize(\commitment)).
+    \end{aligned}
+  \]
+
+If no message is being set, i.e. if $\msg = \none$, then the implementation may decide to skip the computation of $\hmsg$ and consider it empty.
+This method is fixed for all implementations of $\sigmaprotocol$. Note that the state of the hash function is partially shared between the commitment seed inputs and the challenge computation. Implementors may choose to store the partial hash state before generating the commitment, and re-using it when computing the challenge.
+
+% commit = SHO(L1: HD,HA,HM,Z | a ^)
+% challenge = SHO(L2: HD,HA,HM,commit ^)
+
+% # D - Description
+% # A = statement
+% # a = witness for statement A, e.g. A=G^a
+% # Z = randomness
+% # M = message to be signed
+
+% SCHNORR_1HASH (pre-hash style):
+%   H = SHO(M ^)
+%   commit    = SHO(L1; D,A,H > Z > a ^)
+%   challenge = SHO(L2; D,A,H > commit ^)
+
+% SCHNORR_2HASH (EdDSA style):
+%   commit = SHO(L1; D,A > Z > a > M ^)
+%   challenge = SHO(L2; D,A > commit > M ^)
+
+
+\subsubsection{Non-interactive proofs}
+
+We define two \emph{public methods} for generating proofs, meant to be exposed externally and be used by users: $\shortproof$, and $\batchableproof$.
+Since the challenge is computed deterministically from the commitment and the statement, it is not necessary to include the full transcript in a proof as it can be deduced in the verification phase.
+
+Short proofs are the most efficient if the protocol contains at least an \emph{AND} composition (see \cref{sec:and-comp} for a proper definition), and the gain in size is measured as $|\vec \commitment| - \digestlen$.
+(Note: the length of the commitment is the length of the statement.)
+Batchable proofs are the canonical forms of proofs.
+Both provers in the batchable form may raise an exception if the statement is not valid.
+Proofs are seen directly as fixed-length bit strings, whose exact length can be inferred from the statement during initialization of the $\Sigma$-protocol.
+
+\subsubsection{Batchable Proofs}
+
+\begin{description}
+\item[Prover algorithm.]
+The public function $\sigmaprotocol.\batchableproof( \witness, \msg)$ computes:
+\begin{enumerate}
+\item
+   $(\commitment,\proverstatett)\gets\sigmaprotocol.\provercommitment( \witness)$.
+\item
+$c \gets \sigmaprotocol.\challengett(\msg,\commitment)$
+\item
+   $\response\gets\sigmaprotocol.\proverresponse(\proverstatett,  \challenge)$.
+   \item Check that the witness is valid. This can (for instance) be done running \[\sigmaprotocol.\verifiertt(\commitment, \challenge, \response)\]
+\jannote{I'd caution against formally requiring a witness-check in the prover algorithm. From experience, this absolutely kills prover performance (basically doubles computation time) and in most scenarios, you trivially get witness-correctness from the larger application (say, I'm just using my Schnorr signature key as always, it won't suddenly become invalid). Maybe that's what you mean with \enquote{for instance}, in which case please clarify for the reader.}
+\stnote{just say that this is important. but it's up to the developer to make sure how this is done}
+\minote{Yes we mean that it can be checked. also: fault attacks? they can be prevented this way}
+  Return $\serialize(\commitment)$ concatenated to $\serialize(\vec \response)$
+\end{enumerate}
+The challenge $\challenge$ is not provided within a batchable proof since it can be re-computed from the commitment.
+\item[Verifier algorithm.] The verifier's algorithm $\sigmaprotocol.\batchverifier((\commitment,s), \msg)$ works as follows:
+\begin{enumerate}
+  \item
+    $c \gets \sigmaprotocol.\challengett(\msg, \commitment)$
+  \item
+    Return whatever $\sigmaprotocol.\verifiertt(\commitment,\challenge, \response)$ returns.
+\end{enumerate}
+\begin{remark}{Input validation}{}
+The case of batched verification must include an input validation sub-routine that asserts the statement and commitments are in question.
+In the case of elliptic curves described in~\Cref{sec:instantiations}, this boils down to point validation.
+Failure to properly check that a commitment is in the group could lead to subgroup attacks~\cite{EC:VanWie96,C:LimLee97} or invalid curve attacks~\cite{C:BieMeyMul00,RSA:BBPV12}.
+\end{remark}
+\jannote{I might be completely wrong here, but \dots is this remark actually true? Do we need to check that the commitment $\commitment$ is in the right subgroup?
+This is a verifier check, so it doesn't impact ZK.
+For soundness, let's say we check that $\commitment$ is on curve (I'd never omit that check), but in the wrong subgroup. Say everything else ($\varphi(\cdot), \statement$) in the right subgroup.
+But then the verifier checks $\commitment+c\statement = \varphi(\response)$. If that check is true, then multiplying the equation with $z = \mathit{cofactor}\cdot (\mathit{cofactor}^{-1}\bmod p)$ gives us that $z\cdot \commitment$, which lives in the right subgroup, fulfills the verification equation, too. This generalizes to batch verification.
+So it seems like (though I may be overlooking something!?), in soundness proofs, we could just project commitments into the right subgroup and everything would still just work, even if the actual verifier works with elements of the wrong subgroup.
+That seems like a significant performance boost not to have to check subgroups for all the $\commitment_i$ in batch verification, but I'm not sure if you want to complicate things.}
+\minote{Add de-serialization sub-procedures that may fail}
+
+\end{description}
+
+\subsubsection{Short Proofs}\label{sec:shortproof}
+\begin{description}
+\item[Prover algorithm.]
+A new proof $\sigmaprotocol.\shortproof(\witness, \msg)$ is built as follows:
+\begin{enumerate}
+  \item
+     $(\commitment,\proverstatett)\gets\sigmaprotocol.\provercommitment(\witness)$.
+  \item
+   $c \gets \sigmaprotocol.\challengett(\msg,  \commitment)$
+  \item
+     $\vec \response\gets\sigmaprotocol.\proverresponse(\proverstatett,\challenge)$.
+    \item Check that the witness is valid. This can (for instance) be done running \[\sigmaprotocol.\verifiertt(\commitment, \challenge, \response)\]
+  \item
+  Return $\serialize(\challenge)$ concatenated to $\serialize(\response)$.
+\end{enumerate}
+The commitment $\commitment$ is not provided within a short proof since it can be calculated again.
+\item[Verifier algorithm.] The verifier's algorithm $\sigmaprotocol.\shortverifier( (\challenge, \response), \ctx, \msg)$ works as follows:
+\begin{enumerate}
+  \item $\commitment \gets \sigmaprotocol.\simcommitmenttt(\challenge, \response)\,.$
+  \item $c^* \gets \sigmaprotocol.\challengett(\msg, \vec \commitment)$
+  \item
+  Check whether $\challenge=\challenge^*$.
+  Output $\accept$ if this is the case, and $\reject$ otherwise.
+\end{enumerate}
+\end{description}
+\minote{Check the inputs to the sub-procedures, like the simulator is not having enough information for recomputing the challenge}
+
+If input parsing fails, an exception should be raised.
+If verification fails, an exception should be raised.
+Otherwise, the verifier outputs $\pctrue$. Optionally, the implementation can choose to return the parsed statement.
+
+
+
 
 
 \subsection{Composition of $\Sigma$-Protocols}
 \label{sec:composition}
 \label{sec:or-comp}
 \label{sec:and-comp}
-  In this section, we specify composition techniques of $\Sigma$-protocols.
-
-  Specifically, we define mechanisms for proving knowledge of multiple independent witnesses (\emph{AND composition}), and for proving knowledge for one out of a set of witnesses (\emph{OR composition}). The $\sigmaprotocol$ object is a recursive enumeration of the following form:
+  $\Sigma$-protocols can be composed to prove knowledge of multiple independent witnesses (\emph{AND composition}), and for proving knowledge for one out of a set of witnesses (\emph{OR composition}). An object $\sigmaprotocol$ can be seen as a recursive enumeration
 
   \begin{verbatim}
     enum SigmaProtocol {
@@ -266,14 +445,14 @@ A $\sigmaprotocol$ consists of the following methods:
       [...]
     }
   \end{verbatim}
-
+whose instances expose the methods described above.
 The dots \texttt{[...]} denote optional, specific $\Sigma$ protocol instantiations that will be covered in \cref{sec:sigma-dlog}.
   Without loss of generality, the techniques presented in the following focus on the composition of two protocols.
   Composition of multiple protocols (e.g., proving knowledge of a witness for one out of many statements) can be achieved by recursively applying composition of two protocols.
 
   \subsubsection{AND Composition}
-  In the following we explain how to construct a $\Sigma$-protocol proving knowledge of multiple independent witnesses, e.g., knowledge of multiple secret keys, or openings to multiple commitments.
-  That is, the algorithms specified below constitute a $\Sigma$-protocol for the following relation:
+  In this section we show how to construct a $\Sigma$-protocol proving knowledge of multiple independent witnesses, e.g., knowledge of multiple secret keys, or openings to multiple commitments.
+  That is, a $\Sigma$-protocol for the following relation:
 \[
   \andrelation = \set{
     ((\statement^0,\statement^1),(\witness^0,\witness^1) : (\statement^0,\witness^0)\in \relation^0 ~\land~ (\statement^1,\witness^1)\in\relation^1}
@@ -291,7 +470,7 @@ For the rest of this section, the witness $\witness$ for the $\Sigma$-protocol w
 The main procedures of the resulting $\Sigma$-protocol are specified by the following algorithms:
 \begin{itemize}
   \item
-  $\andcomposition.\new(\leftbranch, \rightbranch)$: internally store $\leftbranch$ and $\rightbranch$.
+  $\andcomposition.\new(\ctx, \leftbranch, \rightbranch)$: internally store $\leftbranch$ and $\rightbranch$.
   \item
   $(\vec \commitment, \proverstatett)\gets \andcomposition.\provercommitment(\vec \witness)$
     \begin{enumerate}
@@ -374,7 +553,7 @@ The main procedures of the resulting $\Sigma$-protocol are specified by the foll
 The main procedures of the resulting $\Sigma$-protocol are specified by the following algorithms:
 \begin{itemize}
   \item
-  $\orcomposition.\new(\leftbranch, \rightbranch)$: internally store $\leftbranch$ and $\rightbranch$.
+  $\orcomposition.\new(\ctx, \leftbranch, \rightbranch)$: internally store $\leftbranch$ and $\rightbranch$.
   \item
   $(\vec \commitment, \proverstatett)\gets \orcomposition.\provercommitment(\vec \witness)$:
     \begin{enumerate}
@@ -446,158 +625,6 @@ $\vec \commitment \gets \orcomposition.\simcommitmenttt(\challenge, \vec \respon
 \end{itemize}
 
 
-\subsection{The Fiat-Shamir Transform}\label{sec:fs}
-% \marynote{Considering you are stressing the importance of hashing the instance, I would send the instance in the first message of the interactive versions as well.}
-All protocols described in this standard require three messages being exchanged between the prover and the verifier.
-In practice, public-coin protocols such as $\Sigma$-protocols can be converted into non-interactive ones through the
-Fiat and Shamir heuristic~\cite{C:FiaSha86} and subsequent work, e.g., by Bernhard et al.~\cite{AC:BerPerWar12}
-
-The underlying idea is to replace the verifier with a cryptographically secure hash function, hashing the context from the protocol and the previous message sent by the prover.
-
-\begin{remark}{Interactive $\Sigma$-protocols}{} $\Sigma$-protocols illustrated in this spec \textbf{must not} be used interactively.
-\end{remark}
-
-\subsection{Syntax}
-
-When using a hash function we will employ comma-separated values to indicate values that are concatenated.
-To prevent side-channel attacks and allow for possible optimizations we also separate values with semi-columns
-to indicate that they must appear in a subsequent block.
-\minote{}
-\minote{is this all there is?}
-\subsubsection{Hash Registry}
-\label{sec:hash-registry}.
-
-The set of supported hash functions must  all of the following hash functions that takes as input a sequence of bytes of arbitrary length and output $\seedlen$ of entropy.
-
-\begin{table}[b]
-  \centering
-  \begin{tabular}{lllcc}
-  Hash & Security Level & Source & $\blocklen$ & $\digestlen$ \\
-  \hline
-  Blake2 \\
-  Keccak & \\
-  \unsure{Poseidon} &\\
-  \end{tabular}
-  \caption{Registry of supported hash functions.}
-\end{table}
-\minote{The output of poseidon are not bytes. How do make this work in the bigger picture?}
-\minote{Randomness for the commitment: we can choose to rely on the operating system's entropy. For fault attacks, it does not seem ideal either to have a prf sqeezing all the entropy.}
-\subsubsection{Computing the challenge}
-\label{sec:fs-challenge}
-
-We introduce a function, that applies to all $\Sigma$-protocols, and takes care of the Fiat-Shamir transform:
-\begin{itemize}
-  \item $\sigmaprotocol.\challengett(\ctx, \msg, \commitment)$
-  return the hash:\[
-    \hash(\domsepctx \concat \ctx \concat \sigmaprotocol.\labeltt() \concat \msg \concat  \serialize(\commitment)).
-    \]
-\end{itemize}
-In the above:
-\begin{itemize}[label=$-$]
-  \item $\ctx$, a 32-byte string identifying the following application-specific data:
-  \begin{itemize}
-    \item a domain separator, indicating the application name;
-    \item local context information, such as:
-    session identifiers (to avoid replay attacks), protocol metadata (to avoid hijacking), and optionally a timestamp and some pre-shared randomness (to guarantee freshness of the proof).
-  \end{itemize}
-  \item $\sigmaprotocol.\labeltt()$, the 32-byte string identifying the statement being proven.
-  \item $\msg$, a $\seedlen$ tag, or message, to be attached to the proof.
-  Useful when defining signatures. Can be set to zero if not used.
-  \item $\serialize(T)$, the serialization of the commitment.
-\end{itemize}
-
-We note that the chosen hash functions allow for preprocessing: it is possible to store the partial state and process the commitment.
-
-
-\subsubsection{Computing the commitment}
-\minote{define an aux function that takes as input the statement etc and then returns 32B of randomness to be used for the generation of the commtiment. Explain how the hash function is invoked}
-\stnote{once you have this seed, how do you expand it for long commitments}
-
-\subsubsection{Non-interactive proofs}
-
-In a non-interactive protocol, since challenge is computed deterministically from the commitment and the statement, it is not necessary to include it within a proof as it can be deduced in the verification phase.
-
-We define two \emph{public methods} for generating proofs: $\shortproof$, and $\batchableproof$.
-Short proofs are the most efficient if the protocol contains at least an AND statement, and the gain in size can be trivially measured as $|\vec \commitment| - \seedlen$.
-(Note: the length of the commitment is the length of the statement.)
-Batchable proofs are the canonical forms of proofs.
-Both provers in the batchable form may raise an exception if the statement is not valid.
-Proofs are seen directly as fixed-length bit strings, whose exact length can be inferred from the statement during initialization of the $\Sigma$-protocol.
-
-\subsubsection{Batchable Proofs}
-
-\begin{description}
-\item[Prover algorithm.]
-The public interface $\sigmaprotocol.\batchableproof( \witness, \ctx, \msg)$:
-\begin{enumerate}
-\item
-   $(\commitment,\proverstatett)\gets\sigmaprotocol.\provercommitment( \witness)$.
-\item
-$c \gets \sigmaprotocol.\challengett(\ctx, \msg,\commitment)$
-\item
-   $\response\gets\sigmaprotocol.\proverresponse(\proverstatett,  \challenge)$.
-   \item Check that the witness is valid. This can (for instance) be done running \[\sigmaprotocol.\verifiertt(\commitment, \challenge, \response)\]
-\jannote{I'd caution against formally requiring a witness-check in the prover algorithm. From experience, this absolutely kills prover performance (basically doubles computation time) and in most scenarios, you trivially get witness-correctness from the larger application (say, I'm just using my Schnorr signature key as always, it won't suddenly become invalid). Maybe that's what you mean with \enquote{for instance}, in which case please clarify for the reader.}
-\stnote{just say that this is important. but it's up to the developer to make sure how this is done}
-\minote{Yes we mean that it can be checked. also: fault attacks? they can be prevented this way}
-  Return $\serialize(\commitment) \concat \serialize(\vec \response)$
-  \jannote{This concatenation-without-separator seems a bit iffy (is it clear where to separate the concatenated bit string again?). I also feel like it's inconsistent that the prover outputs the concatenation of two serialized objects but the verifier takes as input \enquote{$(\commitment, s)$}. Either establish $(\commitment, s)$-notation (and explain how to serialize tuples somewhere else) or have everyone input/output opaque bit strings}
-\stnote{void, everything has fixed length in our case}
-\end{enumerate}
-\item[Verifier algorithm.] The verifier's algorithm $\sigmaprotocol.\batchverifier((\commitment,s), \ctx, \msg)$ works as follows:
-\begin{enumerate}
-  \item
-    $c \gets \sigmaprotocol.\challengett(\ctx, \msg, \commitment)$
-  \item
-    Return whatever $\sigmaprotocol.\verifiertt(\commitment,\challenge, \response)$ returns.
-\end{enumerate}
-\begin{remark}{Input validation}{}
-The case of batched verification must include a point verification sub-routine that asserts the statement and commitments are in question. Failure to properly check that a commitment is in the group could lead to subgroup attacks~\cite{EC:VanWie96,C:LimLee97} or invalid curve attacks~\cite{C:BieMeyMul00,RSA:BBPV12}.
-\end{remark}
-\jannote{I might be completely wrong here, but \dots is this remark actually true? Do we need to check that the commitment $\commitment$ is in the right subgroup?
-This is a verifier check, so it doesn't impact ZK.
-For soundness, let's say we check that $\commitment$ is on curve (I'd never omit that check), but in the wrong subgroup. Say everything else ($\varphi(\cdot), \statement$) in the right subgroup.
-But then the verifier checks $\commitment+c\statement = \varphi(\response)$. If that check is true, then multiplying the equation with $z = \mathit{cofactor}\cdot (\mathit{cofactor}^{-1}\bmod p)$ gives us that $z\cdot \commitment$, which lives in the right subgroup, fulfills the verification equation, too. This generalizes to batch verification.
-So it seems like (though I may be overlooking something!?), in soundness proofs, we could just project commitments into the right subgroup and everything would still just work, even if the actual verifier works with elements of the wrong subgroup.
-That seems like a significant performance boost not to have to check subgroups for all the $\commitment_i$ in batch verification, but I'm not sure if you want to complicate things.}
-\minote{Add de-serialization sub-procedures that may fail}
-
-\end{description}
-
-\subsubsection{Short Proofs}
-\begin{description}
-\item[Prover algorithm.]
-A new proof $\sigmaprotocol.\shortproof(\witness,\ctx, \msg)$ is built as follows:
-\begin{enumerate}
-  \item
-     $(\commitment,\proverstatett)\gets\sigmaprotocol.\provercommitment(\witness)$.
-  \item
-   $c \gets \sigmaprotocol.\challengett(\ctx, \msg,  \commitment)$
-  \item
-     $\vec \response\gets\sigmaprotocol.\proverresponse(\proverstatett,\challenge)$.
-    \item Check that the witness is valid. This can (for instance) be done running \[\sigmaprotocol.\verifiertt(\commitment, \challenge, \response)\]
-  \item
-  Return $\serialize(\challenge) \concat \serialize(\response)$.
-\end{enumerate}
-\item[Verifier algorithm.] The verifier's algorithm $\sigmaprotocol.\shortverifier( (\challenge, \response), \ctx, \msg)$ works as follows:
-\begin{enumerate}
-  \item $\commitment \gets \sigmaprotocol.\simcommitmenttt(\challenge, \response)\,.$
-  \item $c^* \gets \sigmaprotocol.\challengett(\ctx, \msg, \vec \commitment)$
-  \item
-  Check whether $\challenge=\challenge^*$.
-  Output $\accept$ if this is the case, and $\reject$ otherwise.
-\end{enumerate}
-\end{description}
-\minote{Check the inputs to the sub-procedures, like the simulator is not having enough information for recomputing the challenge}
-
-If input parsing fails, an exception should be raised.
-If verification fails, an exception should be raised.
-Otherwise, the verifier outputs $\pctrue$. Optionally, the implementation can choose to return the parsed statement.
-
-
-
-
-
 \section{$\Sigma$-protocols on elliptic curves}
 \label{sec:instantiation}
 
@@ -624,8 +651,8 @@ The following section now presents concrete instantiations for of $\Sigma$-proto
   \verb|BLS12-381| & 128 & \cite{bls12} \\
  \end{tabular}
 \end{center}
-We denote with $\GG$ the prime-order group of the elliptic curve, with $\FF_p$ the scalar field, and with $G$ the generator of $\GG$.
-We assume that all above ciphersuites provide the group operations: check for equality, identity, addition, and scalar multiplication.
+We denote with $\GG$ the prime-order group of the elliptic curve, with $\FF_p$ the scalar field, and with $G$ the generator of $\GG$ chosen as per the curve parameters. It is the basis for most mathematical operations in the group $\GG$.
+We assume that all above curve parameters also provide the following group operations: check for equality, identity, addition, and scalar multiplication.
 \minote{multiscalar multiplication}
 In addition, we require the following functions:
 
@@ -640,14 +667,14 @@ In addition, we require the following functions:
 \minote{Add warning that affine points should be used for encoding and decoding}
 
 \subsection{Basic $\Sigma$-Protocols in prime-order groups}\label{sec:basic_sigma}
-
-The protocol presented in the following allow one to prove knowledge of a preimage under an arbitrary \emph{group homomorphism}, which is a mapping between two groups respecting the structure of the groups.
+  We describe an abstract class for proving knowledge of a preimage under an arbitrary \emph{group homomorphism}, which is a mapping between two groups respecting the structure of the groups.
 In particular, as will be discussed in \cref{sec:instantiations}, many statements related to discrete logarithms or representations in groups of prime order, can be expressed as statements over group homomorphisms.
 For an in-depth discussion of the underlying theory we refer to Cramer~\cite{cramer97}.
 
 \begin{definition}
   For two groups $\GG_1,\GG_2$, a function $\varphi:\GG_1\to\GG_2:x\mapsto\varphi(x)$ is a \emph{(group) homomorphism}, if and only if for all $a,b\in\GG_1$ it holds that $\varphi(a+b)=\varphi(a)+\varphi(b)$.
 \end{definition}
+\minote{Readers that are not familiar with the notation of gorup morphism should think of $\varphi$ as a linear function from $n$ elements into $m$ elements}
 
 \begin{example}{Discrete logarithm equality}{phi_DLOG}
   Looking at the relation from \cref{exa:R_DLOG}, the relevant homomorphism is given by:
@@ -703,7 +730,7 @@ These will be defined later in the specific protocols.
  \stnote{which checks are necessary? which values need to be on the curve, etc.?}
 \minote{It's maybe dangerously unclear, but I as assuming that all private methods written here have valid elements in the curve, and that validation is up to serialization/deserialization...}
 \begin{itemize}
-  \item $\dlogsigmaprotocol.\new(\vec\statement)$ internally stores $\vec\statement$.
+  \item $\dlogsigmaprotocol.\new(\ctx, \vec\statement)$ internally stores $\vec\statement$ and $\ctx$.
   \item\label{item:basic:p1}
    $(\vec \commitment, \proverstatett) \gets \dlogsigmaprotocol.\provercommitment(\vec \witness)$ consists of the following steps:
     \begin{enumerate}
@@ -721,7 +748,8 @@ These will be defined later in the specific protocols.
       \item  $(\randomness_1,\dots,\randomness_n)\defeq \proverstatett$
       \item  $(\witness_1,\dots,\witness_n)\defeq \vec \witness$
       \item
-        $c \defeq \frombytes(\challenge)$.
+        $\challenge \defeq \frombytes(\challenge)$.
+        \minote{confusing, the c given as argument should probably be of a different font}
       \item For $i=1,\dots,n$: $\response_i\defeq \randomness_i+\challenge \witness_i$
 			\item Return $\vec\response \defeq (\response_1,\dots,\response_n)$.
     \end{enumerate}
@@ -805,7 +833,7 @@ That is, they prove knowledge of $w\in\FF_p$ such that $Y=wG$.
   \item $\varphi:\FF_p\to\GG:w\mapsto wG$
   \item $\schnorr.\morphismlabel()$: return:
   \[
-    \hash(\schnorrlabel \concat \curvectx \concat \serialize(G) \concat \serialize(\statement))
+    \hash(\schnorrlabel \concatblock \curvectx \concat \serialize(G) \concat \serialize(\statement))
   \]
 \end{itemize}
 \stnote{stupid question: should the label (or the curve) have constant length to ensure that label-bits and curve-bits can be clearly seperated?}
@@ -836,13 +864,13 @@ For a description of this proof goal in the general case of residue classes, we 
 % It then outputs the simulated transcript $(\commitment,\challenge,s)$.
 
 \subsubsection{Discrete logarithm equality}
-So-called DLEQ proofs prove equality of the discrete logarithm $w$ of $\statement_1$ in base $G$ and $\statement_2$ in base $H$.
+So-called DLEQ proofs prove equality of the discrete logarithm, that is: $\statement_1 = wG$ and $\statement_2 = wH$.
 
 \begin{itemize}
   \item $\varphi:\FF_p\to\GG^2:w\mapsto (wG,wH)$
   \item $\dleq.\morphismlabel()$: return
   \[
-    \hash(\dleqlabel \concat \curvectx \concat \serialize(G) \concat \serialize(H) \concat \serialize(\statement_1) \concat \serialize(\statement_2))
+    \hash(\dleqlabel \concatblock \curvectx \concat \serialize(G) \concat \serialize(H) \concat \serialize(\statement_1) \concat \serialize(\statement_2))
   \]
 \end{itemize}
     % \begin{protocol}{Proving knowledge of equality of two discrete logarithms (alternative).\\[-2.25em]}{fig:dleq_2}{t}
