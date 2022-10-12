@@ -78,7 +78,7 @@
 
 \section{Introduction}
 
-Zero-knowledge~\cite{GolMicRac89} proofs of knowledge~\cite{C:BelGol92} allow a prover to convince a verifier that he knows a secret piece of information, without revealing anything else that what is already revealed by the claim itself.
+Zero-knowledge~\cite{GolMicRac89} proofs of knowledge~\cite{C:BelGol92} allow a prover to convince a verifier that he knows a secret piece of information, without revealing anything except that the claim itself already reveals.
 Many practically relevant proof goals can be realized using so-called $\Sigma$-protocols.
 %, or their non-interactive counterparts, which can be proven secure in the random oracle model. %without the need for a common reference string.
 Introduced by Schnorr~\cite{JC:Schnorr91} over 30 years ago, they play an essential component in the building of a number of cryptographic
@@ -121,7 +121,7 @@ Note there may be multiple witnesses for a given $\statement$.
   Let $\GG$ be a cyclic group of prime order $p$, and let $G$ and $H$ be generators of $\GG$.
 	Then the following relation $\dleqrelation$ contains as statements all pairs of elements having the same discrete logarithm with respect to $G$ and $H$, with the corresponding witness being their discrete logarithm:
   $$
-	  \dleqrelation = \set{\left((\statement_1,\statement_2),\witness)\right)~:~\statement_1=\witness G ~\land~ \statement_2=\witness H}\,.
+	  \dleqrelation = \set{\left((\statement_1,\statement_2),\witness)\right) \in \GG^2\times \FF_p~:~\statement_1=\witness G ~\land~ \statement_2=\witness H}\,.
 	$$
 \end{example}
 
@@ -129,7 +129,7 @@ Note there may be multiple witnesses for a given $\statement$.
   Let $\GG$ be a cyclic group of prime order $p$, and let $G$ and $H$ be generators of $\GG$.
 	Then the following relation $\reprelation$ contains as statements all valid Perdersen commitments, with the corresponding witnesses being their openings:
   $$
-	  \reprelation = \set{\left(\statement,(\witness_1,\witness_2))\right)~:~\statement=\witness_1G + \witness_2H}\,.
+	  \reprelation = \set{\left(\statement,(\witness_1,\witness_2))\right)\in \GG \times \FF_p^2~:~\statement=\witness_1G + \witness_2H}\,.
 	$$
 	Note that in this case, each statement has $p$ valid witnesses.
 \end{example}
@@ -141,8 +141,8 @@ Proofs described in this spec are zero-knowledge and sound.
 Zero knowledge means that the protocol does not leak any information about the prover's witness beyond what the attacker may infer from the proven statement or from other sources~\cite[1.6.4]{zkproof-reference}.
 Soundness means that it is not possible to make the verifier accept for statements for which no valid witness exists~\cite[1.6.2]{zkproof-reference}.
 
-In particular we will focus on non-malleable extractable proofs, that is, proofs where the the witness does not only exist but it really must be known by the prover.
-These protocols are also known as proofs of knowledge~\cite{STOC:GolMicRac85,STOC:FeiFiaSha87,C:BelGol92} and are said to satisfy \emph{knowledge soundness}~\cite{damgard04}. Non-malleability means that in addition the proof is secure against man-in-the middle attacks, and attackers that might change  then we call the proof \emph{simulation-extractable}.
+In particular we will focus on non-malleable extractable proofs, that is, proofs where the the witness does not only exist but it is also precisely known by the prover.
+These protocols are also known as proofs of knowledge~\cite{STOC:GolMicRac85,STOC:FeiFiaSha87,C:BelGol92} and are said to satisfy \emph{knowledge soundness}~\cite{damgard04}. Non-malleability means that, in addition, the proof is secure against man-in-the middle attacks, and attackers that might change  then we call the proof \emph{simulation-extractable}.
 
 
 \subsection{Guarantees}
@@ -161,26 +161,7 @@ We won't provide any guidance for securely storing secrets or producing constant
 \minote{People interested in the development of a specific $\Sigma$ protocol should implement the template from 2 using the algorithm from XX and XX and then refer to section XX}
 
 
-
-\section{Generic $\Sigma$-Protocols}
-In the following, we describe a generic interface for $\Sigma$-protocols.
-Such protocols can be used to prove that, for some binary relation $\relation$ and a public value $\statement$, a witness $\witness$ such that $(\statement,\witness)\in\relation$ is known.
-Basic statements include proofs of knowledge of a secret key, openings of commitments, and more in general of representations.
-The type of these elements depends on the specific relation being implemented.
-
-An important property of $\Sigma$-protocols is that they are composable: it is possible to prove conjunction and disjunctions of statements in zero-knowledge.
-Composition of $\Sigma$-protocols is dealt in details in \cref{sec:composition}; for an in-depth discussion of the underlying theory we refer to Cramer~\cite{cramer97}.
-
-\subsection{Overview}
-A $\Sigma$-protocol, in abstract, follows the following steps:
-\begin{itemize}
-  \item the prover computes a fresh \textbf{commitment}, denoted $\commitment$. This element is sometimes also called \emph{nonce}.
-  \item the prover computes, using the so-called Fiat-Shamir transform (cf.~\cref{sec:fs}), a random \textbf{challenge}, denoted $\challenge$.
-  \item the prover computes a \textbf{response}, denoted $\response$, that depends on the commitment and the challenge.
-\end{itemize}
-The final proof is constituted of the three-elements above $(\commitment, \challenge, \response)$, and is also referred to as the \textbf{transcript}.
-
-\begin{figure}
+\begin{figure}[t]
   \begin{tcolorbox}
     \centering
     \procedure{}{
@@ -193,10 +174,30 @@ The final proof is constituted of the three-elements above $(\commitment, \chall
   \caption{Overview of the steps composing a generic $\Sigma$-protocol.}
 \end{figure}
 
+\section{Generic $\Sigma$-Protocols}
+In the following, we describe a generic interface for $\Sigma$-protocols.
+Such protocols can be used to prove that, for some binary relation $\relation$ and a public value $\statement$, a witness $\witness$ such that $(\statement,\witness)\in\relation$ is known.
+Basic statements include proofs of knowledge of a secret key, openings of commitments, and more in general of representations.
+The type of these elements depends on the specific relation being implemented.
+
+An important property of $\Sigma$-protocols is that they are composable: it is possible to prove conjunction and disjunctions of statements in zero-knowledge.
+Composition of $\Sigma$-protocols is dealt in details in \cref{sec:composition}; for an in-depth discussion of the underlying theory we refer to Cramer~\cite{cramer97}.
+
+
+
+\subsection{Overview}
+A $\Sigma$-protocol, in abstract, follows the following steps:
+\begin{itemize}
+  \item the prover computes a fresh \textbf{commitment}, denoted $\commitment$. This element is sometimes also called \emph{nonce}.
+  \item the prover computes, using the so-called Fiat-Shamir transform (cf.~\cref{sec:fs}), a random \textbf{challenge}, denoted $\challenge$.
+  \item the prover computes a \textbf{response}, denoted $\response$, that depends on the commitment and the challenge.
+\end{itemize}
+The final proof is constituted of the three-elements above $(\commitment, \challenge, \response)$, and is also referred to as the \textbf{transcript}.
+
 
 \subsection{An abstract class for generic $\Sigma$-protocols}
 The following formally provide a template class for $\Sigma$-protocols denoted $\sigmaprotocol$. This is the basic interface that will be implemented remainder of this document.
-These methods should be considered \emph{private} and \emph{should not} exposed externally.
+These methods should be considered \emph{private} and \emph{should not} be exposed externally.
 Instances are created via the $\new$ function, which is a class method, while all other functions are methods that acting on a particular instance.
 A $\sigmaprotocol$ consists of the following methods:
       \begin{itemize}
@@ -221,14 +222,14 @@ A $\sigmaprotocol$ consists of the following methods:
           or an error if verification fails.
           \item $\texttt{label} \gets\sigmaprotocol.\labeltt()$,
           returning a string of $\seedlen$ uniquely identifying the relation being proven.
-          Implementing correctly this function is vital security, and will be used for computing the challenge in the Fiat-Shamir transform~\cref{sec:fs}.
-          One \emph{must} carefully follow the directives written in the relative instantiations. It is crucial for security that the label includes all data available in the statement, including the parameters and the relation being proven.
+          Implementing this function correctly is vital security, and will be used for computing the challenge in the Fiat-Shamir transform~\cref{sec:fs}.
+          One \emph{must} carefully implement the function as illustrated in the following secttions. \minote{this relative instantiations is confusing}It is crucial for security that the label includes all data available in the statement, including the parameters and the relation being proven.
 
           More precisely, if the label is \emph{not} tied to the relation, then it may be possible to produce another proof for a different relation without knowing its witness.
           Similarly, if the statement is not tied to the witness, then it might be possible to produce proofs
           for another statement whose witness is related to the original proof.
       \end{itemize}
-      The final two algorithm describe the \emph{zero-knowledge simulator}.
+      The final two algorithms describe the \emph{zero-knowledge simulator}.
       The simulator is primarily an efficient algorithm for proving zero-knowledge in a theoretical constriction, but it is also needed for verifying short proofs (cf.~\cref{sec:shortproof}) and for or-composition (cf.~\cref{sec:or-comp}), where a witness is not known and thus has to be simulated.
       \begin{itemize}
         \item $\response \gets \sigmaprotocol.\simresponsett()$,
@@ -280,7 +281,7 @@ to indicate that they must appear in a subsequent block.
 \subsubsection{Hash Registry}
 \label{sec:hash-registry}.
 
-The set of supported hash functions must  all of the following hash functions that takes as input a sequence of bytes of arbitrary length and output $\seedlen$ of entropy.
+This is the set of all supported hash functions. They take an arbitrary length sequence of bytes as input, and output $\seedlen$ of entropy.
 
 \begin{center}
   \begin{tabular}{lllcc}
@@ -295,7 +296,7 @@ The set of supported hash functions must  all of the following hash functions th
 \subsubsection{Computing the challenge and seeding the commitment}
 \label{sec:fs-challenge}
 
-Relying on a hash function allows us to both compute the challenge and generate securely the commitment.
+Relying on a hash function allows us to both compute the challenge and generate the commitment securely.
 We define the following auxiliary variables that may be pre-computed during the call of $\sigmaprotocol.\new$. All variables will have fixed length $\digestlen$ so to avoid
 canonicalization attacks.
 
@@ -306,7 +307,7 @@ canonicalization attacks.
    & \hctx \defeq \hash(\ctx)
   \end{aligned}
 \]
-\paragraph{Seeding the commitment.} The method $\sigmaprotocol.\provercommitment()$ is a randomized function that generates a random element, unique per each execution. The entropy for the commitment be seeded as follows:
+\paragraph{Seeding the commitment.} The method $\sigmaprotocol.\provercommitment()$ is a randomized function that generates a random element, unique per each execution. The entropy for the commitment must be seeded as follows:
 \[
     \begin{aligned}
      & \hz \defeq \randombytes(32) \\
@@ -325,7 +326,7 @@ The method $\sigmaprotocol.\challengett(\msg, \commitment)$ is implemented as fo
   \]
 
 If no message is being set, i.e. if $\msg = \none$, then the implementation may decide to skip the computation of $\hmsg$ and consider it empty.
-This method is fixed for all implementations of $\sigmaprotocol$. Note that the state of the hash function is partially shared between the commitment seed inputs and the challenge computation. Implementors may choose to store the partial hash state before generating the commitment, and re-using it when computing the challenge.
+This method is fixed for all implementations of $\sigmaprotocol$. Note that the state of the hash function is partially shared between the commitment seed inputs and the challenge computation. Implementors may choose to store the partial hash state before generating the commitment, and reuse it when computing the challenge.
 
 % commit = SHO(L1: HD,HA,HM,Z | a ^)
 % challenge = SHO(L2: HD,HA,HM,commit ^)
@@ -414,10 +415,10 @@ A new proof $\sigmaprotocol.\shortproof(\witness, \msg)$ is built as follows:
   Return $\serialize(\challenge)$ concatenated to $\serialize(\response)$.
 \end{enumerate}
 The commitment $\commitment$ is not provided within a short proof since it can be calculated again.
-\item[Verifier algorithm.] The verifier's algorithm $\sigmaprotocol.\shortverifier( (\challenge, \response), \ctx, \msg)$ works as follows:
+\item[Verifier algorithm.] The verifier's algorithm $\sigmaprotocol.\shortverifier( (\challenge, \response), \msg)$ works as follows:
 \begin{enumerate}
   \item $\commitment \gets \sigmaprotocol.\simcommitmenttt(\challenge, \response)\,.$
-  \item $c^* \gets \sigmaprotocol.\challengett(\msg, \vec \commitment)$
+  \item $c^* \gets \sigmaprotocol.\challengett(\msg, \commitment)$
   \item
   Check whether $\challenge=\challenge^*$.
   Output $\accept$ if this is the case, and $\reject$ otherwise.
@@ -456,9 +457,9 @@ The dots \texttt{[...]} denote optional, specific $\Sigma$ protocol instantiatio
   That is, a $\Sigma$-protocol for the following relation:
 \[
   \andrelation = \set{
-    ((\statement^0,\statement^1),(\witness^0,\witness^1) : (\statement^0,\witness^0)\in \relation^0 ~\land~ (\statement^1,\witness^1)\in\relation^1}
+    ((\statement_0,\statement_1),(\witness_0,\witness_1) : (\statement_0,\witness_0)\in \relation_0 ~\land~ (\statement_1,\witness_1)\in\relation_1}
 \]
-For the rest of this section, the witness $\witness$ for the $\Sigma$-protocol will now be a pair $(\witness^0, \witness^1)$ of witnesses, and the associated statement $\statement$ will be a pair $(\statement^0, \statement^1)$ of statements, where $\witness^0$ is the witness for the statement $\statement^0$, and $\witness^1$ is the witness for $\statement^1$.
+For the rest of this section, the witness $\witness$ for the $\Sigma$-protocol will now be a pair $(\witness_0, \witness_1)$ of witnesses, and the associated statement $\statement$ will be a pair $(\statement_0, \statement_1)$ of statements, where $\witness_0$ is the witness for the statement $\statement_0$, and $\witness_1$ is the witness for $\statement_1$.
 %\minote{say explicitly that now the witness is a pair of witnesses valid for the respective relation. Same goes for the statement}
 
   Intuitively, the AND composition simply runs the instances of the different protocols to be composed in parallel, using the same challenge $\challenge$ for all instances.
@@ -476,32 +477,32 @@ The main procedures of the resulting $\Sigma$-protocol are specified by the foll
   $(\vec \commitment, \proverstatett)\gets \andcomposition.\provercommitment(\vec \witness)$
     \begin{enumerate}
       \item
-        $(\witness^0,\witness^1)\defeq \vec \witness$
+        $(\witness_0,\witness_1)\defeq \vec \witness$
       \item
-        $(\commitment^0,\proverstatett^0)\gets\leftbranch.\provercommitment(\witness^0)$
-      \item $(\commitment^1,\proverstatett^1)\gets\rightbranch.\provercommitment(\witness^1)$
+        $(\commitment_0,\proverstatett_0)\gets\leftbranch.\provercommitment(\witness_0)$
+      \item $(\commitment_1,\proverstatett_1)\gets\rightbranch.\provercommitment(\witness_1)$
       \item
-	Return $(\vec \commitment,\proverstatett) \defeq ((\commitment^0,  \commitment^1),(\proverstatett^0,\proverstatett^1))$
+	Return $(\vec \commitment,\proverstatett) \defeq ((\commitment_0,  \commitment_1),(\proverstatett_0,\proverstatett_1))$
     \end{enumerate}
   \item
   $\vec \response \gets \andcomposition.\proverresponse(\proverstatett, \challenge)$
   \begin{enumerate}
       \item
-	    $(\proverstatett^0,\proverstatett^1)\defeq \proverstatett$
+	    $(\proverstatett_0,\proverstatett_1)\defeq \proverstatett$
       \item
-      $\response^0\gets\leftbranch.\proverresponse(\proverstatett^0, \challenge)$
+      $\response_0\gets\leftbranch.\proverresponse(\proverstatett_0, \challenge)$
       \item
-      $\response^1\gets\rightbranch.\proverresponse(\proverstatett^1, \challenge)$
+      $\response_1\gets\rightbranch.\proverresponse(\proverstatett_1, \challenge)$
       \item
-      Return $\vec \response\defeq(\response^0,\response^1)$
+      Return $\vec \response\defeq(\response_0,\response_1)$
     \end{enumerate}
   \item
   $\andcomposition.\verifiertt(\vec \commitment, \challenge, \vec \response)$
   \begin{enumerate}
       \item
-        $(\response^0,\response^1)\defeq \vec \response$.
+        $(\response_0,\response_1)\defeq \vec \response$.
       \item
-	Return $\accept$ if both $\leftbranch.\verifiertt(\commitment^0,\challenge, \response^0)$ and $\rightbranch.\verifiertt(\commitment^1,\challenge, \response^1)$ return $\accept$. Otherwise, return $\reject$.
+	Return $\accept$ if both $\leftbranch.\verifiertt(\commitment_0,\challenge, \response_0)$ and $\rightbranch.\verifiertt(\commitment_1,\challenge, \response_1)$ return $\accept$. Otherwise, return $\reject$.
     \end{enumerate}
   \item  $\andcomposition.\labeltt()$ is computed as:
     \[
@@ -514,21 +515,21 @@ The main procedures of the resulting $\Sigma$-protocol are specified by the foll
    generates a simulated response as follows:
     \begin{enumerate}
       \item
-        $\response^0\gets\leftbranch.\simresponsett()$
-        \item $\response^1\gets\rightbranch.\simresponsett()$
+        $\response_0\gets\leftbranch.\simresponsett()$
+        \item $\response_1\gets\rightbranch.\simresponsett()$
       \item
-        Return $\vec \response\defeq(\response^0,\response^1)$.
+        Return $\vec \response\defeq(\response_0,\response_1)$.
     \end{enumerate}
   \item
   $\vec \commitment \gets \andcomposition.\simcommitmenttt(\challenge, \vec \response)$ works as follows:
     \begin{enumerate}
       \item
-        $(\response^0,\response^1)\defeq\vec\response$.
+        $(\response_0,\response_1)\defeq\vec\response$.
       \item
-        $\commitment^0\gets\leftbranch.\simcommitmenttt(\challenge,\response^0)$
-        \item $\commitment^1\gets\rightbranch.\simcommitmenttt(\challenge,\response^1)$
+        $\commitment_0\gets\leftbranch.\simcommitmenttt(\challenge,\response_0)$
+        \item $\commitment_1\gets\rightbranch.\simcommitmenttt(\challenge,\response_1)$
       \item
-        Return $\vec \commitment\defeq(\commitment^0, \commitment^1)$.
+        Return $\vec \commitment\defeq(\commitment_0, \commitment_1)$.
       \end{enumerate}
 \end{itemize}
 
@@ -540,11 +541,11 @@ The main procedures of the resulting $\Sigma$-protocol are specified by the foll
   That is, the algorithms specified below constitute a $\Sigma$-protocol for the following relation:
 \[
   \orrelation = \set{
-    ((\statement^0,\statement^1),(\witness^0,\witness^1) :
-    (\statement^0,\witness^0)\in \relation^0 ~\lor~ (\statement^1,\witness^1)\in\relation^1}\,.
+    ((\statement_0,\statement_1),(\witness_0,\witness_1) :
+    (\statement_0,\witness_0)\in \relation_0 ~\lor~ (\statement_1,\witness_1)\in\relation_1}\,.
 \]
 \minote{Say explicitly that now the witnesses are a pair of optional arugments, at least one of them being a non-null witness.}
-  In the following protocol specification, let $j$ be such that $w^j$ is known to the prover, whereas without loss of generality $\witness^{1-j}$ is assumed to be unknown to the prover.
+  In the following protocol specification, let $j$ be such that $w_j$ is known to the prover, whereas without loss of generality $\witness_{1-j}$ is assumed to be unknown to the prover.
 
 	On a high level, the protocol works as follows.
 	Using the simulator, the prover first simulates a transcript for the unknown witness (keeping the challenge and response of this transcript temporarily secret), and generates an honest commitment for the known witness.
@@ -560,68 +561,68 @@ The main procedures of the resulting $\Sigma$-protocol are specified by the foll
     \begin{enumerate}
       \item $\provertt = [\leftbranch, \rightbranch]$
       \item
-        $(\witness^0,\witness^1)\defeq \vec \witness$, and let $j \in \bin$ be the first index for which $\witness^{j}\neq\none$
+        $(\witness_0,\witness_1)\defeq \vec \witness$, and let $j \in \bin$ be the first index for which $\witness_{j}\neq\none$
       \item
-        $(\commitment^j,\proverstatett)\gets\provertt[j].\provercommitment(\statement^j,\witness^j)$
+        $(\commitment_j,\proverstatett_j)\gets\provertt[j].\provercommitment(\statement_j,\witness_j)$
       \item
-			   $\response^{1-j}\gets\provertt[1-j].\simresponsett()$
+			   $\response_{1-j}\gets\provertt[1-j].\simresponsett()$
 			\item
-        Choose a random $\challenge^{1-j}$ in $\CS$
+        Choose a random $\challenge_{1-j}$ in $\CS$
       \item
-        $\commitment^{1-j}\gets\provertt[1-j].\simcommitmenttt(\challenge^{1-j},\response^{1-j})$
+        $\commitment_{1-j}\gets\provertt[1-j].\simcommitmenttt(\challenge_{1-j},\response_{1-j})$
       \item
-	Return $(\vec \commitment,\proverstatett) \defeq ((\commitment^0,\commitment^1),(\proverstatett,\challenge^{1-j},\response^{1-j}))$
+	Return $(\vec \commitment,\proverstatett) \defeq ((\commitment_0,\commitment_1),(\proverstatett_j,\challenge_{1-j},\response_{1-j}))$
     \end{enumerate}
   \item
   $\vec \response \gets \orcomposition.\proverresponse(\proverstatett, \challenge)$:
     \begin{enumerate}
-      \item  $(\proverstatett^j,\challenge^{1-j},\response^{1-j})\defeq\proverstatett$
+      \item  $(\proverstatett_j,\challenge_{1-j},\response_{1-j})\defeq\proverstatett$
       \item
-         $\challenge^j\defeq \challenge\oplus \challenge^{1-j}$
-         \item $\response^j\gets\provertt[j].\proverresponse(\proverstatett, \challenge^j)$
+         $\challenge_j\defeq \challenge\oplus \challenge_{1-j}$
+         \item $\response_j\gets\provertt[j].\proverresponse(\proverstatett_j, \challenge_j)$
       \item
-        Return $\vec \response\defeq(\response^0,\response^1, \challenge^0)$.
+        Return $\vec \response\defeq(\response_0,\response_1, \challenge_0)$.
     \end{enumerate}
   \item
   $\orcomposition.\verifiertt(\vec \commitment, \challenge, \vec \response)$,
     \begin{enumerate}
       \item
-         $(\response^0, \response^1, \challenge^0)\defeq \vec \response$.
+         $(\response_0, \response_1, \challenge_0)\defeq \vec \response$.
       \item
-         $\challenge^1\defeq \challenge \oplus \challenge^0$.
+         $\challenge_1\defeq \challenge \oplus \challenge_0$.
       \item
-	    Return $\pctrue$ if both $\leftbranch.\verifiertt(\commitment^0,\challenge^0,\response^0)$ and $\rightbranch.\verifiertt^1(\commitment^1,\challenge^1,\response^1)$ return $\pctrue$. Otherwise, return $\pcfalse$.
+	    Return $\pctrue$ if both $\leftbranch.\verifiertt(\commitment_0,\challenge_0,\response_0)$ and $\rightbranch.\verifiertt_1(\commitment_1,\challenge_1,\response_1)$ return $\pctrue$. Otherwise, return $\pcfalse$.
     \end{enumerate}
   \item  $\orcomposition.\labeltt()$ is computed as:
     \[
-     \hash(\orlabel \concat \leftbranch.\labeltt() \concat \rightbranch.\labeltt())
+     \hash(\orlabel \concatblock \leftbranch.\labeltt() \concat \rightbranch.\labeltt())
    \]
    The supported hash functions are described in \cref{sec:hash-registry}.
   \item
   $\vec \response \gets \orcomposition.\simresponsett()$
     \begin{enumerate}
       \item
-         $(\statement^0,\statement^1)\defeq \vec \statement$.
+         $(\statement_0,\statement_1)\defeq \vec \statement$.
       \item
-         $\response^0\gets\leftbranch.\simresponsett()$
-      \item $\response^1\gets\rightbranch.\simresponsett()$
+         $\response_0\gets\leftbranch.\simresponsett()$
+      \item $\response_1\gets\rightbranch.\simresponsett()$
       \item
-        Choose a random $\challenge^0$ in $\CS$.
+        Choose a random $\challenge_0$ in $\CS$.
 			\item
-        Return $\vec \response \defeq (\response^0,\response^1,\challenge^0)$.
+        Return $\vec \response \defeq (\response_0,\response_1,\challenge_0)$.
     \end{enumerate}
 \item
-$\vec \commitment \gets \orcomposition.\simcommitmenttt(\challenge, \vec \response)$ works as follows:
+$\vec \commitment \gets \orcomposition.\simcommitmenttt(\challenge, \vec \response)$
 \begin{enumerate}
       \item
-        $(\response^0,\response^1,\challenge^0)\defeq\vec\response$.
+        $(\response_0,\response_1,\challenge_0)\defeq\vec\response$.
       \item
-        $\challenge^1\defeq \challenge \oplus \challenge^0$.
+        $\challenge_1\defeq \challenge \oplus \challenge_0$.
       \item
-        $\commitment^0 \gets\leftbranch.\simcommitmenttt(\challenge^0,\response^0)$
-    \item $\commitment^1\gets\rightbranch.\simcommitmenttt(\challenge^1,\response^1)$
+        $\commitment_0 \gets\leftbranch.\simcommitmenttt(\challenge_0,\response_0)$
+    \item $\commitment_1\gets\rightbranch.\simcommitmenttt(\challenge_1,\response_1)$
       \item
-        Return $\vec \commitment \defeq (\commitment^0,\commitment^1)$.
+        Return $\vec \commitment \defeq (\commitment_0,\commitment_1)$.
     \end{enumerate}
 \end{itemize}
 
@@ -725,7 +726,7 @@ $$
 \end{example}
 \minote{relation name like before?}
 
-However, the following \emph{does not define neither the morphism nor the label associated to the protocol}.
+However, the following \emph{defines neither the morphism nor the label associated to the protocol}.
 These will be defined later in the specific protocols.
 
  \stnote{which checks are necessary? which values need to be on the curve, etc.?}
@@ -944,7 +945,7 @@ As shown in this example, and in contrast to linear relations, multiplicative re
 
 
 \subsubsection{Representation}\label{sec:instantiations:representation}
-Let $\GG$ be a group over an elliptic curve of prime order $p$.
+Let $\GG$ be a group over an elliptic curve of prime order $p$, and let $G_1, \dots, G_m$ be generators of $\GG$.
 Proving knowledge of a valid opening of a Pedersen commitment means proving knowledge of $\witness_1,\witness_2, \dots, \witness_m\in\FF_p$ such that $Y=\witness_1G_1 + \witness_2G_2 + \dots + \witness_m G_m$.
 
 
@@ -1015,7 +1016,7 @@ Given the single verification equations of the form:
 \]
 for $i=1, \dots,\ell$,
 %(So, $T \in \GG^\ell$, $c \in \FF_p^\ell$ and $s \in \FF_p^{\ell \times m}$ and $\mat G \in \GG^{m \times \ell}$.)
-the verifier can sample a random vector of coefficients $\vec a \in \FF_p^\ell$ instead test that:
+the verifier can sample a random vector of coefficients $\vec a \in \FF_p^\ell$ and instead test:
 \[
   \left(\sum_{i=1}^{\ell} a_i \commitment_i\right) + \left(\sum_{i=1}^{\ell} a_i \cdot  \challenge_i \statement_i \right) = \left(\sum_{i=1}^{\ell} a_i \cdot \sum_j \response_j G_{i,j}\right).
 \]
