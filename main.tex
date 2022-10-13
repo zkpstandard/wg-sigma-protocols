@@ -111,7 +111,7 @@ For the purpose of this document, the following notation will be used:
 Additional notation will be introduced when describing specific algebraic objects.
 \subsection{Terminology}
 Given sets $\Set{Y}$ and $\Set{W}$,
-a \emph{binary relation} $\relation \subseteq \Set{Y} \times \Set{W}$ associates elements from $\Set{Y}$ with elements from $\Set{W}$
+a \emph{binary relation} $\relation \subseteq \Set{Y} \times \Set{W}$ associates elements from $\Set{Y}$ with elements from $\Set{W}$.
 For $(\statement,\witness)\in\relation$, we refer to $\statement$ as a \emph{statement}, and to $\witness$ as a \emph{witness} (for $\statement$).
 The statement is public information shared between prover and verifier.
 The witness is secret information solely known by the prover.
@@ -121,7 +121,7 @@ Note there may be multiple witnesses for a given $\statement$.
   Let $\GG$ be a cyclic group of prime order $p$, and let $G$ and $H$ be generators of $\GG$.
 	Then the following relation $\dleqrelation$ contains as statements all pairs of elements having the same discrete logarithm with respect to $G$ and $H$, with the corresponding witness being their discrete logarithm:
   $$
-	  \dleqrelation = \set{\left((\statement_1,\statement_2),\witness)\right) \in \GG^2\times \FF_p~:~\statement_1=\witness G ~\land~ \statement_2=\witness H}\,.
+	  \dleqrelation = \set{\left((\statement_1,\statement_2),\witness\right) \in \GG^2\times \FF_p~:~\statement_1=\witness G ~\land~ \statement_2=\witness H}\,.
 	$$
 \end{example}
 
@@ -129,7 +129,7 @@ Note there may be multiple witnesses for a given $\statement$.
   Let $\GG$ be a cyclic group of prime order $p$, and let $G$ and $H$ be generators of $\GG$.
 	Then the following relation $\reprelation$ contains as statements all valid Perdersen commitments, with the corresponding witnesses being their openings:
   $$
-	  \reprelation = \set{\left(\statement,(\witness_1,\witness_2))\right)\in \GG \times \FF_p^2~:~\statement=\witness_1G + \witness_2H}\,.
+	  \reprelation = \set{\left(\statement,(\witness_1,\witness_2)\right)\in \GG \times \FF_p^2~:~\statement=\witness_1G + \witness_2H}\,.
 	$$
 	Note that in this case, each statement has $p$ valid witnesses.
 \end{example}
@@ -165,10 +165,10 @@ We won't provide any guidance for securely storing secrets or producing constant
   \begin{tcolorbox}
     \centering
     \procedure{}{
-      \textbf{Prover} \< \< \textbf{Verifier} \\[1em]
-    \textbf{commitment} \< \sendmessageright*[20em]{\commitment} \< \\
-    \< \sendmessageleft*[20em]{\challenge}  \< \textbf{challenge}\\
-    \textbf{response} \< \sendmessageright*[20em]{\response} \\
+      \textbf{Prover} \< \< \textbf{Verifier} \\[][\hline]\\
+    \textbf{commitment}~~~~~~~~ \< \sendmessageright*[20em]{\commitment} \< \\
+    \< \sendmessageleft*[20em]{\challenge}  \< ~~~\textbf{challenge}\\
+    \textbf{response}~~~~~~ \< \sendmessageright*[20em]{\response} \\
     }
   \end{tcolorbox}
   \caption{Overview of the steps composing a generic $\Sigma$-protocol.}
@@ -511,7 +511,6 @@ The main procedures of the resulting $\Sigma$-protocol are specified by the foll
      \hash(\andlabel \concatblock \leftbranch.\labeltt() \concat \rightbranch.\labeltt())
    \]
    The supported hash functions are described in \cref{sec:hash-registry}.
-   \minote{in particular we want those strings to be always 32B and padded with zeros}
   \item
   $\vec \response \gets \andcomposition.\simresponsett()$
    generates a simulated response as follows:
@@ -683,11 +682,11 @@ For an in-depth discussion of the underlying theory we refer to Cramer~\cite{cra
 \begin{example}{Discrete logarithm equality}{phi_DLOG}
   Looking at the relation from \cref{exa:R_DLOG}, the relevant homomorphism is given by:
 	$$
-	  \varphi_{\operatorname{dlog}} : \ZZ_p\to\GG^2 : \witness\mapsto (\witness G,\witness H)\,.
+	  \varphi_{\operatorname{dlog}} : \FF_p\to\GG^2 : \witness\mapsto (\witness G,\witness H)\,.
 	$$
 	If equality of discrete logarithms within \emph{different} groups of the same prime order $p$ is to be proven, the homomorphism to be considered would be:
 	$$
-	  \varphi_{\operatorname{dlog}}' : \ZZ_p\to\GG_1\times\GG_2 : \witness\mapsto (\witness G,\witness H)\,,
+	  \varphi_{\operatorname{dlog}}' : \FF_p\to\GG_1\times\GG_2 : \witness\mapsto (\witness G,\witness H)\,,
 	$$
 	where $G$ and $H$ would now be generators for $\GG_1$ and $\GG_2$, respectively.
 	All the techniques discussed in the remainder of this spec equally apply to both cases.
@@ -696,7 +695,7 @@ For an in-depth discussion of the underlying theory we refer to Cramer~\cite{cra
 \begin{example}{Representation}{phi_REP}
   Looking at the relation from \cref{exa:R_REP}, the relevant homomorphism is given by:
 	$$
-	  \varphi_{\operatorname{rep}} : \ZZ_p^2\to\GG : (\witness_1,\witness_2)\mapsto \witness_1 G + \witness_2 H\,.
+	  \varphi_{\operatorname{rep}} : \FF_p^2\to\GG : (\witness_1,\witness_2)\mapsto \witness_1 G + \witness_2 H\,.
 	$$
 \end{example}
 
@@ -704,7 +703,7 @@ For an in-depth discussion of the underlying theory we refer to Cramer~\cite{cra
 \label{sec:sigma-dlog}
 We provide a generic template for all $\Sigma$-protocols for statements of the following form over DLOG groups:
 \[
-  \relation=\set{((\statement_1,\dots,\statement_m),(\witness_1,\dots,\witness_n)) : (\statement_1,\dots,\statement_m)=\varphi(\witness_1,\dots,\witness_n)}
+  \relation=\set{((\statement_1,\dots,\statement_m),(\witness_1,\dots,\witness_n)) \in \GG^m \times \FF_p^n: (\statement_1,\dots,\statement_m)=\varphi(\witness_1,\dots,\witness_n)}
 \]
 where $\varphi:\FF_p^n\to\GG^m$ is a group homomorphism.
 
@@ -827,7 +826,7 @@ where
 
 
 \subsection{Instantiations}\label{sec:instantiations}
-Let $\GG$ be a group over an elliptic curve with prime order $p$.
+Let $\GG$ be a group over an elliptic curve with prime order $p$. Denote with $G \in \GG$ a generator of $\GG$.
 
 \subsubsection{Schnorr signatures}\label{sec:instantiations:schnorr}
 Schnorr signatures, also known as Schnorr proofs or DLOG proofs, prove knowledge of the discrete logarithm $w$ of a point $Y$ in base $G$.
@@ -837,7 +836,7 @@ That is, they prove knowledge of $w\in\FF_p$ such that $Y=wG$.
   \item $\varphi:\FF_p\to\GG:w\mapsto wG$
   \item $\schnorr.\morphismlabel()$: return:
   \[
-    \hash(\schnorrlabel \concatblock \curvectx \concat \serialize(G) \concat \serialize(\statement))
+    \hash(\schnorrlabel \concatblock \curvectx \concatblock \serialize(G) \concat \serialize(\statement))
   \]
 \end{itemize}
 \stnote{stupid question: should the label (or the curve) have constant length to ensure that label-bits and curve-bits can be clearly seperated?}
@@ -874,7 +873,7 @@ So-called DLEQ proofs prove equality of the discrete logarithm, that is: $\state
   \item $\varphi:\FF_p\to\GG^2:w\mapsto (wG,wH)$
   \item $\dleq.\morphismlabel()$: return
   \[
-    \hash(\dleqlabel \concatblock \curvectx \concat \serialize(G) \concat \serialize(H) \concat \serialize(\statement_1) \concat \serialize(\statement_2))
+    \hash(\dleqlabel \concatblock \curvectx \concatblock \serialize(G) \concat \serialize(H) \concat \serialize(\statement_1) \concat \serialize(\statement_2))
   \]
 \end{itemize}
     % \begin{protocol}{Proving knowledge of equality of two discrete logarithms (alternative).\\[-2.25em]}{fig:dleq_2}{t}
