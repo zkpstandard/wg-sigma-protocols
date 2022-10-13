@@ -65,16 +65,61 @@
     fonttitle=\bfseries}{exa} %cite as \cref{exa:<label>}
 
 
-\title{A spec for $\Sigma$-protocols}
+%\title{A spec for $\Sigma$-protocols}
 %
-\date{Created on: \today}
+%\date{Created on: \today}
 
-\author{Michele Orrù, Stephan Krenn}
+%\author{Michele Orrù, Stephan Krenn}
 \begin{document}
 %
-\maketitle              % typeset the header of the contribution
+%\maketitle              % typeset the header of the contribution
 %
-{\hypersetup{hidelinks} \tableofcontents}
+
+
+% =========== TITLE PAGE ===========
+
+\pagenumbering{roman}
+\begin{titlepage}
+   \begin{center}
+       \vspace*{1cm}
+       \textbf{\Huge{A Spec for $\Sigma$-Protocols}}
+
+       \vspace{2.0cm}
+       \textbf{Editors: Michele Orrù, Stephan Krenn}
+			
+       \vspace{1.0cm}
+			 Contributors: Jan Bobolz, Trevor Perrin, ...
+       \vfill
+       Version: v0.2\\
+       \vspace{0.5cm}
+       Date: \today\\
+       \vspace{1.3cm}
+       \includegraphics[width=0.4\textwidth]{zkproof.png}
+   \end{center}
+\end{titlepage}
+
+% =========== TABLE OF CONTENTS ===========
+
+{
+  \hypersetup{hidelinks} 
+  \tableofcontents
+}
+\vfill
+\begin{center}
+  \includegraphics[width=0.8\textwidth]{Dinner_Party.png}
+\end{center}
+
+\clearpage
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+% =========== CONTENT ===========
+
+
+
+
+
+
 
 \section{Introduction}
 
@@ -232,7 +277,7 @@ A $\sigmaprotocol$ consists of the following methods:
           for another statement whose witness is related to the original proof.
       \end{itemize}
       The final two algorithms describe the \emph{zero-knowledge simulator}.
-      The simulator is primarily an efficient algorithm for proving zero-knowledge in a theoretical constriction, but it is also needed for verifying short proofs (cf.~\cref{sec:shortproof}) and for or-composition (cf.~\cref{sec:or-comp}), where a witness is not known and thus has to be simulated.
+      The simulator is primarily an efficient algorithm for proving zero-knowledge in a theoretical construction, but it is also needed for verifying short proofs (cf.~\cref{sec:shortproof}) and for or-composition (cf.~\cref{sec:or-comp}), where a witness is not known and thus has to be simulated.
       \begin{itemize}
         \item $\response \gets \sigmaprotocol.\simresponsett()$,
         denoting the first stage of the \emph{simulator}. It is an algorithm drawing a random response that follows the same output distribution of the algorithm $\proverresponse$.
@@ -262,7 +307,7 @@ The underlying idea is to replace the verifier with a cryptographically secure h
 \subsection{Syntax}
 
 When using a hash function we will employ comma-separated values to indicate values that are concatenated.
-To mitigate attacks and allow for state cloning, we also separate values with semi-columns
+To mitigate attacks and allow for state cloning, we also separate values with semi-colons
 to indicate that they must appear in a subsequent block.
 
 \paragraph{Constants.} Different hash functions may compress inputs with different block length and produce outputs of different length. We define some constants to be used throughout this spec, when hashing values.
@@ -592,7 +637,7 @@ The main procedures of the resulting $\Sigma$-protocol are specified by the foll
       \item
          $\challenge_1\defeq \challenge \oplus \challenge_0$.
       \item
-	    Return $\pctrue$ if both $\leftbranch.\verifiertt(\commitment_0,\challenge_0,\response_0)$ and $\rightbranch.\verifiertt_1(\commitment_1,\challenge_1,\response_1)$ return $\pctrue$. Otherwise, return $\pcfalse$.
+	    Return $\pctrue$ if both $\leftbranch.\verifiertt(\commitment_0,\challenge_0,\response_0)$ and $\rightbranch.\verifiertt(\commitment_1,\challenge_1,\response_1)$ return $\pctrue$. Otherwise, return $\pcfalse$.
     \end{enumerate}
   \item  $\orcomposition.\labeltt()$ is computed as:
     \[
@@ -677,7 +722,7 @@ For an in-depth discussion of the underlying theory we refer to Cramer~\cite{cra
 \begin{definition}
   For two groups $\GG_1,\GG_2$, a function $\varphi:\GG_1\to\GG_2:x\mapsto\varphi(x)$ is a \emph{(group) homomorphism}, if and only if for all $a,b\in\GG_1$ it holds that $\varphi(a+b)=\varphi(a)+\varphi(b)$.
 \end{definition}
-\minote{Readers that are not familiar with the notation of gorup morphism should think of $\varphi$ as a linear function from $n$ elements into $m$ elements}
+Readers not familiar with the notation of group homomorphism may think of $\varphi$ as a linear function from $n$ elements into $m$ elements.
 
 \begin{example}{Discrete logarithm equality}{phi_DLOG}
   Looking at the relation from \cref{exa:R_DLOG}, the relevant homomorphism is given by:
@@ -707,7 +752,7 @@ We provide a generic template for all $\Sigma$-protocols for statements of the f
 \]
 where $\varphi:\FF_p^n\to\GG^m$ is a group homomorphism.
 
-\begin{example}{Selective disclosure of witnesses}{}
+\begin{remark}{Selective disclosure of witnesses}{}
   Note that in the following descriptions, all witnesses are assumed to be kept secret, i.e., none of them is disclosed to the verifier.
 	In case it is required to disclose $\witness_j$, as is the case, e.g., in the context of attribute-based credential systems, the relation to be proven can be rewritten as follows:
 $$
@@ -724,7 +769,7 @@ $$
 	  \psi(\witness_1,\dots,\witness_{j-1},\witness_{j+1},\dots,\witness_n) &:= \varphi(\witness_1,\dots,\witness_{j-1},0,\witness_{j+1},\dots,\witness_n)\,.
 	\end{align*}
 
-\end{example}
+\end{remark}
 \minote{relation name like before?}
 
 However, the following \emph{defines neither the morphism nor the label associated to the protocol}.
@@ -810,7 +855,7 @@ A = \left(\begin{array}{cccccccc}
     \end{array}\right)
 \end{equation*}
 Note that this is without loss of generality.
-If the system of linear equations has a different form, the above form can always be achieved using, e.g., Gaussian elimination and re-ordering of witnesses.
+If the system of linear equations has a different form, the above form can always be achieved using, e.g., Gaussian elimination \cite{} and re-ordering of witnesses.
 Further note that we only need to consider the case where $k<n$, as otherwise the linear equations would uniquely determine the witnesses, which is not desirable in our context.
 
 The following relation $\relation'$ is now equivalent to that specified by $\relation$:
@@ -1071,7 +1116,4 @@ The tree is encoded in breadth-first.
 \bibliographystyle{alpha}
 \bibliography{cryptobib/abbrev3,cryptobib/crypto,additional}
 
-\begin{figure}[b]
-\includegraphics[width=\textwidth]{Dinner_Party.png}
-\end{figure}
 \end{document}
