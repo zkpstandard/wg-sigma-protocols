@@ -210,10 +210,16 @@ We won't provide any guidance for securely storing secrets or producing constant
   \begin{tcolorbox}
     \centering
     \procedure{}{
-      \textbf{Prover} \< \< \textbf{Verifier} \\[][\hline]\\
-    \textbf{commitment}~~~~~~~~ \< \sendmessageright*[20em]{\commitment} \< \\
-    \< \sendmessageleft*[20em]{\challenge}  \< ~~~\textbf{challenge}\\
-    \textbf{response}~~~~~~ \< \sendmessageright*[20em]{\response} \\
+      \< \textbf{Prover} \< \< \textbf{Verifier} \\[][\hline]\\[-0.75em]
+			\textit{Inputs} \< \textbf{statement}~(\statement) \< \< \textbf{statement}~(\statement) \\
+			\< \textbf{context}~(\ctx)\< \< \textbf{context}~(\ctx)\\
+			\< \textbf{witness}~(\witness)\< \< \\
+%
+		  %
+    \textit{Protocol flow} ~~~~\< \textbf{commitment}~(\commitment)~~~~~~~~ \< \sendmessageright*[15em]{\commitment} \< \\
+    \< \< \sendmessageleft*[15em]{\challenge}  \< ~~~\textbf{challenge}~(\challenge)\\
+    \< \textbf{response}~(\response)~~~~~~ \< \sendmessageright*[15em]{\response}\\
+		\textit{Transcript} \< (\commitment,\challenge,\response) \< \<
     }
   \end{tcolorbox}
   \caption{Overview of the steps composing a generic $\Sigma$-protocol.}
