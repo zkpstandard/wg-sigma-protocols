@@ -50,7 +50,7 @@
   \fancyhf{}% Clear header/footer
   \fancyhead[R]{\includegraphics[height=0.75cm]{zkproof.png}}% Right header
 	\fancyhead[L]{\leftmark\\[-0.6em]}
-  \fancyfoot[L]{\documentTitle v0.2}% Left footer
+  \fancyfoot[L]{\documentTitle\ v0.2}% Left footer
   \fancyfoot[R]{\thepage}% Right footer
 }
 \headheight 40pt              %% put this outside
@@ -170,7 +170,7 @@ The statement is public information shared between prover and verifier.
 The witness is secret information solely known by the prover.
 Note there may be multiple witnesses for a given $\statement$.
 
-\begin{example}{Discrete logarithm equality}{R_DLOG}
+\begin{example}{Discrete logarithm equality}{R_DLEQ}
   Let $\GG$ be a cyclic group of prime order $p$, and let $G$ and $H$ be generators of $\GG$.
 	Then the following relation $\relation[dleq]$ contains as statements all pairs of elements having the same discrete logarithm with respect to $G$ and $H$, with the corresponding witness being their discrete logarithm:
   $$
@@ -364,7 +364,7 @@ canonicalization attacks.
 \[
     \begin{aligned}
      & \hz \defeq \randombytes(32) \\
-    & \pcreturn  \hash(\hd \concat \hctx \concat \hstatement \concatblock \hz, \witness).
+    & \pcreturn  \hash(\hd \concat \hctx \concat \hstatement \concatblock \hz\concat \witness).
     \end{aligned}
     \]
 The above seed can be expanded to obtain arbitrary-length commitments.
@@ -483,6 +483,12 @@ The commitment $\commitment$ is not provided within a short proof since it can b
 \end{enumerate}
 \end{description}
 
+\minote{Check the inputs to the sub-procedures, like the simulator is not having enough information for recomputing the challenge}
+
+If input parsing fails, an exception should be raised.
+If verification fails, an exception should be raised.
+Otherwise, the verifier outputs $\pctrue$. Optionally, the implementation can choose to return the parsed statement.
+
 \begin{remark}{Availability of the short form}{}
   While the short form as described here is applicable to all $\Sigma$-protocols currently covered by this document, it cannot be used for protocols where $\commitment$ is not uniquely determined by $\challenge$ and $\response$, as is the case, e.g., for ZKBoo~\cite{USENIX:GiaMadOrl16}, one-out-of-many proofs~\cite{EC:GroKoh15}, or protocols, where a randomized signature is sent and proven correct subsequently, e.g., \cite{RSA:PoiSan16,AC:CamChaShe08}.
 
@@ -490,11 +496,6 @@ The commitment $\commitment$ is not provided within a short proof since it can b
 \end{remark}
 
 
-\minote{Check the inputs to the sub-procedures, like the simulator is not having enough information for recomputing the challenge}
-
-If input parsing fails, an exception should be raised.
-If verification fails, an exception should be raised.
-Otherwise, the verifier outputs $\pctrue$. Optionally, the implementation can choose to return the parsed statement.
 
 
 
@@ -739,14 +740,14 @@ For an in-depth discussion of the underlying theory we refer to Cramer~\cite{cra
 \end{definition}
 Readers not familiar with the notation of group homomorphism may think of $\varphi$ as a linear function from $n$ elements into $m$ elements.
 
-\begin{example}{Discrete logarithm equality}{phi_DLOG}
-  Looking at the relation from \cref{exa:R_DLOG}, the relevant homomorphism is given by:
+\begin{example}{Discrete logarithm equality}{phi_DLEQ}
+  Looking at the relation from \cref{exa:R_DLEQ}, the relevant homomorphism is given by:
 	$$
-	  \varphi_{\operatorname{dlog}} : \FF_p\to\GG^2 : \witness\mapsto (\witness G,\witness H)\,.
+	  \varphi_{\operatorname{dleq}} : \FF_p\to\GG^2 : \witness\mapsto (\witness G,\witness H)\,.
 	$$
 	If equality of discrete logarithms within \emph{different} groups of the same prime order $p$ is to be proven, the homomorphism to be considered would be:
 	$$
-	  \varphi_{\operatorname{dlog}}' : \FF_p\to\GG_1\times\GG_2 : \witness\mapsto (\witness G,\witness H)\,,
+	  \varphi_{\operatorname{dleq}}' : \FF_p\to\GG_1\times\GG_2 : \witness\mapsto (\witness G,\witness H)\,,
 	$$
 	where $G$ and $H$ would now be generators for $\GG_1$ and $\GG_2$, respectively.
 	All the techniques discussed in the remainder of this spec equally apply to both cases.
@@ -1050,23 +1051,26 @@ Proving knowledge of a valid opening of a Pedersen commitment means proving know
 	Multiple techniques for proving that a secret witness lies within a certain range, cf. Morais et al.~\cite{range-proof-survey} for a survey.
 	We will use the so-called \emph{bit decomposition} approach.
 
-	To do so, the prover computes $\witness_1^{(i)}\in\set{0,1}$ for $i=0,\dots,\ell-1$ such that $\witness_1=\sum_{i=0}^{\ell-1}2^i\witness_1^{(i)}$, and computes commitments to those individual bits, i.e., $\statement^{(i)}=\witness_1^{(i)}G+\witness_2^{(i)}H$ for $\witness_2^{(i)}\sample\FF_p$.
-	Furthermore, it sets $\witness^*=\witness_2-\sum_{i=0}^{\ell-1}2^i\witness_2^{(i)}$.
+	To do so, the prover computes $\witness_{1,i}\in\set{0,1}$ for $i=0,\dots,\ell-1$ such that $\witness_1=\sum_{i=0}^{\ell-1}2^i\witness_{1,i}$, and computes commitments to those individual bits, i.e., $\statement_i=\witness_{1,i}G+\witness_{2,i}H$ for $\witness_{2,i}\sample\FF_p$.
+	Furthermore, it sets $\witness^*=\witness_2-\sum_{i=0}^{\ell-1}2^i\witness_{2,i}$.
 
   Assuming that the discrete logarithm problem is hard in $\GG$, the above relation is now equivalent to the following relation:
   \begin{align}
-	  \relation[range]' = \bigg\{\left((\statement,(\statement^{(i)})_{i=0}^{\ell-1}),(\witness_1,\witness_2,(\witness_2^{(i)})_{i=0}^{\ell-1}),\witness^*)\right)~:~ 		\statement=\witness_1 G +\witness_2 H ~\land~ \label{ex:range:preimage}\\
-		\statement-\sum_{i=0}^{\ell-1} 2^i\statement^{(i)} = \witness^* H ~\land~  \label{ex:range:equality}\\
-		\bigwedge_{i=0}^{\ell-1} \left(\statement^{(i)}=\witness_2^{(i)}H ~\lor~ \statement^{(i)}-G=\witness_2^{(i)}H\right)\bigg\}\,.\label{ex:range:bits}
+	  \relation[range]' = \bigg\{\left((\statement,(\statement_i)_{i=0}^{\ell-1}),(\witness_1,\witness_2,(\witness_{2,i})_{i=0}^{\ell-1}),\witness^*)\right)~:~ 		\statement=\witness_1 G +\witness_2 H ~\land~ \label{ex:range:preimage}\\
+		\statement-\sum_{i=0}^{\ell-1} 2^i\statement_i = \witness^* H ~\land~  \label{ex:range:equality}\\
+		\bigwedge_{i=0}^{\ell-1} \left(\statement_i=\witness_{2,i}H ~\lor~ \statement_i-G=\witness_{2,i}H\right)\bigg\}\,.\label{ex:range:bits}
 	\end{align}
 
 	It can now be seen that \cref{ex:range:preimage} ensures knowledge of the witnesses $\witness_1$ hidden within $\statement$.
-	Furthermore, \cref{ex:range:equality} guarantees that the values hidden within $\statement^{(i)}$ correctly add up to $\witness_1$, i.e., that $\witness_1-\sum_{i=0}^{\ell-1}2^i\witness_1^{(i)}=0$.
-  Finally, the two clauses in \cref{ex:range:bits} ensure that each $\statement^{(i)}$ is a commitment to either $0$ or $1$, thus implying the bound on $\witness_1$.
+	Furthermore, \cref{ex:range:equality} guarantees that the values hidden within $\statement_i$ correctly add up to $\witness_1$, i.e., that $\witness_1-\sum_{i=0}^{\ell-1}2^i\witness_{1,i}=0$.
+  Finally, the two clauses in \cref{ex:range:bits} ensure that each $\statement_i$ is a commitment to either $0$ or $1$, thus implying the bound on $\witness_1$.
 
 	While \cref{ex:range:preimage} can be proven using the protocol from \cref{sec:instantiations:representation}, \cref{ex:range:equality} and \cref{ex:range:bits} can be proven using those from \cref{sec:instantiations:schnorr}.
 	The different clauses can finally be composed using nested protocol compositions from \cref{sec:composition}.
 \end{example}
+
+
+
 
 \subsection{Batch verification}
 
@@ -1090,10 +1094,6 @@ In any case, the test can be efficiently implemented as a single multiscalar mul
 \]
 
 The random vector $\vec a$ can be \emph{deterministically} generated by fixing $a_1 \defeq 1$ and setting $(a_2, \dots, a_{\ell}) \defeq \prg(\hash(\challenge \concat \vec s))$~\cite{bip-schnorr}.
-
-\stnote{What's the gain of this batching? (is there any, if no values are re-used?) --> multiscalar multiplication}
-\stnote{What does it mean that the $\statement_i$ have identical rows? I guess simply that the $\statement_i$'s are identical (i.e., same value)? --> yes}
-\stnote{Maybe add a note making explicit that batching can be used even within the same proof? E.g., in the case of the range proof above, the $2\ell+1$ Schnorr-proofs could be batched... as they are all sharing the same $H$, the number of group operations should actually decrease (?)}
 
 \section{Encoding the statement}
 
