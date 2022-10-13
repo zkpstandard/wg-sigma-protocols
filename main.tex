@@ -284,7 +284,8 @@ A $\sigmaprotocol$ consists of the following methods:
           \item $\texttt{label} \gets\sigmaprotocol.\labeltt()$,
           returning a string of $\seedlen$ uniquely identifying the relation being proven.
           Implementing this function correctly is vital security, and will be used for computing the challenge in the Fiat-Shamir transform~\cref{sec:fs}.
-          One \emph{must} carefully implement the function as illustrated in the following secttions. \minote{this relative instantiations is confusing}It is crucial for security that the label includes all data available in the statement, including the parameters and the relation being proven.
+          Precise indications on how to implement this function will be given in the following sections (see e.g.\ \cref{sec:and-comp,sec:instantiations:schnorr}).
+          It is crucial for security that the label includes all data available in the statement, including the parameters and the relation being proven.
 
           More precisely, if the label is \emph{not} tied to the relation, then it may be possible to produce another proof for a different relation without knowing its witness.
           Similarly, if the statement is not tied to the witness, then it might be possible to produce proofs
