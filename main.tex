@@ -5,7 +5,6 @@
 \usepackage[T1]{fontenc}
 \usepackage{tgbonum}
 
-
 \usepackage{adjustbox}
 \usepackage{amsmath}
 \usepackage{amssymb}
@@ -45,6 +44,19 @@
 
 \input{macros}
 
+\usepackage{fancyhdr}
+\usepackage[left=2.55cm,right=2.55cm,top=2.25cm,bottom=3.35cm,headheight=20pt,headsep=10pt]{geometry}
+\fancypagestyle{plain}{
+  \fancyhf{}% Clear header/footer
+  \fancyhead[R]{\includegraphics[height=0.75cm]{zkproof.png}}% Right header
+	\fancyhead[L]{\leftmark\\[-0.6em]}
+  \fancyfoot[L]{\documentTitle v0.2}% Left footer
+  \fancyfoot[R]{\thepage}% Right footer
+}
+\headheight 40pt              %% put this outside
+\headsep 10pt                 %% put this outside
+
+
 \newtheorem{definition}{Definition}
 \newtheorem{theorem}{Theorem}
 
@@ -73,24 +85,16 @@
     fonttitle=\bfseries}{exa} %cite as \cref{exa:<label>}
 
 
-%\title{A spec for $\Sigma$-protocols}
-%
-%\date{Created on: \today}
+\newcommand{\documentTitle}{A Spec for $\Sigma$-Protocols}
 
-%\author{Michele Orrù, Stephan Krenn}
 \begin{document}
-%
-%\maketitle              % typeset the header of the contribution
-%
-
-
 % =========== TITLE PAGE ===========
 
 \pagenumbering{roman}
 \begin{titlepage}
    \begin{center}
        \vspace*{1cm}
-       \textbf{\Huge{A Spec for $\Sigma$-Protocols}}
+       \textbf{\Huge{\documentTitle}}
 
        \vspace{2.0cm}
        \textbf{Editors: Michele Orrù, Stephan Krenn}
@@ -105,6 +109,7 @@
        \includegraphics[width=0.4\textwidth]{zkproof.png}
    \end{center}
 \end{titlepage}
+\pagestyle{plain}% Set page style to plain.
 
 % =========== TABLE OF CONTENTS ===========
 
@@ -122,11 +127,6 @@
 \setcounter{page}{1}
 
 % =========== CONTENT ===========
-
-
-
-
-
 
 
 \section{Introduction}
@@ -410,6 +410,11 @@ Batchable proofs are the canonical forms of proofs.
 Both provers in the batchable form may raise an exception if the statement is not valid.
 Proofs are seen directly as fixed-length bit strings, whose exact length can be inferred from the statement during initialization of the $\Sigma$-protocol.
 
+\begin{remark}{Witness validation}{}
+  In the following we assume correctness of the witness $\witness$ for the given statement $\statement$.
+	This can be ensured, e.g., by a higher-level application, or by running $\sigmaprotocol.\verifiertt(\commitment, \challenge, \response)$ before sending the resulting proof.
+\end{remark}
+
 \subsubsection{Batchable Proofs}
 
 \begin{description}
@@ -422,10 +427,10 @@ The public function $\sigmaprotocol.\batchableproof( \witness, \msg)$ computes:
 $c \gets \sigmaprotocol.\challengett(\msg,\commitment)$
 \item
    $\response\gets\sigmaprotocol.\proverresponse(\proverstatett,  \challenge)$.
-   \item Check that the witness is valid. This can (for instance) be done running \[\sigmaprotocol.\verifiertt(\commitment, \challenge, \response)\]
-\jannote{I'd caution against formally requiring a witness-check in the prover algorithm. From experience, this absolutely kills prover performance (basically doubles computation time) and in most scenarios, you trivially get witness-correctness from the larger application (say, I'm just using my Schnorr signature key as always, it won't suddenly become invalid). Maybe that's what you mean with \enquote{for instance}, in which case please clarify for the reader.}
-\stnote{just say that this is important. but it's up to the developer to make sure how this is done}
-\minote{Yes we mean that it can be checked. also: fault attacks? they can be prevented this way}
+%   \item Check that the witness is valid. This can (for instance) be done running \[\sigmaprotocol.\verifiertt(\commitment, \challenge, \response)\]
+%\jannote{I'd caution against formally requiring a witness-check in the prover algorithm. From experience, this absolutely kills prover performance (basically doubles computation time) and in most scenarios, you trivially get witness-correctness from the larger application (say, I'm just using my Schnorr signature key as always, it won't suddenly become invalid). Maybe that's what you mean with \enquote{for instance}, in which case please clarify for the reader.}
+%\stnote{just say that this is important. but it's up to the developer to make sure how this is done}
+%\minote{Yes we mean that it can be checked. also: fault attacks? they can be prevented this way}
   Return $\serialize(\commitment)$ concatenated to $\serialize(\vec \response)$
 \end{enumerate}
 The challenge $\challenge$ is not provided within a batchable proof since it can be re-computed from the commitment.
@@ -462,7 +467,7 @@ A new proof $\sigmaprotocol.\shortproof(\witness, \msg)$ is built as follows:
    $c \gets \sigmaprotocol.\challengett(\msg,  \commitment)$
   \item
      $\vec \response\gets\sigmaprotocol.\proverresponse(\proverstatett,\challenge)$.
-    \item Check that the witness is valid. This can (for instance) be done running \[\sigmaprotocol.\verifiertt(\commitment, \challenge, \response)\]
+%    \item Check that the witness is valid. This can (for instance) be done running \[\sigmaprotocol.\verifiertt(\commitment, \challenge, \response)\]
   \item
   Return $\serialize(\challenge)$ concatenated to $\serialize(\response)$.
 \end{enumerate}
