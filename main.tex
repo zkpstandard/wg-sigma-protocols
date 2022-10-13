@@ -313,7 +313,7 @@ The underlying idea is to replace the verifier with a cryptographically secure h
 
 When using a hash function we will employ comma-separated values to indicate values that are concatenated.
 To mitigate attacks and allow for state cloning, we also separate values with semi-colons
-to indicate that they must appear in a subsequent block.
+to indicate that they must appear in a subsequent block and that the previous is padded with zeros. For instance, with the writing $\hash(a \concat b \concatblock c)$ we denote the hashing of $a$ concatenated to $b$, then padded with the null byte to fill $\digestlen$ and concatenate the resulting bit string to $c$.
 
 \paragraph{Constants.} Different hash functions may compress inputs with different block length and produce outputs of different length. We define some constants to be used throughout this spec, when hashing values.
 
@@ -331,7 +331,7 @@ to indicate that they must appear in a subsequent block.
 
 
 \subsubsection{Hash Registry}
-\label{sec:hash-registry}.
+\label{sec:hash-registry}
 
 This is the set of all supported hash functions. They take an arbitrary length sequence of bytes as input, and output $\seedlen$ of entropy.
 
@@ -703,13 +703,13 @@ The following section now presents concrete instantiations for of $\Sigma$-proto
  \begin{center}
  \begin{tabular}{llcc}
   \hline
-  Curve  & Security Level & Sources \\
+  Curve  & Identifier &  Security Level & Sources \\
   \hline
-  \verb|-p-521|     & 256& \cite{fips2} \\
-  \verb|-p-256|     & 128 & \cite{fips2}  \\
-  \verb|-secp256k1| & 128 & \cite{SECG} \\
-  \verb|-ristretto| & 128 & \cite{cfrg-ristretto-decaf} \\
-  \verb|-bls12-381| & 128 & \cite{bls12} \\
+ P-521 & \verb|'-p-521'|     & 256& \cite{fips2} \\
+ P-256 & \verb|'-p-256'|     & 128 & \cite{fips2}  \\
+ secp256k1 & \verb|'-secp256k1'| & 128 & \cite{SECG} \\
+ Ristretto & \verb|'-ristretto'| & 128 & \cite{cfrg-ristretto-decaf} \\
+ BLS12-381 & \verb|'-bls12-381'| & 128 & \cite{bls12} \\
  \end{tabular}
 \end{center}
 We denote with $\GG$ the prime-order group of the elliptic curve, with $\FF_p$ the scalar field, and with $G$ the generator of $\GG$ chosen as per the curve parameters. It is the basis for most mathematical operations in the group $\GG$.
