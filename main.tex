@@ -86,9 +86,9 @@
 
        \vspace{2.0cm}
        \textbf{Editors: Michele Orrù, Stephan Krenn}
-			
+
        \vspace{1.0cm}
-			 Contributors: Jan Bobolz, Trevor Perrin, ...
+			 Contributors: Jan Bobolz, Mary Maller, Trevor Perrin, ...
        \vfill
        Version: v0.2\\
        \vspace{0.5cm}
@@ -101,7 +101,7 @@
 % =========== TABLE OF CONTENTS ===========
 
 {
-  \hypersetup{hidelinks} 
+  \hypersetup{hidelinks}
   \tableofcontents
 }
 \vfill
@@ -164,17 +164,17 @@ Note there may be multiple witnesses for a given $\statement$.
 
 \begin{example}{Discrete logarithm equality}{R_DLOG}
   Let $\GG$ be a cyclic group of prime order $p$, and let $G$ and $H$ be generators of $\GG$.
-	Then the following relation $\dleqrelation$ contains as statements all pairs of elements having the same discrete logarithm with respect to $G$ and $H$, with the corresponding witness being their discrete logarithm:
+	Then the following relation $\relation[dleq]$ contains as statements all pairs of elements having the same discrete logarithm with respect to $G$ and $H$, with the corresponding witness being their discrete logarithm:
   $$
-	  \dleqrelation = \set{\left((\statement_1,\statement_2),\witness\right) \in \GG^2\times \FF_p~:~\statement_1=\witness G ~\land~ \statement_2=\witness H}\,.
+	  \relation[dleq] = \set{\left((\statement_1,\statement_2),\witness\right) \in \GG^2\times \FF_p~:~\statement_1=\witness G ~\land~ \statement_2=\witness H}\,.
 	$$
 \end{example}
 
 \begin{example}{Representation}{R_REP}
   Let $\GG$ be a cyclic group of prime order $p$, and let $G$ and $H$ be generators of $\GG$.
-	Then the following relation $\reprelation$ contains as statements all valid Perdersen commitments, with the corresponding witnesses being their openings:
+	Then the following relation $\relation[rep]$ contains as statements all valid Perdersen commitments, with the corresponding witnesses being their openings:
   $$
-	  \reprelation = \set{\left(\statement,(\witness_1,\witness_2)\right)\in \GG \times \FF_p^2~:~\statement=\witness_1G + \witness_2H}\,.
+	  \relation[rep] = \set{\left(\statement,(\witness_1,\witness_2)\right)\in \GG \times \FF_p^2~:~\statement=\witness_1G + \witness_2H}\,.
 	$$
 	Note that in this case, each statement has $p$ valid witnesses.
 \end{example}
@@ -509,7 +509,7 @@ The dots \texttt{[...]} denote optional, specific $\Sigma$ protocol instantiatio
   In this section we show how to construct a $\Sigma$-protocol proving knowledge of multiple independent witnesses, e.g., knowledge of multiple secret keys, or openings to multiple commitments.
   That is, a $\Sigma$-protocol for the following relation:
 \[
-  \andrelation = \set{
+  \relation[and] = \set{
     ((\statement_0,\statement_1),(\witness_0,\witness_1) : (\statement_0,\witness_0)\in \relation_0 ~\land~ (\statement_1,\witness_1)\in\relation_1}
 \]
 For the rest of this section, the witness $\witness$ for the $\Sigma$-protocol will now be a pair $(\witness_0, \witness_1)$ of witnesses, and the associated statement $\statement$ will be a pair $(\statement_0, \statement_1)$ of statements, where $\witness_0$ is the witness for the statement $\statement_0$, and $\witness_1$ is the witness for $\statement_1$.
@@ -592,7 +592,7 @@ The main procedures of the resulting $\Sigma$-protocol are specified by the foll
   In the following we explain how to construct a $\Sigma$-protocol proving knowledge of one out of a set of witnesses, e.g., one of a set of secret keys in the case of ring signatures.
   That is, the algorithms specified below constitute a $\Sigma$-protocol for the following relation:
 \[
-  \orrelation = \set{
+  \relation[or] = \set{
     ((\statement_0,\statement_1),(\witness_0,\witness_1) :
     (\statement_0,\witness_0)\in \relation_0 ~\lor~ (\statement_1,\witness_1)\in\relation_1}\,.
 \]
@@ -698,11 +698,11 @@ The following section now presents concrete instantiations for of $\Sigma$-proto
   \hline
   Curve  & Security Level & Sources \\
   \hline
-  \verb|p-521|     & 256& \cite{fips2} \\
-  \verb|p-256|     & 128 & \cite{fips2}  \\
-  \verb|secp256k1| & 128 & \cite{SECG} \\
-  \verb|Ristretto| & 128 & \cite{cfrg-ristretto-decaf} \\
-  \verb|BLS12-381| & 128 & \cite{bls12} \\
+  \verb|-p-521|     & 256& \cite{fips2} \\
+  \verb|-p-256|     & 128 & \cite{fips2}  \\
+  \verb|-secp256k1| & 128 & \cite{SECG} \\
+  \verb|-ristretto| & 128 & \cite{cfrg-ristretto-decaf} \\
+  \verb|-bls12-381| & 128 & \cite{bls12} \\
  \end{tabular}
 \end{center}
 We denote with $\GG$ the prime-order group of the elliptic curve, with $\FF_p$ the scalar field, and with $G$ the generator of $\GG$ chosen as per the curve parameters. It is the basis for most mathematical operations in the group $\GG$.
@@ -754,7 +754,7 @@ Readers not familiar with the notation of group homomorphism may think of $\varp
 \label{sec:sigma-dlog}
 We provide a generic template for all $\Sigma$-protocols for statements of the following form over DLOG groups:
 \[
-  \relation=\set{((\statement_1,\dots,\statement_m),(\witness_1,\dots,\witness_n)) \in \GG^m \times \FF_p^n: (\statement_1,\dots,\statement_m)=\varphi(\witness_1,\dots,\witness_n)}
+  \relation[dlog]=\set{((\statement_1,\dots,\statement_m),(\witness_1,\dots,\witness_n)) \in \GG^m \times \FF_p^n: (\statement_1,\dots,\statement_m)=\varphi(\witness_1,\dots,\witness_n)}
 \]
 where $\varphi:\FF_p^n\to\GG^m$ is a group homomorphism.
 
@@ -762,9 +762,9 @@ where $\varphi:\FF_p^n\to\GG^m$ is a group homomorphism.
   Note that in the following descriptions, all witnesses are assumed to be kept secret, i.e., none of them is disclosed to the verifier.
 	In case it is required to disclose $\witness_j$, as is the case, e.g., in the context of attribute-based credential systems, the relation to be proven can be rewritten as follows:
 $$
-  \relation'=\set{
+  \relation[dlog]'=\set{
 	\begin{array}{r}
-	((\statement_1',\dots,\statement_m')),(\witness_1,\dots,\witness_{j-1},\witness_{j+1},\dots,\witness_n)) : ~~~~~~~~~~~~\\
+	((\statement_1',\dots,\statement_m')),(\witness_1,\dots,\witness_{j-1},\witness_{j+1},\dots,\witness_n)) \in \GG^m \times \FF_p^{n-1}: ~~~~~~~~~~~~\\
 	(\statement_1',\dots,\statement_m')=\psi(\witness_1,\dots,\witness_{j-1},\witness_{j+1},\dots,\witness_n)
 	\end{array}
 	}
@@ -843,7 +843,7 @@ These will be defined later in the specific protocols.
 While the above protocol allows one to efficiently prove knowledge of a pre-image under a homomorphism, many protocols found in the literature require one to prove relations among witnesses.
   Specifically, they require to prove relations like the following:
 \begin{equation*}
-\relation=\set{((\statement_1,\dots,\statement_m),(\witness_1,\dots,\witness_n)) :
+\relation[lin]=\set{((\statement_1,\dots,\statement_m),(\witness_1,\dots,\witness_n)) :
 \begin{array}{c} (\statement_1,\dots,\statement_m)=\varphi(\witness_1,\dots,\witness_n) \\
                   A\cdot(\witness_1,\dots,\witness_n)^\intercal = (b_1,\dots,b_k)^\intercal\end{array}}\,,
 \end{equation*}
@@ -864,9 +864,9 @@ Note that this is without loss of generality.
 If the system of linear equations has a different form, the above form can always be achieved using, e.g., Gaussian elimination \cite{} and re-ordering of witnesses.
 Further note that we only need to consider the case where $k<n$, as otherwise the linear equations would uniquely determine the witnesses, which is not desirable in our context.
 
-The following relation $\relation'$ is now equivalent to that specified by $\relation$:
+The following relation $\relation[lin]'$ is now equivalent to that specified by $\relation[lin]$:
 \begin{equation*}
-\relation'=\set{((\statement_1,\dots,\statement_m),(\witness_1,\dots,\witness_{n-k})) :
+\relation[lin]'=\set{((\statement_1,\dots,\statement_m),(\witness_1,\dots,\witness_{n-k})) :
 (\statement_1,\dots,\statement_m)=\psi(\witness_1,\dots,\witness_{n-k})}
 \end{equation*}
 where
@@ -887,7 +887,7 @@ That is, they prove knowledge of $w\in\FF_p$ such that $Y=wG$.
   \item $\varphi:\FF_p\to\GG:w\mapsto wG$
   \item $\schnorr.\morphismlabel()$: return:
   \[
-    \hash(\schnorrlabel \concatblock \curvectx \concatblock \serialize(G) \concat \serialize(\statement))
+    \hash(\schnorrlabel \concat \curvectx \concatblock \serialize(G) \concat \serialize(\statement))
   \]
 \end{itemize}
 \stnote{stupid question: should the label (or the curve) have constant length to ensure that label-bits and curve-bits can be clearly seperated?}
@@ -924,7 +924,7 @@ So-called DLEQ proofs prove equality of the discrete logarithm, that is: $\state
   \item $\varphi:\FF_p\to\GG^2:w\mapsto (wG,wH)$
   \item $\dleq.\morphismlabel()$: return
   \[
-    \hash(\dleqlabel \concatblock \curvectx \concatblock \serialize(G) \concat \serialize(H) \concat \serialize(\statement_1) \concat \serialize(\statement_2))
+    \hash(\dleqlabel \concat \curvectx \concatblock \serialize(G) \concat \serialize(H) \concat \serialize(\statement_1) \concat \serialize(\statement_2))
   \]
 \end{itemize}
     % \begin{protocol}{Proving knowledge of equality of two discrete logarithms (alternative).\\[-2.25em]}{fig:dleq_2}{t}
@@ -959,7 +959,7 @@ However, the required multiplicative relation can be proven by observing that th
   \item  $\varphi:\FF_p^2\to\GG^3:(\witness_1,\witness_2)\mapsto(\witness_1G,\witness_2G,\witness_2\statement_1)$
   \item $\dhtt.\morphismlabel()$ return:
   \[
-    \hash(\dhlabel \concatblock \curvectx \concat \serialize(G) \concat \serialize(\statement_0) \concat \serialize(\statement_1))
+    \hash(\dhlabel \concat \curvectx \concatblock \serialize(G) \concat \serialize(\statement_0) \concat \serialize(\statement_1))
   \]
 \end{itemize}
 
@@ -1005,7 +1005,7 @@ Proving knowledge of a valid opening of a Pedersen commitment means proving know
   \item $\varphi:\FF_p^m\to\GG:(\witness_1,\witness_2, \dots, \witness_m)\mapsto \sum_i \witness_iG_i$
   \item $\rep.\morphismlabel()$ returns
   \[
-    \hash(\replabel \concat \curvectx \concat \serialize(G_1) \concat \cdots \concat \serialize(G_m) \concat \serialize(\statement))
+    \hash(\replabel \concat \curvectx \concatblock \serialize(G_1) \concat \cdots \concat \serialize(G_m) \concat \serialize(\statement))
   \]
   \minote{length is important to avoid generators swapped with statement}
 \end{itemize}
@@ -1036,7 +1036,7 @@ Proving knowledge of a valid opening of a Pedersen commitment means proving know
   Let $\GG$ be a cyclic group of prime order $p$, and let $G$ and $H$ be generators of $\GG$, and let $\ell$ be a non-negative integer satisfying $\ell<\log_2 p$.
 	Consider the following relation:
   $$
-	  \rangerelation = \set{\left(\statement,(\witness_1,\witness_2))\right)~:~\statement=\witness_1 G +\witness_2 H ~\land~ \witness_1\in[0,2^\ell)}\,.
+	  \relation[range] = \set{\left(\statement,(\witness_1,\witness_2))\right)~:~\statement=\witness_1 G +\witness_2 H ~\land~ \witness_1\in[0,2^\ell)}\,.
 	$$
 	Multiple techniques for proving that a secret witness lies within a certain range, cf. Morais et al.~\cite{range-proof-survey} for a survey.
 	We will use the so-called \emph{bit decomposition} approach.
@@ -1046,7 +1046,7 @@ Proving knowledge of a valid opening of a Pedersen commitment means proving know
 
   Assuming that the discrete logarithm problem is hard in $\GG$, the above relation is now equivalent to the following relation:
   \begin{align}
-	  \rangerelation' = \bigg\{\left((\statement,(\statement^{(i)})_{i=0}^{\ell-1}),(\witness_1,\witness_2,(\witness_2^{(i)})_{i=0}^{\ell-1}),\witness^*)\right)~:~ 		\statement=\witness_1 G +\witness_2 H ~\land~ \label{ex:range:preimage}\\
+	  \relation[range]' = \bigg\{\left((\statement,(\statement^{(i)})_{i=0}^{\ell-1}),(\witness_1,\witness_2,(\witness_2^{(i)})_{i=0}^{\ell-1}),\witness^*)\right)~:~ 		\statement=\witness_1 G +\witness_2 H ~\land~ \label{ex:range:preimage}\\
 		\statement-\sum_{i=0}^{\ell-1} 2^i\statement^{(i)} = \witness^* H ~\land~  \label{ex:range:equality}\\
 		\bigwedge_{i=0}^{\ell-1} \left(\statement^{(i)}=\witness_2^{(i)}H ~\lor~ \statement^{(i)}-G=\witness_2^{(i)}H\right)\bigg\}\,.\label{ex:range:bits}
 	\end{align}
@@ -1085,16 +1085,6 @@ The random vector $\vec a$ can be \emph{deterministically} generated by fixing $
 \stnote{What's the gain of this batching? (is there any, if no values are re-used?) --> multiscalar multiplication}
 \stnote{What does it mean that the $\statement_i$ have identical rows? I guess simply that the $\statement_i$'s are identical (i.e., same value)? --> yes}
 \stnote{Maybe add a note making explicit that batching can be used even within the same proof? E.g., in the case of the range proof above, the $2\ell+1$ Schnorr-proofs could be batched... as they are all sharing the same $H$, the number of group operations should actually decrease (?)}
-\section{Additional examples}
-
-Other protocols are not included here but fit within the description
-of $\Sigma$-protocols:
-\begin{itemize}
-\item mpc-in-the-head protocol such as ZKBoo~\cite{USENIX:GiaMadOrl16}
-\item one-out-of-many proofs such as~\cite{EC:GroKoh15}
-\end{itemize}
-\minote{Add example for ring signatures}
-
 
 \section{Encoding the statement}
 
@@ -1118,6 +1108,14 @@ The tree is encoded in breadth-first.
   we are missing a way of translating the statemnt into a tree of provers.
 }
 
+\section{Additional proof types}
+
+Other protocols are not included here and are not part of the scope of the current version of this spec.
+\begin{itemize}
+\item mpc-in-the-head protocol such as ZKBoo~\cite{USENIX:GiaMadOrl16}
+\item one-out-of-many proofs such as~\cite{EC:GroKoh15}
+\item lwe-based sigma protocol
+\end{itemize}
 
 \bibliographystyle{alpha}
 \bibliography{cryptobib/abbrev3,cryptobib/crypto,additional}
