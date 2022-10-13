@@ -57,6 +57,14 @@
     fonttitle=\bfseries}{rem} %cite as \cref{rem:<label>}
 
 \newtcbtheorem[auto counter, number within = section,
+  crefname={Remark}{Remark},
+  Crefname={Remark}{Remark}]{warning}{Remark}{
+    breakable,
+		colback=red!25,
+    colframe=red!70!black,
+    fonttitle=\bfseries}{war} %cite as \cref{war:<label>}
+
+\newtcbtheorem[auto counter, number within = section,
   crefname={Example}{Example},
   Crefname={Example}{Example}]{example}{Example}{
     breakable,
@@ -289,15 +297,6 @@ A $\sigmaprotocol$ consists of the following methods:
         denoting the first stage of the \emph{simulator}. It is an algorithm drawing a random response that follows the same output distribution of the algorithm $\proverresponse$.
         \item $\commitment \gets \sigmaprotocol.\simcommitmenttt(\challenge, \response)$, denoting the second stage of the \emph{simulator}, returning a commitment that follows the same output distribution of the algorithm $\provercommitment$.
       \end{itemize}
-      \stnote{are there any reasonable $\Sigma$-protocols where the simulator cannot be split like this? e.g., are there any protocols where $\challenge$ and $\response$ do not uniquely determine $\commitment$ (which would maybe mean that the short form of fiat-shamir does not work anyways)?}
-      \jannote{@Stephan: Afaik, pretty much every simulator can be split into \enquote{choose random $\response$, then choose (random) fitting $\commitment$}.
-      There \emph{are} notable examples where $\challenge, \response$ do not \emph{uniquely} determine $\commitment$ (and hence cannot do short-form Fiat-Shamir as it's defined right now).
-      (1) MPC in the head proofs (ZKBoo is cited in Section 4). (2) \cite[Fig 1]{EC:GroKoh15} (also cited in Section 4). (3) any send-randomized-signature-then-prove protocols like \cite[Section 6.2]{EPRINT:PoiSan15} or \cite[Fig 1]{AC:CamChaShe08}. \\
-      As noted in \cite[Observation 1]{EC:GGHK22}, one can force the unique-announcement property by including the announcement in the response, though that clearly negates the benefits of short-form FS.
-      To suggest a way out: in our implementation \cite{EPRINT:BEHF21}, to enable short-form FS for all Sigma protocols, we add compress/decompress methods to the Sigma protocol interface.
-      Compress takes a transcript $(\commitment, \challenge, \response)$ and outputs a shorter version of it (e.g., just $\response$ or something like $(\sigma, \response)$ if the announcement contains some part $\sigma$ that cannot be uniquely recomputed from $(\challenge, \response)$). Decompress takes the compressed transcript and a challenge and outputs an error or the unique accepting full transcript. Then short-form FS becomes $(\challenge, \mathit{compressed\ transcript})$.}
-\stnote{maybe only support short form if there is only (at most) one $T$}
-
 
 \subsection{The Fiat-Shamir Transform}\label{sec:fs}
 
@@ -307,8 +306,8 @@ Fiat and Shamir heuristic~\cite{C:FiaSha86} and subsequent work, e.g., by Bernha
 
 The underlying idea is to replace the verifier with a cryptographically secure hash function, hashing the context from the protocol and the previous message sent by the prover.
 
-\begin{remark}{Interactive $\Sigma$-protocols}{} $\Sigma$-protocols illustrated in this spec \textbf{must not} be used interactively.
-\end{remark}
+\begin{warning}{Interactive $\Sigma$-protocols}{} $\Sigma$-protocols illustrated in this spec \textbf{must not} be used interactively.
+\end{warning}
 
 \subsection{Syntax}
 
@@ -437,11 +436,11 @@ The challenge $\challenge$ is not provided within a batchable proof since it can
   \item
     Return whatever $\sigmaprotocol.\verifiertt(\commitment,\challenge, \response)$ returns.
 \end{enumerate}
-\begin{remark}{Input validation}{}
+\begin{warning}{Input validation}{}
 The case of batched verification must include an input validation sub-routine that asserts the statement and commitments are in question.
 In the case of elliptic curves described in~\Cref{sec:instantiations}, this boils down to point validation.
 Failure to properly check that a commitment is in the group could lead to subgroup attacks~\cite{EC:VanWie96,C:LimLee97} or invalid curve attacks~\cite{C:BieMeyMul00,RSA:BBPV12}.
-\end{remark}
+\end{warning}
 \jannote{I might be completely wrong here, but \dots is this remark actually true? Do we need to check that the commitment $\commitment$ is in the right subgroup?
 This is a verifier check, so it doesn't impact ZK.
 For soundness, let's say we check that $\commitment$ is on curve (I'd never omit that check), but in the wrong subgroup. Say everything else ($\varphi(\cdot), \statement$) in the right subgroup.
@@ -477,6 +476,14 @@ The commitment $\commitment$ is not provided within a short proof since it can b
   Output $\accept$ if this is the case, and $\reject$ otherwise.
 \end{enumerate}
 \end{description}
+
+\begin{remark}{Availability of the short form}{}
+  While the short form as described here is applicable to all $\Sigma$-protocols currently covered by this document, it cannot be used for protocols where $\commitment$ is not uniquely determined by $\challenge$ and $\response$, as is the case, e.g., for ZKBoo~\cite{USENIX:GiaMadOrl16}, one-out-of-many proofs~\cite{EC:GroKoh15}, or protocols, where a randomized signature is sent and proven correct subsequently, e.g., \cite{RSA:PoiSan16,AC:CamChaShe08}.
+	
+  A trade-off is presented, e.g., by Bobolz et al.~\cite{EPRINT:BEHF21}, requiring an additional algorithm to shorten a full transcript to a compressed form which still allows for unique reconstruction of the transcript.
+\end{remark}
+
+
 \minote{Check the inputs to the sub-procedures, like the simulator is not having enough information for recomputing the challenge}
 
 If input parsing fails, an exception should be raised.
@@ -517,10 +524,10 @@ For the rest of this section, the witness $\witness$ for the $\Sigma$-protocol w
 
   Intuitively, the AND composition simply runs the instances of the different protocols to be composed in parallel, using the same challenge $\challenge$ for all instances.
   The verifier will then accept the protocol run, if and only if all instances of the partial protocols output $\accept$.
-  \begin{remark}{Witness equality}{}
+  \begin{warning}{Witness equality}{}
   Note that the AND-composition defined in the following gives no guarantee about equality of the witnesses: if the same witness is used across different clauses of the AND-composition, the protocol will not guarantee that they are indeed the same.
 	How to achieve such claims is discussed in \cref{sec:linear_relations}.
-  \end{remark}
+  \end{warning}
 
 The main procedures of the resulting $\Sigma$-protocol are specified by the following algorithms:
 \begin{itemize}
