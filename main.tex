@@ -479,7 +479,7 @@ The commitment $\commitment$ is not provided within a short proof since it can b
 
 \begin{remark}{Availability of the short form}{}
   While the short form as described here is applicable to all $\Sigma$-protocols currently covered by this document, it cannot be used for protocols where $\commitment$ is not uniquely determined by $\challenge$ and $\response$, as is the case, e.g., for ZKBoo~\cite{USENIX:GiaMadOrl16}, one-out-of-many proofs~\cite{EC:GroKoh15}, or protocols, where a randomized signature is sent and proven correct subsequently, e.g., \cite{RSA:PoiSan16,AC:CamChaShe08}.
-	
+
   A trade-off is presented, e.g., by Bobolz et al.~\cite{EPRINT:BEHF21}, requiring an additional algorithm to shorten a full transcript to a compressed form which still allows for unique reconstruction of the transcript.
 \end{remark}
 
@@ -808,10 +808,8 @@ These will be defined later in the specific protocols.
     \begin{enumerate}
       \item  $(\randomness_1,\dots,\randomness_n)\defeq \proverstatett$
       \item  $(\witness_1,\dots,\witness_n)\defeq \vec \witness$
-      \item
-        $\challenge \defeq \frombytes(\challenge)$.
-        \minote{confusing, the c given as argument should probably be of a different font}
-      \item For $i=1,\dots,n$: $\response_i\defeq \randomness_i+\challenge \witness_i$
+      \item  $e \defeq \frombytes(\challenge)$.
+      \item For $i=1,\dots,n$: $\response_i\defeq \randomness_i+e \witness_i$
 			\item Return $\vec\response \defeq (\response_1,\dots,\response_n)$.
     \end{enumerate}
   \item $\dlogsigmaprotocol.\labeltt()$ return $\morphismlabel()$.
@@ -820,11 +818,12 @@ These will be defined later in the specific protocols.
     \begin{enumerate}
       \item  $(\response_1, \dots, \response_n) \defeq \vec \response$
       \item $(\commitment_1, \dots, \commitment_m) \defeq \vec \commitment$
+      \item  $e \defeq \frombytes(\challenge)$.
       \item\label{item:basic:v:checks}
       For $i=1,\dots,n$: check $\response_i\in\FF_p$
       \item
       For $j=1,\dots,m$: check $\commitment_j\in\GG$
-      \item Return $\accept$ if $(\commitment_1 + c\statement_1,\dots,\commitment_m + c\statement_m) = \varphi(\response_1,\dots,\response_n)$; $\reject$ otherwise
+      \item Return $\accept$ if $(\commitment_1 + e\statement_1,\dots,\commitment_m + e\statement_m) = \varphi(\response_1,\dots,\response_n)$; $\reject$ otherwise
     \end{enumerate}
   \item $\vec \response \gets \dlogsigmaprotocol.\simresponsett()$:
   \begin{enumerate}
@@ -838,8 +837,9 @@ These will be defined later in the specific protocols.
        $(\statement_1,\dots,\statement_m)\defeq \vec \statement$.
       \item\label{item:basic:sim:s}
        $(\response_1,\dots,\response_n) \defeq \vec \response$.
+       \item  $e \defeq \frombytes(\challenge)$.
       \item
-         $(\commitment_1,\dots,\commitment_m) \defeq \varphi(\response_1,\dots,\response_n) - c(\statement_1,\dots,\statement_m)$.
+         $(\commitment_1,\dots,\commitment_m) \defeq \varphi(\response_1,\dots,\response_n) - e(\statement_1,\dots,\statement_m)$.
       \item
         Output $\vec \commitment \defeq(\response_1,\dots,\response_n)$.
     \end{enumerate}
