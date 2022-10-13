@@ -23,6 +23,9 @@
 \newcommand{\relation}{\mathsf{R}}
 \newcommand{\lang}{\mathcal{L}}
 
+\renewcommand{\concat}{\,\textbf{,}~}
+\newcommand{\concatblock}{\,\textbf{;}~}
+
 %algorithms
 \newcommand{\alg}{\texttt{procedure}}
 
@@ -34,6 +37,8 @@
 
 %variables
 \newcommand{\ctx}{\texttt{ctx}}
+\newcommand{\domsep}{\texttt{DOMSEP}}
+
 
 
 \newcommand{\minote}[1]{\todo[color=green!30, inline]{\textbf{Michele's note:} #1}}
@@ -50,8 +55,8 @@
 \newcommand{\generatorsctx}{\textsf{gens}}
 \newcommand{\str}[1]{\textquotesingle{}#1\textquotesingle}
 \newcommand{\domsepctx}{\texttt{\str{zkpstd/sigma/0.1}}}
-\newcommand{\andlabel}{\texttt{\str{AND composition}}}
-\newcommand{\orlabel}{\texttt{\str{OR composition}}}
+\newcommand{\andlabel}{\texttt{\str{and-composition}}}
+\newcommand{\orlabel}{\texttt{\str{or-composition}}}
 
 \newcommand{\batchprover}{\prover_{\operatorname{batch}}}
 \newcommand{\batchverifier}{\texttt{batchable\_verify}}
@@ -132,7 +137,7 @@
 \newcommand{\simcommitmenttt}{\texttt{simulate\_commitment}}
 \newcommand{\andcomposition}{\texttt{AndComposition}}
 \newcommand{\orcomposition}{\texttt{OrComposition}}
-\newcommand{\msg}{\texttt{msg}}
+\newcommand{\msg}{\mu}
 \newcommand{\proofobj}{\texttt{Proof}}
 \newcommand{\proto}{\texttt{proto}}
 \newcommand{\shortproof}{\texttt{short\_proof}}
@@ -141,6 +146,12 @@
 \newcommand{\morphismlabel}{\texttt{morphism\_label}}
 \newcommand{\challengett}{\texttt{challenge}}
 
+\newcommand{\hd}{\text{hd}}
+\newcommand{\hstatement}{\text{ha}}
+\newcommand{\hmsg}{\text{hm}}
+\newcommand{\hctx}{\text{hctx}}
+\newcommand{\hz}{\text{z}}
+\newcommand{\randombytes}{\texttt{randombytes}}
 \newcommand{\dloglin}{\texttt{DlogLin}}
 
 \newcommand{\schnorr}{\texttt{Schnorr}}
