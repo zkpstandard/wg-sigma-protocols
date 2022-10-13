@@ -506,7 +506,7 @@ The main procedures of the resulting $\Sigma$-protocol are specified by the foll
     \end{enumerate}
   \item  $\andcomposition.\labeltt()$ is computed as:
     \[
-     \hash(\andlabel \concat \leftbranch.\labeltt() \concat \rightbranch.\labeltt())
+     \hash(\andlabel \concatblock \leftbranch.\labeltt() \concat \rightbranch.\labeltt())
    \]
    The supported hash functions are described in \cref{sec:hash-registry}.
    \minote{in particular we want those strings to be always 32B and padded with zeros}
