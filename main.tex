@@ -713,19 +713,15 @@ The following section now presents concrete instantiations for of $\Sigma$-proto
  \end{tabular}
 \end{center}
 We denote with $\GG$ the prime-order group of the elliptic curve, with $\FF_p$ the scalar field, and with $G$ the generator of $\GG$ chosen as per the curve parameters. It is the basis for most mathematical operations in the group $\GG$.
-We assume that all above curve parameters also provide the following group operations: check for equality, identity, addition, and scalar multiplication.
-\minote{multiscalar multiplication}
-In addition, we require the following functions:
+We assume that all above curve parameters also provide the following group operations: check for equality, identity, addition, and scalar multiplication. Optionally, implementation might implement Pippenger's algorithm~\cite{pippenger} for multi-scalar multiplication. In addition, we consider:
 
-\minote{sampling at random}
 \begin{itemize}
-  \item $\curvectx$, the identifier for the curve displayed in the table above;
-  \item \texttt{FromRandomBytes}, taking as input $\seedlen$ and mapping them into an element of the scalar field;
-  \item \texttt{Serialize}, taking as input a point in the elliptic curve and returning a fixed-length sequence of bits;
-  \item \texttt{Deserialize}, taking a (fixed-length and curve-dependent) sequence of bits and returning an elliptic curve point. This procedure may output an error if the conversion fails.
+  \item an identifier for the curve, chosen from the table above, and denoted $\curvectx$;
+  \item a deterministic sub-procedure $a \defeq \frombytes(b)$, taking as input a bit string $b$ of length $\seedlen$, and mapping it into an element $a \sample \FF_p$;
+  \item a deterministic sub-procedure $s \defeq \serialize(P)$, taking as input a group element $P \in \GG$ and returning a fixed-length sequence of bits.
+  For elliptic curve groups, $\serialize$ must provide a compressed representation of the \emph{affine} representation, such as $x$-coordinate and one bit determining the sign of $y$.
+  \item a deterministic sub-procedure $P \defeq \deserialize(s)$, taking a (fixed-length and curve-dependent) sequence of bits and returning an elliptic curve point. This procedure may raise an exception or output $\none$ if the conversion fails.
 \end{itemize}
-
-\minote{Add warning that affine points should be used for encoding and decoding}
 
 \subsection{Basic $\Sigma$-Protocols in prime-order groups}\label{sec:basic_sigma}
   We describe an abstract class for proving knowledge of a preimage under an arbitrary \emph{group homomorphism}, which is a mapping between two groups respecting the structure of the groups.
@@ -1121,7 +1117,7 @@ Other protocols are not included here and are not part of the scope of the curre
 \begin{itemize}
 \item mpc-in-the-head protocol such as ZKBoo~\cite{USENIX:GiaMadOrl16}
 \item one-out-of-many proofs such as~\cite{EC:GroKoh15}
-\item lwe-based sigma protocol~\cite{C:AttCraKoh21} 
+\item lwe-based sigma protocol~\cite{C:AttCraKoh21}
 \item syndrome decoding and LPN~\cite{C:Stern93,AC:JKPT12}
 \end{itemize}
 
