@@ -46,11 +46,12 @@
 
 \usepackage{fancyhdr}
 \usepackage[left=2.55cm,right=2.55cm,top=2.25cm,bottom=3.35cm,headheight=20pt,headsep=10pt]{geometry}
+\newcommand{\version}{{v 0.2}}
 \fancypagestyle{plain}{
   \fancyhf{}% Clear header/footer
   \fancyhead[R]{\includegraphics[height=0.75cm]{zkproof.png}}% Right header
 	\fancyhead[L]{\leftmark\\[-0.6em]}
-  \fancyfoot[L]{\documentTitle\ v0.2}% Left footer
+  \fancyfoot[L]{\documentTitle\ \version}% Left footer
   \fancyfoot[R]{\thepage}% Right footer
 }
 \headheight 40pt              %% put this outside
@@ -100,9 +101,9 @@
        \textbf{Editors: Michele Orrù, Stephan Krenn}
 
        \vspace{1.0cm}
-			 Contributors: Jan Bobolz, Mary Maller, Trevor Perrin, ...
+			 Contributors: TODO
        \vfill
-       Version: v0.2\\
+       Version: \version\\
        \vspace{0.5cm}
        Date: \today\\
        \vspace{1.3cm}
@@ -199,8 +200,8 @@ These protocols are also known as proofs of knowledge~\cite{STOC:GolMicRac85,STO
 
 
 \subsection{Guarantees}
-\stnote{with OR-composition you lose simulation-extractability}
-\minote{It is not immediate to build OR composition in  constant-time. It is possible to double the cost and run prover and simulator for each branch, but at the end we still need the ternary operator to select the correct transcirpt. This is the only place where we are incurring in non non-constant-time operations assuming the algebraic operations are already solved. }
+\minote{\underline{Question for the community}: Should we require implementations to be constant-time? It is not immediate to build OR composition in constant-time. It is possible to double the cost and run prover and simulator for each branch, but at the end we still need the ternary operator to select the correct transcirpt. This is the only place where we are incurring in non non-constant-time operations assuming the algebraic operations are already solved.}
+\minote{\underline{Question for the community}: Who is the recipient of this standard? Are they meant to know already what extraction, or simulation means? Should we employ terms like \emph{simulation-extractability} or \emph{non-malleability} (the latter being different from the former and more imprecise, yet also more self-explainatory). Side-note: OR-composition is not simulation-extractable.}
 \subsection{Scope of this document}
 
 This document provides guidelines for secure implementations of $\Sigma$-protocols and is addressed to applied cryptographers and cryptographic engineers that are looking to implement a generic
@@ -329,7 +330,9 @@ The underlying idea is to replace the verifier with a cryptographically secure h
 
 When using a hash function we will employ comma-separated values to indicate values that are concatenated.
 To mitigate attacks and allow for state cloning, we also separate values with semi-colons
-to indicate that they must appear in a subsequent block and that the previous is padded with zeros. For instance, with the writing $\hash(a \concat b \concatblock c)$ we denote the hashing of $a$ concatenated to $b$, then padded with the null byte to fill $\digestlen$ and concatenate the resulting bit string to $c$.
+to indicate that they must appear in a subsequent block and that the previous is padded with zeros. For instance, with the writing $\hash(a \concat b \concatblock c)$ we denote the hashing of $a$ concatenated to $b$, then padded with the null byte until to reach the closest multiple of $\blocklen$ bytes added, then and concatenate the resulting bit string to $c$.
+
+\minote{\underline{Question for the community}: how should padding be implemented? \texttt{10*1} used in sha3 would be straightforward but perhaps just filling with zeros is simpler and sufficient for our use-case?}
 
 \paragraph{Constants.} Different hash functions may compress inputs with different block length and produce outputs of different length. We define some constants to be used throughout this spec, when hashing values.
 
@@ -359,6 +362,7 @@ This is the set of all supported hash functions. They take an arbitrary length s
   % \unsure{Poseidon} &  \cite{EPRINT:GKKRRS19}\\
   \end{tabular}
 \end{center}
+Supported hash functions must all have $\blocklen \geq 32$ and throughout this work we will define labels and constant strings so that their length is always $\seedlen$ at most. If $\digestlen \ge 32$, we implicitly assume that the implementation considers only the least significant bytes and discards the remainder of the hash output when exactly $\seedlen$ bytes are needed.
 \subsubsection{Computing the challenge and seeding the commitment}
 \label{sec:fs-challenge}
 
@@ -380,7 +384,8 @@ canonicalization attacks.
     & \pcreturn  \hash(\hd \concat \hctx \concat \hstatement \concatblock \hz\concat \witness).
     \end{aligned}
     \]
-The above seed can be expanded to obtain arbitrary-length commitments.
+If the output length $\digestlen$ of the hash function is not sufficient to provide enough entropy for the commitment, the seed may be expanded with a PRNG to provide at least $|T|$ bytes times the security level provided.
+\minote{\underline{Question for the community}: This must be more formal. What are we expecting the PRNG to be? It seems a waste not to use variable-length hash output from from supported hash functions. Should we opt for replacing sha3 with shake? How is the implementor supposed to know what is \emph{enough entropy}? This could be misleading: there must be enough bytes for the domain of the morphism (which could be more than the security parameter!). Finally, the hash function used here may be different from the hash function to compute the challenge (this might make sense in the case of algebraic hashing). Should we support it?}
 \paragraph{Computing the challenge.}
 The method $\sigmaprotocol.\challengett(\msg, \commitment)$ is implemented as follows in order to produce a random challenge.
 
@@ -460,13 +465,6 @@ The case of batched verification must include an input validation sub-routine th
 In the case of elliptic curves described in~\Cref{sec:instantiations}, this boils down to point validation.
 Failure to properly check that a commitment is in the group could lead to subgroup attacks~\cite{EC:VanWie96,C:LimLee97} or invalid curve attacks~\cite{C:BieMeyMul00,RSA:BBPV12}.
 \end{warning}
-\jannote{I might be completely wrong here, but \dots is this remark actually true? Do we need to check that the commitment $\commitment$ is in the right subgroup?
-This is a verifier check, so it doesn't impact ZK.
-For soundness, let's say we check that $\commitment$ is on curve (I'd never omit that check), but in the wrong subgroup. Say everything else ($\varphi(\cdot), \statement$) in the right subgroup.
-But then the verifier checks $\commitment+c\statement = \varphi(\response)$. If that check is true, then multiplying the equation with $z = \mathit{cofactor}\cdot (\mathit{cofactor}^{-1}\bmod p)$ gives us that $z\cdot \commitment$, which lives in the right subgroup, fulfills the verification equation, too. This generalizes to batch verification.
-So it seems like (though I may be overlooking something!?), in soundness proofs, we could just project commitments into the right subgroup and everything would still just work, even if the actual verifier works with elements of the wrong subgroup.
-That seems like a significant performance boost not to have to check subgroups for all the $\commitment_i$ in batch verification, but I'm not sure if you want to complicate things.}
-\minote{Add de-serialization sub-procedures that may fail}
 
 \end{description}
 
@@ -495,8 +493,6 @@ The commitment $\commitment$ is not provided within a short proof since it can b
   Output $\accept$ if this is the case, and $\reject$ otherwise.
 \end{enumerate}
 \end{description}
-
-\minote{Check the inputs to the sub-procedures, like the simulator is not having enough information for recomputing the challenge}
 
 If input parsing fails, an exception should be raised.
 If verification fails, an exception should be raised.
@@ -623,7 +619,8 @@ The main procedures of the resulting $\Sigma$-protocol are specified by the foll
     ((\statement_0,\statement_1),(\witness_0,\witness_1) :
     (\statement_0,\witness_0)\in \relation_0 ~\lor~ (\statement_1,\witness_1)\in\relation_1}\,.
 \]
-\minote{Say explicitly that now the witnesses are a pair of optional arugments, at least one of them being a non-null witness.}
+
+In other words, the statement is the pair of composing statements, and the witness is a pair of witnesses for the respective relation, optionally one of them being $\none$.
   In the following protocol specification, let $j$ be such that $w_j$ is known to the prover, whereas without loss of generality $\witness_{1-j}$ is assumed to be unknown to the prover.
 
 	On a high level, the protocol works as follows.
@@ -799,13 +796,10 @@ $$
 	\end{align*}
 
 \end{remark}
-\minote{relation name like before?}
 
 However, the following \emph{defines neither the morphism nor the label associated to the protocol}.
 These will be defined later in the specific protocols.
 
- \stnote{which checks are necessary? which values need to be on the curve, etc.?}
-\minote{It's maybe dangerously unclear, but I as assuming that all private methods written here have valid elements in the curve, and that validation is up to serialization/deserialization...}
 \begin{itemize}
   \item $\dlogsigmaprotocol.\new(\ctx, \vec\statement)$ internally stores $\vec\statement$ and $\ctx$.
   \item\label{item:basic:p1}
@@ -913,7 +907,6 @@ That is, they prove knowledge of $w\in\FF_p$ such that $Y=wG$.
     \hash(\schnorrlabel \concat \curvectx \concatblock \serialize(G) \concat \serialize(\statement))
   \]
 \end{itemize}
-\stnote{stupid question: should the label (or the curve) have constant length to ensure that label-bits and curve-bits can be clearly seperated?}
 
 For a description of this proof goal in the general case of residue classes, we also refer to~\cite[1.4.1]{zkproof-reference}.
 
@@ -1030,7 +1023,6 @@ Proving knowledge of a valid opening of a Pedersen commitment means proving know
   \[
     \hash(\replabel \concat \curvectx \concatblock \serialize(G_1) \concat \cdots \concat \serialize(G_m) \concat \serialize(\statement))
   \]
-  \minote{length is important to avoid generators swapped with statement}
 \end{itemize}
     % \begin{protocol}{Proving knowledge of representation.\\[-2.25em]}{fig:rep}{hbpt}
     %   \begin{tabular}{@{}l@{\hspace{2em}}c@{\hspace{-3em}}r@{}}
@@ -1122,12 +1114,8 @@ Statements are serialized depth-first.
   \item Concise Binary Object Representation (CBOR) \href{https://datatracker.ietf.org/doc/html/rfc7049}{RFC7049}
     \item The zk proof Reference document provides a serialization document for r1cs~\cite[3.4.2]{zkproof-reference}, but there is nothing in it.
 \end{itemize}
-The tree is encoded in breadth-first.
-
-
 \minote{
-  This section will be helpful in order to communicate the statement, but
-  we are missing a way of translating the statemnt into a tree of provers.
+  \underline{Question for the community}: what kind of serialization format should we pick? It seems that no clear choice has been taken already for r1cs and CBOR seems to be the most reasonable choice?
 }
 
 \section{Additional proof types}
