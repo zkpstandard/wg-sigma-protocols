@@ -156,7 +156,7 @@ For the purpose of this document, the following notation will be used:
     $x\sample\someset$ & assignment of a uniformly random element in $\someset$ to $x$\\
     $x\gets\alg(in)$ & assign to $x$ the output of the randomized procedure on input $in$\\
     $\relation$ & binary relation\\
-    $|y|$ & bitlength of a string \\
+    $|y|$ & bit-length of a string \\
     $\oplus$ & binary operator denoting the bitwise XOR of two strings of equal length
 %    $\NN,\ZZ$ & non-negative natural numbers and integers, respectively
 \end{tabular}
@@ -173,17 +173,17 @@ Note there may be multiple witnesses for a given $\statement$.
 \begin{example}{Discrete logarithm equality}{R_DLEQ}
   Let $\GG$ be a cyclic group of prime order $p$, and let $G$ and $H$ be generators of $\GG$.
 	Then the following relation $\relation[dleq]$ contains as statements all pairs of elements having the same discrete logarithm with respect to $G$ and $H$, with the corresponding witness being their discrete logarithm:
-  $$
+  \[
 	  \relation[dleq] = \set{\left((\statement_1,\statement_2),\witness\right) \in \GG^2\times \FF_p~:~\statement_1=\witness G ~\land~ \statement_2=\witness H}\,.
-	$$
+	\]
 \end{example}
 
 \begin{example}{Representation}{R_REP}
   Let $\GG$ be a cyclic group of prime order $p$, and let $G$ and $H$ be generators of $\GG$.
 	Then the following relation $\relation[rep]$ contains as statements all valid Perdersen commitments, with the corresponding witnesses being their openings:
-  $$
+  \[
 	  \relation[rep] = \set{\left(\statement,(\witness_1,\witness_2)\right)\in \GG \times \FF_p^2~:~\statement=\witness_1G + \witness_2H}\,.
-	$$
+	\]
 	Note that in this case, each statement has $p$ valid witnesses.
 \end{example}
 
@@ -211,26 +211,41 @@ entropy source well-suited for crypto\-graphic purposes.
 We will not talk about implementation of cryptographic primitives such as hash functions, or elliptic-curve algebra, but we will provide references for where to find them.
 We won't provide any guidance for securely storing secrets or producing constant-time code.
 
-\minote{People interested in the development of a specific $\Sigma$ protocol should implement the template from 2 using the algorithm from XX and XX and then refer to section XX}
-
+% \minote{People interested in the development of a specific $\Sigma$ protocol should implement the template from 2 using the algorithm from XX and XX and then refer to section XX}
 
 \begin{figure}[t]
   \begin{tcolorbox}
     \centering
-    \procedure{}{
-      \< \textbf{Prover} \< \< \textbf{Verifier} \\[][\hline]\\[-0.75em]
-			\textit{Inputs} \< \textbf{statement}~(\statement) \< \< \textbf{statement}~(\statement) \\
-			\< \textbf{context}~(\ctx)\< \< \textbf{context}~(\ctx)\\
-			\< \textbf{witness}~(\witness)\< \< \\
-%
-		  %
-    \textit{Protocol flow} ~~~~\< \textbf{commitment}~(\commitment)~~~~~~~~ \< \sendmessageright*[15em]{\commitment} \< \\
-    \< \< \sendmessageleft*[15em]{\challenge}  \< ~~~\textbf{challenge}~(\challenge)\\
-    \< \textbf{response}~(\response)~~~~~~ \< \sendmessageright*[15em]{\response}\\
-		\textit{Transcript} \< (\commitment,\challenge,\response) \< \<
-    }
+      ~\textbf{Prover} \hfill \textbf{Verifier}~ \\[1em]
+      \tcblower
+      \tcbox[title=Inputs, halign title=flush center]{
+        \begin{tabular*}{.92\textwidth}{l@{\extracolsep{\fill}}r}
+          \textbf{statement}~(\statement), & \textbf{statement}~(\statement), \\
+          \textbf{context}~(\ctx), & \textbf{context}~(\ctx),\\
+          \textbf{witness}~(\witness) &
+        \end{tabular*}
+      }
+      \tcbox[title=Protocol flow, halign title=flush center]{
+        \procedure{}{
+           \textbf{commitment}~(\commitment)~~~~~~~~ \< \sendmessageright*[19.5em]{\commitment} \< \\
+    \< \sendmessageleft*[19.5em]{\challenge}  \< ~~~\textbf{challenge}~(\challenge)\\
+    \textbf{response}~(\response)~~~~~~ \< \sendmessageright*[19.5em]{\response}\\
+		% \textit{Transcript} \< (\commitment,\challenge,\response) \< \<
+        }
+      }
+      \begin{center}\tcbox{\textbf{transcript}: $(\commitment, \challenge, \response)$}\end{center}
+% 			\textit{Inputs} \< \textbf{statement}~(\statement) \< \< \textbf{statement}~ \\
+% 			\< \textbf{context}~(\ctx)\< \< \textbf{context}~(\ctx)\\
+% 			\< \textbf{witness}~(\witness)\< \< \\
+% %
+% 		  %
+%     \textit{Protocol flow} ~~~~\< \textbf{commitment}~(\commitment)~~~~~~~~ \< \sendmessageright*[15em]{\commitment} \< \\
+%     \< \< \sendmessageleft*[15em]{\challenge}  \< ~~~\textbf{challenge}~(\challenge)\\
+%     \< \textbf{response}~(\response)~~~~~~ \< \sendmessageright*[15em]{\response}\\
+% 		\textit{Transcript} \< (\commitment,\challenge,\response) \< \<
+    % }
   \end{tcolorbox}
-  \caption{Overview of the steps composing a generic $\Sigma$-protocol.}
+  \caption{Overview of the steps composing a generic $\Sigma$-protocol. In practice, the challenge is computed deterministically and the protocol is non-interactive. See \cref{sec:fs} for more information.}
 \end{figure}
 
 \section{Generic $\Sigma$-Protocols}
@@ -328,8 +343,7 @@ to indicate that they must appear in a subsequent block and that the previous is
   $\digestlen$ & Digest length
 \end{tabular}
 \end{center}
-\minote{digest len and block len do not seem to be useful?}\minote{The output of poseidon are not bytes. How do make this work in the bigger picture?}
-
+\minote{\underline{Question for the community}: this spec assumes that the hash function takes as input a bit-string and returns a bit-string. This is however not the case for all hash functions that we would like to support. For instance, Poseidon~\cite{EPRINT:GKKRRS19}'s core function is a map $\FF_p^* \to \FF_p^\ell$ with $\ell$ fixed.}
 
 \subsubsection{Hash Registry}
 \label{sec:hash-registry}
@@ -340,12 +354,11 @@ This is the set of all supported hash functions. They take an arbitrary length s
   \begin{tabular}{lllcc}
   Hash  & Source & $\blocklen$ & $\digestlen$ \\
   \hline
-  Blake2 &  \cite{ACNS:ANWW13}\\
-  Keccak & \cite{EC:BDPA13} \\
-  \unsure{Poseidon} &  \cite{EPRINT:GKKRRS19}\\
+  blake2b &  \cite{ACNS:ANWW13} & 128 & 64 \\
+  sha3-256 & \cite{EC:BDPA13} & 136 & 32 \\
+  % \unsure{Poseidon} &  \cite{EPRINT:GKKRRS19}\\
   \end{tabular}
 \end{center}
-\minote{double-check table}
 \subsubsection{Computing the challenge and seeding the commitment}
 \label{sec:fs-challenge}
 
@@ -704,7 +717,7 @@ The following section now presents concrete instantiations for of $\Sigma$-proto
 \end{remark}
 
 \subsection{Ciphersuite Registry}
- We advise for the use of prime-order elliptic curves of size either 256 or 512 bits, depending on the desired security of the upper layers in the protocol\footnote{For instance, proving a DH relation with one fixed group element such as a public key, might expose the protocol to cryptanalytic attacks such as Brown-Gallant~\cite{EPRINT:BroGal04} and Cheon’s attack~\cite{EC:Cheon06}, and some implementations might opt for larger curve sizes. We consider these attacks out of scope for this standardization effort, and believe this analysis should be deferred to the concrete security study of the larger protocol.}.
+ We advise for the use of prime-order elliptic curves of size either 256 or 512 bits, depending on the desired security of the upper layers in the protocol\footnote{For instance, proving a DH relation with one fixed group element such as a public key, might expose the protocol to cryptanalytic attacks such as Brown-Gallant~\cite{EPRINT:BroGal04} and Cheon's attack~\cite{EC:Cheon06}, and some implementations might opt for larger curve sizes. We consider these attacks out of scope for this standardization effort, and believe this analysis should be deferred to the concrete security study of the larger protocol.}.
 
  \vspace{1em}
  \begin{center}
