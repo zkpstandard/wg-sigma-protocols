@@ -61,25 +61,25 @@
 \newtheorem{definition}{Definition}
 \newtheorem{theorem}{Theorem}
 
-\newtcbtheorem[auto counter, number within = section,
-  crefname={Remark}{Remark},
-  Crefname={Remark}{Remark}]{remark}{Remark}{
+\newtcbtheorem[auto counter, %number within = section,
+  crefname={remark}{remarks},
+  Crefname={Remark}{Remarks}]{remark}{Remark}{
     breakable,
 		colback=green!5,
     colframe=green!35!black,
     fonttitle=\bfseries}{rem} %cite as \cref{rem:<label>}
 
-\newtcbtheorem[auto counter, number within = section,
-  crefname={Remark}{Remark},
-  Crefname={Remark}{Remark}]{warning}{Remark}{
+\newtcbtheorem[auto counter, % use counter from=remark,
+  crefname={warning}{warnings},
+  Crefname={Warning}{Warnings}]{warning}{Warning}{
     breakable,
 		colback=red!25,
     colframe=red!70!black,
     fonttitle=\bfseries}{war} %cite as \cref{war:<label>}
 
-\newtcbtheorem[auto counter, number within = section,
-  crefname={Example}{Example},
-  Crefname={Example}{Example}]{example}{Example}{
+\newtcbtheorem[auto counter, % use counter from=remark,
+  crefname={ex}{ex},
+  Crefname={Example}{Examples}]{example}{Example}{
     breakable,
     colback=blue!5,
     colframe=blue!35!black,
