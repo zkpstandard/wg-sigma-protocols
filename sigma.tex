@@ -191,14 +191,14 @@ Note there may be multiple witnesses for a given $\statement$.
 	Note that in this case, each statement has $p$ valid witnesses.
 \end{example}
 
-In a zero-knowledge proof, the \emph{witness} is secret information, while the statement is public.
+In a zero-knowledge proof, the \emph{witness} is secret information, while the \emph{statement} is public.
 A \emph{proof} is a sequence of bytes\footnote{Throughout this work, a byte is defined as a vector of 8 bits.} attesting that a witness is in some relation with the statement.
 
 Proofs described in this spec are zero-knowledge and sound.
 Zero knowledge means that the protocol does not leak any information about the prover's witness beyond what the attacker may infer from the proven statement or from other sources~\cite[1.6.4]{zkproof-reference}.
 Soundness means that it is not possible to make the verifier accept for statements for which no valid witness exists~\cite[1.6.2]{zkproof-reference}.
 
-In particular we will focus on non-malleable extractable proofs, that is, proofs where the the witness does not only exist but it is also precisely known by the prover.
+In particular we will focus on non-malleable extractable proofs, that is, proofs where the the witness does not only exist but is also precisely known by the prover.
 These protocols are also known as proofs of knowledge~\cite{STOC:GolMicRac85,STOC:FeiFiaSha87,C:BelGol92} and are said to satisfy \emph{knowledge soundness}~\cite{damgard04}. Non-malleability means that, in addition, the proof is secure against man-in-the middle attacks, and attackers cannot produce a new valid proof by tampering
 another valid proof.
 
@@ -210,8 +210,8 @@ another valid proof.
 This document provides guidelines for secure implementations of $\Sigma$-protocols and is addressed to applied cryptographers and cryptographic engineers that are looking to implement a generic
 $\Sigma$-protocol or provide an ad-hoc instantiation as part of a larger protocols.
 
-We consider outside of this document the problem of having a high-quality
-entropy source well-suited for crypto\-graphic purposes.
+We consider the problem of having a high-quality
+entropy source well-suited for crypto\-graphic purposes outside of the scope of this document.
 We will not talk about implementation of cryptographic primitives such as hash functions, or elliptic-curve algebra, but we will provide references for where to find them.
 We won't provide any guidance for securely storing secrets or producing constant-time code.
 
@@ -292,8 +292,8 @@ A $\sigmaprotocol$ consists of the following methods:
           or an error if verification fails.
           \item $\texttt{label} \gets\sigmaprotocol.\labeltt()$,
           returning a string of $\seedlen$ uniquely identifying the relation being proven.
-          Implementing this function correctly is vital security, and it must include all data available in the statement, as well as the parameters and the relation being proven. The label will be used for computing the challenge in the Fiat-Shamir transform~\cref{sec:fs}.
-          Precise indications on how to implement this function will be given in the following sections (see e.g.\ \cref{sec:and-comp,sec:instantiations:schnorr}).
+          Implementing this function correctly is vital for security, and it must include all data available in the statement, as well as the parameters and the relation being proven. The label will be used for computing the challenge in the Fiat-Shamir transform (see ~\cref{sec:fs}).
+          Precise indications on how to implement this function will be given in the following sections (see e.g.\ \cref{sec:and-comp,sec:instantiations}).
 
           If the label is \emph{not} tied to the relation, then it may be possible to produce another proof for a different relation without knowing its witness.
           Similarly, if the statement is not tied to the label, then it may be possible to produce proofs for another statement whose witness is related to the original proof.
@@ -957,7 +957,7 @@ So-called DLEQ proofs prove equality of the discrete logarithm, that is: $\state
 \subsubsection{Diffie-Hellman}
 Let $\GG$ be a group over an elliptic curve with prime order $p$.
 Proving knowledge of the exponents of a valid Diffie-Hellman triple means proving knowledge of $\witness_1,\witness_2\in\FF_p$ such that $\statement_1=\witness_1G$, $\statement_2=\witness_2G$, and $\statement_3=\witness_1 \witness_2 G$.
-Te mapping $\FF_p^2\to\GG^3:(\witness_1,\witness_2)\mapsto (\witness_1G,\witness_2G,\witness_1\witness_2G)$ is not a homomorphism, and consequently the basic protocol presented before cannot be deployed directly.
+The mapping $\FF_p^2\to\GG^3:(\witness_1,\witness_2)\mapsto (\witness_1G,\witness_2G,\witness_1\witness_2G)$ is not a homomorphism, and consequently the basic protocol presented before cannot be deployed directly.
 However, the required multiplicative relation can be proven by observing that the proof goal is equivalent to $\statement_1=\witness_1G$, $\statement_2=\witness_2G$, and $\statement_3=\witness_2\statement_1$, leading the homomorphism
 
 \begin{itemize}
