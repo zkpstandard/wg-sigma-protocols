@@ -1,0 +1,6 @@
+name: Render Σ-protocol specification
+description: Compile the LaTeX documents
+author: Michele Orrù
+runs:
+  using: docker
+  image: Dockerfile
