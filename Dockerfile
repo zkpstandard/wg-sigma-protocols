@@ -9,5 +9,4 @@ RUN apt install -y \
         texlive-fonts-extra \
         texlive-bibtex-extra
 
-# WORKDIR "stdsigma"
 ENTRYPOINT ["make"]
