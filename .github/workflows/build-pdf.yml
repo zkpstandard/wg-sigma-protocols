@@ -1,0 +1,27 @@
+name: Upload PDF build
+
+on:
+  push:
+    branches: [ "main" ]
+  # pull_request:
+  #   branches: [ "main" ]
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Build sigma-protocols specification
+      uses: ./.github/actions/latexmk
+    - name: Upload pdf
+      run: |
+        git config user.name "github"
+        git config user.email "username@users.noreply.github.com"
+        git checkout --orphan build
+        git reset
+        git add -f *.pdf
+        git commit -m "Automatically built via github actions"
+        git push -f origin build
