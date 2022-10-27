@@ -14,6 +14,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
+      with:
+          submodules: recursive
     - name: Build sigma-protocols specification
       uses: ./.github/actions/latexmk
     - name: Upload pdf
