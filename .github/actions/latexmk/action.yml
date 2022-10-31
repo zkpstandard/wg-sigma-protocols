@@ -1,5 +1,5 @@
-name: Render Σ-protocol specification
-description: Compile the LaTeX documents
+name: Build LaTeX
+description: Set up and compile a LaTeX project via `make`
 author: Michele Orrù
 runs:
   using: docker
