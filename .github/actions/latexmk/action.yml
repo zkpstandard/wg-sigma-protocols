@@ -1,0 +1,6 @@
+name: Build LaTeX
+description: Set up and compile a LaTeX project via `make`
+author: Michele Orrù
+runs:
+  using: docker
+  image: Dockerfile
