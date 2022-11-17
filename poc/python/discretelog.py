@@ -2,8 +2,8 @@ from util import *
 from sigmaprotocol import *
 
 class DlogTemplate(SigmaProtocol):
-    # n is the input dimension of the homomorphism
-    # m is the output dimension of the homomorphism
+    # n is the input dimension of the homomorphism (size of witness)
+    # m is the output dimension of the homomorphism (size of statement)
     n = None
     m = None
     
@@ -12,12 +12,12 @@ class DlogTemplate(SigmaProtocol):
     ec = secp256k1
     
     def __init__(self, ctx: bytes, statement):
-        assert(len(statement) == self.n)
+        assert(len(statement) == self.m)
         self.statement = statement
         self.first_block_hash = self._get_first_block_hash(ctx)
         
     def prover_commit(self, witness):
-        assert(len(witness) == self.m)
+        assert(len(witness) == self.n)
         
         # First, seed rng
         witness_bytes = pickle.dumps(witness)
@@ -33,7 +33,7 @@ class DlogTemplate(SigmaProtocol):
             prover_state = (witness, nonce)
             return (prover_state, commitment)
     
-    # Prover_state is nonce (array of n Fp elements) * witness (array of n Fp elements)
+    # Prover_state is nonce (array of n Fp elements) , witness (array of n Fp elements)
     # challenge is bytes, but is converted to an Fp element
     # outputs an array of n Fp elements
     def prover_response(self, prover_state, challenge: bytes):
@@ -64,7 +64,7 @@ class DlogTemplate(SigmaProtocol):
     
     def verifier(self, commitment, challenge: bytes, response):
         challenge = self._chal_from_bytes(challenge)
-        return all(phi_response_i == commitment_i + statement_i * int(challenge)
+        return all(phi_response_i == commitment_i + statement_i * Integer(challenge)
             for phi_response_i, commitment_i, statement_i in zip(self._morphism(response), commitment, self.statement))
     
     def _chal_from_bytes(self, challenge: bytes) -> ec.Fp:
@@ -76,35 +76,55 @@ class SchnorrDlog(DlogTemplate):
     m = 1
     ec = secp256k1
     first_hash_label = hash_function()
-    first_hash_label.update(b"schnorr" + pickle.dumps(ec))
+    first_hash_label.update(pad_to_blocklen(b"schnorr" + pickle.dumps(ec)))
     
     # Inputs an array of one Fp element `x`
     # Outputs `[G * x]`
     
     def _morphism(self, x):
-        return [self.ec.G * int(x[0])]
+        return [self.ec.G * Integer(x[0])]
     
     def _morphism_label(self):
-        label = self.first_hash_label.copy()
+        label = SchnorrDlog.first_hash_label.copy()
         label.update(pickle.dumps(self.ec.G))
         label.update(pickle.dumps(self.statement[0]))
         return label.digest()
 
 class DlogEQ(DlogTemplate):
     ec = secp256k1
-    n = 2
-    m = 1
-    
+    n = 1
+    m = 2
+    first_hash_label = hash_function()
+    first_hash_label.update(pad_to_blocklen(b"dleq" + pickle.dumps(ec)))
+
     # Inputs an array of one Fp element `x`
     # Outputs `[G * x, H * x]`
     def _morphism(self, x):
-        return [self.ec.G * int(x[0]), self.ec.H * int(x[0])]
+        return [self.ec.G * Integer(x[0]), self.ec.H * Integer(x[0])]
     
     def _morphism_label(self):
-        label = hash_function()
-        label.update(b"dleq")
+        label = DlogEQ.first_hash_label.copy()
         label.update(pickle.dumps(self.ec.G))
         label.update(pickle.dumps(self.ec.H))
+        label.update(pickle.dumps(self.statement[0]))
+        label.update(pickle.dumps(self.statement[1]))
+        return label.digest()
+
+class DiffieHelman(DlogTemplate):
+    ec = secp256k1
+    n = 2
+    m = 3
+    first_hash_label = hash_function()
+    first_hash_label.update(pad_to_blocklen(b"diffiehelman" + pickle.dumps(ec)))
+    
+    # Inputs an array of two Fp elements `x`, `y`
+    # Outputs `[G * x, G * y, G * x * y]`
+    def _morphism(self, x):
+        return [self.ec.G * Integer(x[0]), self.ec.G * Integer(x[1]), self.statement[0] * Integer(x[1])]
+    
+    def _morphism_label(self):
+        label = DiffieHelman.first_hash_label.copy()
+        label.update(pickle.dumps(self.ec.G))
         label.update(pickle.dumps(self.statement[0]))
         label.update(pickle.dumps(self.statement[1]))
         return label.digest()
