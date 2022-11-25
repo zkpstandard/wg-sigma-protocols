@@ -101,9 +101,10 @@
        \textbf{Authors: Michele Orrù, Stephan Krenn}
 
        \vspace{1.0cm}
-			 \textbf{Contributors:}\\[.3em]
+			 \textbf{Contributors:}\\[1em]
        \begin{tabular}{c@{\hspace{5em}}c@{\hspace{5em}}c}
-        Jan Bobolz & Mary Maller & Yuwen Zhang \\
+        Jan Bobolz & Mary Maller & Ivan Visconti \\[.3em]
+        Yuwen  Zhang \\
        \end{tabular}
        \vfill
        Version: \version\\
@@ -135,7 +136,7 @@
 
 \section{Introduction}
 
-Zero-knowledge~\cite{GolMicRac89} proofs of knowledge~\cite{C:BelGol92} allow a prover to convince a verifier that he knows a secret piece of information, without revealing anything except that the claim itself already reveals.
+Zero-knowledge~\cite{GolMicRac89} proofs of knowledge~\cite{C:BelGol92} allow a prover to convince a verifier that he knows a secret piece of information, without revealing anything except what the claim itself already reveals.
 Many practically relevant proof goals can be realized using so-called $\Sigma$-protocols.
 %, or their non-interactive counterparts, which can be proven secure in the random oracle model. %without the need for a common reference string.
 Introduced by Schnorr~\cite{JC:Schnorr91} over 30 years ago, they play an essential component in the building of a number of cryptographic
@@ -150,7 +151,7 @@ For the purpose of this document, the following notation will be used:
 
 \begin{tabular}{r@{\hspace{1em}}p{11cm}}
     $\secpar$ & main security parameter\\
-    $\CS$ & challenge set, corresponding to a vector of 32 bytes (octets).\\
+    $\CS$ & challenge set. A challenge is a vector of 32 bytes (octets).\\
     $\statement$ & the statement, i.e., the public information in a zero-knowledge proof \\
     $\witness$ & the witness, i.e., the secret information in a zero-knowledge proof \\
     $\commitment$ & the first message, called commitment \\
@@ -198,7 +199,7 @@ Proofs described in this spec are zero-knowledge and sound.
 Zero knowledge means that the protocol does not leak any information about the prover's witness beyond what the attacker may infer from the proven statement or from other sources~\cite[1.6.4]{zkproof-reference}.
 Soundness means that it is not possible to make the verifier accept for statements for which no valid witness exists~\cite[1.6.2]{zkproof-reference}.
 
-In particular we will focus on non-malleable extractable proofs, that is, proofs where the the witness does not only exist but is also precisely known by the prover.
+In particular we will focus on non-malleable extractable proofs, that is, proofs where the witness does not only exist but is also precisely known by the prover.
 These protocols are also known as proofs of knowledge~\cite{STOC:GolMicRac85,STOC:FeiFiaSha87,C:BelGol92} and are said to satisfy \emph{knowledge soundness}~\cite{damgard04}. Non-malleability means that, in addition, the proof is secure against man-in-the middle attacks, and attackers cannot produce a new valid proof by tampering
 another valid proof.
 
@@ -208,7 +209,7 @@ another valid proof.
 \subsection{Scope of this document}
 
 This document provides guidelines for secure implementations of $\Sigma$-protocols and is addressed to applied cryptographers and cryptographic engineers that are looking to implement a generic
-$\Sigma$-protocol or provide an ad-hoc instantiation as part of a larger protocols.
+$\Sigma$-protocol or provide an ad-hoc instantiation as part of a larger protocol.
 
 We consider the problem of having a high-quality
 entropy source well-suited for crypto\-graphic purposes outside of the scope of this document.
@@ -238,13 +239,13 @@ We won't provide any guidance for securely storing secrets or producing constant
       }
       \begin{center}\tcbox{\textbf{transcript}: $(\commitment, \challenge, \response)$}\end{center}
   \end{tcolorbox}
-  \caption{Overview of the steps composing a generic $\Sigma$-protocol. Underlined, the secrets in the the protocol. In practice, the challenge is computed deterministically and the protocol is non-interactive. See \cref{sec:fs} for more information.}
+  \caption{Overview of the steps composing a generic $\Sigma$-protocol. Underlined, the secrets in the protocol. In practice, the challenge is computed deterministically and the protocol is non-interactive. See \cref{sec:fs} for more information.}
 \end{figure}
 
 \section{Generic $\Sigma$-Protocols}
 In the following, we describe a generic interface for $\Sigma$-protocols.
 Such protocols can be used to prove that, for some binary relation $\relation$ and a public value $\statement$, a witness $\witness$ such that $(\statement,\witness)\in\relation$ is known.
-Basic statements include proofs of knowledge of a secret key, openings of commitments, and more in general of representations.
+Basic statements include proofs of knowledge of a secret key, openings of commitments and, more generically, of representations.
 The type of these elements depends on the specific relation being implemented.
 
 An important property of $\Sigma$-protocols is that they are composable: it is possible to prove conjunction and disjunctions of statements in zero-knowledge.
@@ -264,7 +265,7 @@ The final proof is constituted of the three-elements above $(\commitment, \chall
 
 
 \subsection{An abstract class for generic $\Sigma$-protocols}
-We define a template class for $\Sigma$-protocols denoted $\sigmaprotocol$. This is the basic interface that will be implemented remainder of this document.
+We define a template class for $\Sigma$-protocols denoted $\sigmaprotocol$. This is the basic interface that will be implemented in the remainder of this document.
 The methods composing $\sigmaprotocol$ should be considered \emph{private} and \emph{should not} be exposed externally. The public API is described later in \cref{sec:fs}.
 Instances are created via the $\new$ function, which is a class method, while all other functions act on a particular instance.
 A $\sigmaprotocol$ consists of the following methods:
@@ -320,8 +321,8 @@ The underlying idea is to replace the verifier with a cryptographically secure h
 \subsubsection{Syntax}
 
 When using a hash function we will employ comma-separated values to indicate values that are concatenated.
-To mitigate attacks and allow for state cloning, we also separate values with semi-colons
-to indicate that they must appear in a subsequent block and that the previous is padded with zeros. For instance, with the writing $\hash(a \concat b \concatblock c)$ we denote the hashing of $a$ concatenated to $b$, then padded with the null byte until to reach the closest multiple of $\blocklen$ bytes added, then and concatenate the resulting bit string to $c$.
+To mitigate attacks and allow for state cloning, we also separate values with a vertical bar
+to indicate that they must appear in a subsequent block and that the previous is padded with zeros. For instance, $\hash(a \concat b \concatblock c)$ denotes the hash of $a$ concatenated to $b$, then padded with the null byte until reaching the closest multiple of $\blocklen$, and finally concatenating the resulting bit string to $c$.
 
 \minote{\underline{Question for the community}: how should padding be implemented? \texttt{10*1} used in sha3 would be straightforward but perhaps just filling with zeros is simpler and sufficient for our use-case?}
 
@@ -370,7 +371,7 @@ canonicalization attacks.
    & \hctx \defeq \hash(\ctx)
   \end{aligned}
 \]
-\paragraph{Seeding the commitment.} The method $\sigmaprotocol.\provercommitment()$ is a randomized function that generates a random element, unique per each execution. The  commitment \emph{should} be seeded as follows:
+\paragraph{Seeding the commitment.} The method $\sigmaprotocol.\provercommitment()$ is a randomized function that generates a random element, unique per each execution. The commitment \emph{should} be seeded as follows:
 \[
     \begin{aligned}
      & \hz \defeq \randombytes(32) \\
@@ -439,7 +440,7 @@ The public function $\sigmaprotocol.\batchableproof( \witness, \msg)$ computes:
 $c \gets \sigmaprotocol.\challengett(\msg,\commitment)$
 \item
    $\response\gets\sigmaprotocol.\proverresponse(\proverstatett,  \challenge)$.
-  Return $\serialize(\commitment)$ concatenated to $\serialize(\vec \response)$
+\item Return $\serialize(\commitment)$ concatenated to $\serialize(\vec \response)$
 \end{enumerate}
 The challenge $\challenge$ is not provided within a batchable proof since it can be re-computed from the commitment.
 \item[Verifier algorithm.] The verifier's algorithm $\sigmaprotocol.\batchverifier(\pi, \msg)$ works as follows:
@@ -448,7 +449,7 @@ The challenge $\challenge$ is not provided within a batchable proof since it can
   \item
     $c \gets \sigmaprotocol.\challengett(\msg, \commitment)$
   \item
-    Return whatever $\sigmaprotocol.\verifiertt(\commitment,\challenge, \response)$ returns.
+    Return the result of $\sigmaprotocol.\verifiertt(\commitment,\challenge, \response)$.
 \end{enumerate}
 \begin{warning}{Input validation}{}
 The case of batched verification must include an input validation sub-routine that asserts the statement and commitments are in question.
@@ -529,7 +530,7 @@ For the rest of this section, the witness $\witness$ for the $\Sigma$-protocol w
 %\minote{say explicitly that now the witness is a pair of witnesses valid for the respective relation. Same goes for the statement}
 
   Intuitively, the AND composition simply runs the instances of the different protocols to be composed in parallel, using the same challenge $\challenge$ for both instances.
-  The verifier will then accept the protocol run, if and only if all instances of the partial protocols output $\accept$.
+  The verifier will then accept the protocol run if and only if all instances of the partial protocols output $\accept$.
 
 
 The resulting $\Sigma$-protocol is specified by the following algorithms:
@@ -615,7 +616,7 @@ The statement $\statement$ is the pair $(\statement_0, \statement_1)$ of the com
 
 	On a high level, the protocol works as follows.
 	Using the simulator, the prover first simulates a transcript for the unknown witness (keeping the challenge and response of this transcript temporarily secret), and generates an honest commitment for the known witness.
-	Having received the challenge, the prover then computes challenge for the known witness, depending on the received challenge and the one from the simulated transcript.
+	Having received the challenge, the prover then computes a challenge for the known witness, depending on the received challenge and the one from the simulated transcript.
 	Having computed the response, the prover transfers the responses of both transcripts, as well as the partial challenges to the verifier, who accepts if and only if both instances of the partial protocols output $\accept$ and the partial challenges correctly add up to the random challenge.
 
 The main procedures of the resulting $\Sigma$-protocol are specified by the following algorithms:
@@ -696,7 +697,7 @@ $\vec \commitment \gets \orcomposition.\simcommitmenttt(\challenge, \vec \respon
 \section{$\Sigma$-protocols on elliptic curves}
 \label{sec:instantiation}
 
-The following section now presents concrete instantiations for of $\Sigma$-protocols over elliptic curves.
+The following section presents concrete instantiations of $\Sigma$-protocols over elliptic curves.
 
 \begin{remark}{Protocols for residue classes}{}
   Because of their dominance, the presentation in the following focuses on proof goals over elliptic curves, therefore leveraging additive notation.
