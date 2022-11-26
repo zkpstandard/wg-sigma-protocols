@@ -1,7 +1,6 @@
 from hashlib import sha3_256 as hash_function
 from secrets import token_bytes as random_bytes
 from sage.all import *
-import pickle
 
 # Define some constants used for hashing unique values.
 
@@ -15,17 +14,17 @@ DIGEST_LEN = HD.digest_size
 HD.update(DOMSEP)
 HD = HD.digest() 
 
-'''
-Pads bytestring `s` with 0's, so that its length is a multiple of `BLOCK_LEN`
-'''
 def pad_to_blocklen(s: bytes) -> bytes: 
+    '''
+    Pads bytestring `s` with 0's, so that its length is a multiple of `BLOCK_LEN`
+    '''
     padding = b"\000" * (BLOCK_LEN - (len(s) % BLOCK_LEN))
     return s + padding
 
-'''
-Turns a hash digest (bytestring) into an int, which can be used to seed the sage PRNG
-'''
 def hash_to_seed(b: bytes) -> int:
+    '''
+    Turns a hash digest (bytestring) into an int, which can be used to seed the sage PRNG
+    '''
     return int.from_bytes(b[:4], "big")
 
 from collections import namedtuple

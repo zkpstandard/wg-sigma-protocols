@@ -40,8 +40,8 @@ if __name__ == "__main__":
     dleq = DlogEQ(b"ctx", statement)
 
     print(f"Discrete Log Equality for witness:\n{witness}\n\nstatement:\n{statement}")
-    dleq_proof = dleq.short_proof(witness, b"message")
-    if dleq.short_verify(dleq_proof, b"message"):
+    dleq_proof = dleq.batchable_proof(witness, b"message")
+    if dleq.batchable_verify(dleq_proof, b"message"):
         print("Discrete Log Equality verified")
     else:
         print("Discrete Log Equality not verified")
@@ -51,13 +51,13 @@ if __name__ == "__main__":
     # Diffie Helman example
     witness = [DiffieHelman.ec.Fp.random_element(), DiffieHelman.ec.Fp.random_element()]
     statement = [DiffieHelman.ec.G * Integer(witness[0]),
-     DiffieHelman.ec.G * Integer(witness[1]),
-      DiffieHelman.ec.G * Integer(witness[1] * witness[0])]
+        DiffieHelman.ec.G * Integer(witness[1]),
+        DiffieHelman.ec.G * Integer(witness[1] * witness[0])]
     diffiehelman = DiffieHelman(b"ctx", statement)
 
     print(f"Diffie Helman witness:\n{witness}\n\nstatement:\n{statement}")
-    diffiehelman_proof = diffiehelman.short_proof(witness, b"message")
-    if diffiehelman.short_verify(diffiehelman_proof, b"message"):
+    diffiehelman_proof = diffiehelman.batchable_proof(witness, b"message")
+    if diffiehelman.batchable_verify(diffiehelman_proof, b"message"):
         print("Diffie Helman verified")
     else:
         print("Diffie Helman not verified")
