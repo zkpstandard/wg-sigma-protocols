@@ -15,7 +15,7 @@ if __name__ == "__main__":
     if schnorr0.batchable_verify(batch_proof, b"I'm signing this message"):
         print("Signature verified")
     else: 
-        print("Signature not verified")
+        print("Signature NOT VERIFIED")
 
     print("\n===================================\n")
 
@@ -24,13 +24,13 @@ if __name__ == "__main__":
     pk1 = [SchnorrDlog.ec.G * Integer(sk1[0])]
     schnorr1 = SchnorrDlog(b"context", pk1)
 
-    print(f"SigmaAndComposition for witness:\{(sk0, sk1)}\n\nstatement:\n{(pk0, pk1)}")
+    print(f"SigmaAndComposition for witness: {(sk0, sk1)}\n\nstatement:\n{(pk0, pk1)}")
     schnorrAnd = SigmaAndComposition(schnorr0, schnorr1)
     and_proof = schnorrAnd.short_proof((sk0, sk1), b"message")
     if schnorrAnd.short_verify(and_proof, b"message"):
         print("And composition verified")
     else:
-        print("And composition not verified")
+        print("And composition NOT VERIFIED")
 
     print("\n===================================\n")
     
@@ -44,7 +44,7 @@ if __name__ == "__main__":
     if dleq.batchable_verify(dleq_proof, b"message"):
         print("Discrete Log Equality verified")
     else:
-        print("Discrete Log Equality not verified")
+        print("Discrete Log Equality NOT VERIFIED")
 
     print("\n===================================\n")
     
@@ -60,7 +60,7 @@ if __name__ == "__main__":
     if diffiehelman.batchable_verify(diffiehelman_proof, b"message"):
         print("Diffie Helman verified")
     else:
-        print("Diffie Helman not verified")
+        print("Diffie Helman NOT VERIFIED")
     
 
 

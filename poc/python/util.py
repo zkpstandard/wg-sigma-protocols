@@ -25,7 +25,13 @@ def hash_to_seed(b: bytes) -> int:
     '''
     Turns a hash digest (bytestring) into an int, which can be used to seed the sage PRNG
     '''
-    return int.from_bytes(b[:4], "big")
+    return int.from_bytes(b, "big")
+
+def hash_algebraic(x) -> bytes:
+    '''
+    Hashes a sage object into bytes
+    '''
+    return hash(x).to_bytes(8, "big", signed=True)
 
 from collections import namedtuple
 # Define the elliptic curve secp256k1
@@ -40,3 +46,6 @@ Zp = GF(p)
 EC = namedtuple('EC', ['G', 'H', 'E', 'p', 'Fp'])
 secp256k1 = EC(G, H, E, p, Zp)
 
+secp256k1_bytes = bytearray()
+for i in secp256k1:
+    secp256k1_bytes.extend(hash_algebraic(i))

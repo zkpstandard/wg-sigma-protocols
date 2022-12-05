@@ -31,7 +31,9 @@ class DlogTemplate(SigmaProtocol):
         assert(len(witness) == self.n)
         
         # First, seed rng
-        witness_bytes = pickle.dumps(witness)
+        witness_bytes = bytearray()
+        for el in witness:
+            witness_bytes.extend(hash_algebraic(el))
         second_block = pad_to_blocklen(random_bytes(32) + witness_bytes)
         h = self.first_block_hash.copy()
         h.update(second_block)
@@ -91,6 +93,12 @@ class DlogTemplate(SigmaProtocol):
         with seed(hash_to_seed(challenge)):
             return self.ec.Fp.random_element()
 
+    def _commitment_to_bytes(self, commitment) -> bytes:
+        result = bytearray()
+        for el in commitment:
+            result.extend(hash_algebraic(el))
+        return bytes(result)
+
 class SchnorrDlog(DlogTemplate):
     n = 1
     m = 1
@@ -107,8 +115,8 @@ class SchnorrDlog(DlogTemplate):
     
     def _morphism_label(self):
         label = SchnorrDlog.first_hash_label.copy()
-        label.update(pickle.dumps(self.ec.G))
-        label.update(pickle.dumps(self.statement[0]))
+        label.update(hash_algebraic(self.ec.G))
+        label.update(hash_algebraic(self.statement[0]))
         return label.digest()
 
 class DlogEQ(DlogTemplate):
@@ -116,7 +124,7 @@ class DlogEQ(DlogTemplate):
     n = 1
     m = 2
     first_hash_label = hash_function()
-    first_hash_label.update(pad_to_blocklen(b"dleq" + pickle.dumps(ec)))
+    first_hash_label.update(pad_to_blocklen(b"dleq" + secp256k1_bytes))
 
     def _morphism(self, x):
         '''
@@ -127,10 +135,10 @@ class DlogEQ(DlogTemplate):
     
     def _morphism_label(self):
         label = DlogEQ.first_hash_label.copy()
-        label.update(pickle.dumps(self.ec.G))
-        label.update(pickle.dumps(self.ec.H))
-        label.update(pickle.dumps(self.statement[0]))
-        label.update(pickle.dumps(self.statement[1]))
+        label.update(hash_algebraic(self.ec.G))
+        label.update(hash_algebraic(self.ec.H))
+        label.update(hash_algebraic(self.statement[0]))
+        label.update(hash_algebraic(self.statement[1]))
         return label.digest()
 
 class DiffieHelman(DlogTemplate):
@@ -138,18 +146,18 @@ class DiffieHelman(DlogTemplate):
     n = 2
     m = 3
     first_hash_label = hash_function()
-    first_hash_label.update(pad_to_blocklen(b"diffiehelman" + pickle.dumps(ec)))
+    first_hash_label.update(pad_to_blocklen(b"diffiehelman" + secp256k1_bytes))
     
     def _morphism(self, x):
         '''
         Inputs an array of two Fp elements `x0`, `x1`
-        Outputs `[G * x0, G * x1, G * Y0 * x1]`, where `Y0` is `G * x0` from the statement. 
+        Outputs `[G * x0, G * x1, Y0 * x1]`, where `Y0` is `G * x0` from the statement. 
         '''
         return [self.ec.G * Integer(x[0]), self.ec.G * Integer(x[1]), self.statement[0] * Integer(x[1])]
     
     def _morphism_label(self):
         label = DiffieHelman.first_hash_label.copy()
-        label.update(pickle.dumps(self.ec.G))
-        label.update(pickle.dumps(self.statement[0]))
-        label.update(pickle.dumps(self.statement[1]))
+        label.update(hash_algebraic(self.ec.G))
+        label.update(hash_algebraic(self.statement[0]))
+        label.update(hash_algebraic(self.statement[1]))
         return label.digest()

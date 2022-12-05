@@ -2,6 +2,11 @@ from util import *
 import pickle
 
 class SigmaProtocol:
+    com = ""
+    message = ""
+
+    
+
     def _prover_commit(self, witness):
         pass
 
@@ -17,6 +22,13 @@ class SigmaProtocol:
     def _simulate_response(self):
         pass
     
+    def _commitment_to_bytes(self, commitment) -> bytes:
+        '''
+        Deterministically converts a commitment to bytes.
+        Use this for hashing, not serialization. 
+        '''
+        pass
+
     def _challenge(self, message: bytes, commitment) -> bytes:
         '''
         Deterministically computes a challenge given a message and commitment. 
@@ -24,12 +36,11 @@ class SigmaProtocol:
         '''
         hm = hash_function()
         hm.update(message)
-        hm = pad_to_blocklen(hm.digest())
+        hm_bytes = pad_to_blocklen(hm.digest())
         
-        commitment_bytes = pad_to_blocklen(pickle.dumps(commitment))
-        
+        commitment_bytes = pad_to_blocklen(self._commitment_to_bytes(commitment))
         result = self.first_block_hash.copy()
-        result.update(hm)
+        result.update(hm_bytes)
         result.update(commitment_bytes)
         return result.digest()
     
@@ -105,11 +116,10 @@ class SigmaProtocol:
         challenge_prime = self._challenge(message, commitment)
         return challenge == challenge_prime
 
-'''
-`SigmaAndComposition` is used to prove knowledge of two independent witnesses. 
-'''
 class SigmaAndComposition(SigmaProtocol):
-    # Left and right are both sigma protocols
+    '''
+    `SigmaAndComposition` is used to prove knowledge of two independent witnesses. 
+    '''
     def __init__(self, left: SigmaProtocol, right: SigmaProtocol):
         self.left = left
         self.right = right
@@ -149,3 +159,8 @@ class SigmaAndComposition(SigmaProtocol):
         left_response, right_response = response
         return (self.left._verifier(left_commitment, challenge, left_response)) and \
         (self.right._verifier(right_commitment, challenge, right_response))
+
+    def _commitment_to_bytes(self, commitment) -> bytes:
+        left_commitment, right_commitment = commitment
+        return self.left._commitment_to_bytes(left_commitment) \
+            + self.right._commitment_to_bytes(right_commitment)
