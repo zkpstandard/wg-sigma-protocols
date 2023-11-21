@@ -258,7 +258,7 @@ Composition of $\Sigma$-protocols is dealt in \cref{sec:composition}; for an in-
 Any $\Sigma$-protocol is structured as follows:
 \begin{itemize}
   \item the prover computes a fresh \textbf{commitment}, denoted $\commitment$. This element is sometimes also called \emph{nonce}.
-  \item the prover computes, using the so-called Fiat-Shamir transform (cf.~\cref{sec:fs}), a random \textbf{challenge}, denoted $\challenge$.
+  \item the verifier computes, using the so-called Fiat-Shamir transform (cf.~\cref{sec:fs}), a random \textbf{challenge}, denoted $\challenge$.
   \item the prover computes a \textbf{response}, denoted $\response$, that depends on the commitment and the challenge.
 \end{itemize}
 The final proof is constituted of the three-elements above $(\commitment, \challenge, \response)$, and is also referred to as the \textbf{transcript}.
